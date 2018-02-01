@@ -1,0 +1,6 @@
+sanic
+Jinja2
+locust
+psycopg2
+sqlalchemy
+wtforms
