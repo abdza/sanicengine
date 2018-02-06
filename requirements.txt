@@ -4,3 +4,4 @@ locust
 psycopg2
 sqlalchemy
 wtforms
+sqlalchemy-paginator

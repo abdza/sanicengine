@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
-"""The page module."""
+"""The fileLinks module."""
 from . import views  # noqa

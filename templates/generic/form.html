@@ -7,11 +7,16 @@
 	Form
 	{% endif %}
 </h1>
-<form method='POST'>
+<form method='POST' {% if enctype %}enctype='{{enctype}}'{% endif %}>
 {% for field in form %}
 <div class='form-group row'>
 	{{ field.label(class_='col-sm-2 col-form-label') }}
-	{{ field(class_='col-sm-10 form-control') }}
+	{{ field(class_='col-sm-10 form-control is-invalid' if field.errors else 'col-sm-10 form-control') }}
+	{% if field.errors %}
+	{% for error in field.errors %}
+	<div class='offset-sm-2 invalid-feedback'>{{ error }}</div>
+	{% endfor %}
+	{% endif %}
 </div>
 {% endfor %}
 <input type='submit' value='Submit'/>
