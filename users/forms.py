@@ -1,6 +1,6 @@
-from wtforms import Form, StringField
+from wtforms import Form, StringField, PasswordField
 
 class UserForm(Form):
     name = StringField('Name')
     username = StringField('User Name')
-    password = StringField('Password')
+    password = PasswordField('Password')

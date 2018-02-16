@@ -6,4 +6,4 @@ class User(ModelBase):
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     username = Column(String(50))
-    password = Column(String(100))
+    password = Column(String(300))

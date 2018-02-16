@@ -26,7 +26,7 @@ def form(request,slug=None):
     form = PageForm(request.form)
     if request.method=='POST':
         page = dbsession.query(Page).filter_by(slug=form.slug.data).first()
-        if not page:
+        if not page and slug:
             page = dbsession.query(Page).get(int(slug))
         if page:
             title = 'Edit Page'
