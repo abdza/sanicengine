@@ -1,11 +1,26 @@
 from sanic import Sanic
-from sanic.response import json, html
+from sanic.response import json, html, redirect
+from sanic_session import InMemorySessionInterface
 import users, pages, fileLinks
 from template import render
 from database import dbsession, ModelBase, dbengine
 
 app = Sanic()
 app.static('/static','./static')
+
+session_interface = InMemorySessionInterface()
+
+@app.middleware('request')
+async def add_session_to_request(request):
+    # before each request initialize a session
+    # using the client's request
+    await session_interface.open(request)
+
+@app.middleware('response')
+async def save_session(request, response):
+    # after each request save the session,
+    # pass the response to set client cookies
+    await session_interface.save(request, response)
 
 @app.listener('before_server_start')
 async def setup_db(app, loop):
