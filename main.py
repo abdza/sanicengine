@@ -1,7 +1,7 @@
 from sanic import Sanic
 from sanic.response import json, html, redirect
 from sanic_session import InMemorySessionInterface
-import users, pages, fileLinks
+import users, pages, fileLinks, trackers
 from template import render
 from database import dbsession, ModelBase, dbengine
 
@@ -31,6 +31,7 @@ async def register_bp(app, loop):
     app.blueprint(users.views.bp)
     app.blueprint(pages.views.bp)
     app.blueprint(fileLinks.views.bp)
+    app.blueprint(trackers.views.bp)
 
 @app.route("/",methods=['GET','POST'])
 async def test(request):
