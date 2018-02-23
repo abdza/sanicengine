@@ -1,13 +1,100 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
 from sanic.response import html, redirect
-from .models import Tracker, TrackerField
-from .forms import TrackerForm, TrackerFieldForm
+from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition
+from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
 from database import dbsession
 from template import render
 from sqlalchemy_paginator import Paginator
 
 bp = Blueprint('trackers')
+
+@bp.route('/trackers/<slug>/addstatus',methods=['POST','GET'])
+@bp.route('/trackers/<slug>/editstatus/',methods=['POST','GET'],name='editstatus')
+@bp.route('/trackers/<slug>/editstatus/<id>',methods=['POST','GET'],name='editstatus')
+def statusform(request,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    title = 'Create Tracker Status'
+    form = TrackerStatusForm(request.form)
+    trackerstatus = None
+    if id:
+        trackerstatus = dbsession.query(TrackerStatus).get(int(id))
+    if trackerstatus:
+        title = 'Edit Tracker Status'
+    if request.method=='POST':
+        if form.validate():
+            if not trackerstatus:
+                trackerstatus=TrackerStatus()
+            form.populate_obj(trackerstatus)
+            trackerstatus.tracker = tracker
+            dbsession.add(trackerstatus)
+            dbsession.commit()
+            return redirect('/trackers/view/' + str(trackerstatus.tracker.id) + '#statuses')
+    else:
+        if id:
+            trackerstatus = dbsession.query(TrackerStatus).get(int(id))
+        if trackerstatus:
+            form = TrackerStatusForm(obj=trackerstatus)
+            title = 'Edit Tracker Status'
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+
+@bp.route('/trackers/<slug>/addtransition',methods=['POST','GET'])
+@bp.route('/trackers/<slug>/edittransition/',methods=['POST','GET'],name='edittransition')
+@bp.route('/trackers/<slug>/edittransition/<id>',methods=['POST','GET'],name='edittransition')
+def transitionform(request,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    title = 'Create Tracker Transition'
+    form = TrackerTransitionForm(request.form)
+    trackertransition = None
+    if id:
+        trackertransition = dbsession.query(TrackerTransition).get(int(id))
+    if trackertransition:
+        title = 'Edit Tracker Transition'
+    if request.method=='POST':
+        if form.validate():
+            if not trackertransition:
+                trackertransition=TrackerTransition()
+            form.populate_obj(trackertransition)
+            trackertransition.tracker = tracker
+            dbsession.add(trackertransition)
+            dbsession.commit()
+            return redirect('/trackers/view/' + str(trackertransition.tracker.id) + '#transitions')
+    else:
+        if id:
+            trackertransition = dbsession.query(TrackerTransition).get(int(id))
+        if trackertransition:
+            form = TrackerTransitionForm(obj=trackertransition)
+            title = 'Edit Tracker Transition'
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+
+@bp.route('/trackers/<slug>/addrole',methods=['POST','GET'])
+@bp.route('/trackers/<slug>/editrole/',methods=['POST','GET'],name='editrole')
+@bp.route('/trackers/<slug>/editrole/<id>',methods=['POST','GET'],name='editrole')
+def roleform(request,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    title = 'Create Tracker Role'
+    form = TrackerRoleForm(request.form)
+    trackerrole = None
+    if id:
+        trackerrole = dbsession.query(TrackerRole).get(int(id))
+    if trackerrole:
+        title = 'Edit Tracker Role'
+    if request.method=='POST':
+        if form.validate():
+            if not trackerrole:
+                trackerrole=TrackerRole()
+            form.populate_obj(trackerrole)
+            trackerrole.tracker = tracker
+            dbsession.add(trackerrole)
+            dbsession.commit()
+            return redirect('/trackers/view/' + str(trackerrole.tracker.id) + '#roles')
+    else:
+        if id:
+            trackerrole = dbsession.query(TrackerRole).get(int(id))
+        if trackerrole:
+            form = TrackerRoleForm(obj=trackerrole)
+            title = 'Edit Tracker Role'
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
 @bp.route('/trackers/<slug>/addfield',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/editfield/',methods=['POST','GET'],name='editfield')
