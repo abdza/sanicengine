@@ -38,11 +38,12 @@
   </div>
   <div id="statuses" class="tab-pane fade">
     <h3>Statuses</h3>
+    <a href='{{ app.url_for('trackers.statusform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Display Fields</th></tr>
 	    {% for status in tracker.statuses %}
 	    <tr>
-		    <td>{{status.name}}</td>
+		    <td><a href="{{ app.url_for('trackers.editstatus',slug=tracker.slug) }}/{{status.id}}">{{status.name}}</a></td>
 		    <td>{{status.display_fields}}</td>
 	    </tr>
 	    {% endfor %}
@@ -50,11 +51,12 @@
   </div>
   <div id="roles" class="tab-pane fade">
     <h3>Roles</h3>
+    <a href='{{ app.url_for('trackers.roleform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Role Type</th><th>Compare</th></tr>
 	    {% for role in tracker.roles %}
 	    <tr>
-		    <td>{{role.name}}</td>
+		    <td><a href="{{ app.url_for('trackers.editrole',slug=tracker.slug) }}/{{role.id}}">{{role.name}}</a></td>
 		    <td>{{role.role_type}}</td>
 		    <td>{{role.compare}}</td>
 	    </tr>
@@ -63,11 +65,12 @@
   </div>
   <div id="transitions" class="tab-pane fade">
     <h3>Transitions</h3>
+    <a href='{{ app.url_for('trackers.transitionform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Display Fields</th><th>Edit Fields</th></tr>
 	    {% for transition in tracker.transitiones %}
 	    <tr>
-		    <td>{{transition.name}}</td>
+		    <td><a href="{{ app.url_for('trackers.edittransition',slug=tracker.slug) }}/{{transition.id}}">{{transition.name}}</a></td>
 		    <td>{{transition.display_fields}}</td>
 		    <td>{{transition.edit_fields}}</td>
 	    </tr>
