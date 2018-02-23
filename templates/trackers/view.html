@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>Tracker</h1>
+<h2>{{tracker.title}}</h2>
+<ul class="nav nav-tabs">
+  <li class="nav-item active"><a class="nav-link active" data-toggle="tab" href="#details">Details</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#fields">Fields</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#statuses">Statuses</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#roles">Roles</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#transitions">Transitions</a></li>
+</ul>
+
+<div class="tab-content">
+  <div id="details" class="tab-pane fade in show active">
+    <h3>Details</h3>
+	<dl>
+		<dt>Title</dt>
+		<dd>{{tracker.title}}</dd>
+		<dt>Slug</dt>
+		<dd>{{tracker.slug}}</dd>
+		<dt>Module</dt>
+		<dd>{{tracker.module}}</dd>
+	</dl>
+  </div>
+  <div id="fields" class="tab-pane fade">
+    <h3>Fields</h3>
+    <a href='{{ app.url_for('trackers.fieldform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <table class='table'>
+	    <tr><th>Name</th><th>Label</th><th>Type</th></tr>
+	    {% for field in tracker.fields %}
+	    <tr>
+		    <td><a href="{{ app.url_for('trackers.editfield',slug=tracker.slug) }}/{{field.id}}">{{field.name}}</a></td>
+		    <td>{{field.label}}</td>
+		    <td>{{field.field_type}}</td>
+	    </tr>
+	    {% endfor %}
+    </table>
+  </div>
+  <div id="statuses" class="tab-pane fade">
+    <h3>Statuses</h3>
+    <table class='table'>
+	    <tr><th>Name</th><th>Display Fields</th></tr>
+	    {% for status in tracker.statuses %}
+	    <tr>
+		    <td>{{status.name}}</td>
+		    <td>{{status.display_fields}}</td>
+	    </tr>
+	    {% endfor %}
+    </table>
+  </div>
+  <div id="roles" class="tab-pane fade">
+    <h3>Roles</h3>
+    <table class='table'>
+	    <tr><th>Name</th><th>Role Type</th><th>Compare</th></tr>
+	    {% for role in tracker.roles %}
+	    <tr>
+		    <td>{{role.name}}</td>
+		    <td>{{role.role_type}}</td>
+		    <td>{{role.compare}}</td>
+	    </tr>
+	    {% endfor %}
+    </table>
+  </div>
+  <div id="transitions" class="tab-pane fade">
+    <h3>Transitions</h3>
+    <table class='table'>
+	    <tr><th>Name</th><th>Display Fields</th><th>Edit Fields</th></tr>
+	    {% for transition in tracker.transitiones %}
+	    <tr>
+		    <td>{{transition.name}}</td>
+		    <td>{{transition.display_fields}}</td>
+		    <td>{{transition.edit_fields}}</td>
+	    </tr>
+	    {% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block endbody %}
+<script>
+var url = document.location.toString();
+if (url.match('#')) {
+    $('.nav-tabs a[href="#'+url.split('#')[1]+'"]').tab('show') ;
+} 
+
+// With HTML5 history API, we can easily prevent scrolling!
+$('.nav-tabs a').on('shown.bs.tab', function (e) {
+    if(history.pushState) {
+        history.pushState(null, null, e.target.hash); 
+    } else {
+        window.location.hash = e.target.hash; //Polyfill for old browsers
+    }
+})
+</script>
+{% endblock %}
