@@ -19,3 +19,29 @@
 <input type='submit' value='Submit' class='btn btn-primary'>
 </form>
 {%- endmacro %}
+
+{% macro recordslist(tracker) -%}
+{% set list_fields = tracker.list_fields_list() %}
+<table class='table'>
+	<tr>
+		<th>#</th>
+		{% if list_fields %}
+		{% for field in list_fields %}
+		<th>{{field.label}}</th>
+		{% endfor %}
+		{% endif %}
+	</tr>
+	{% for record in tracker.records() %}
+	<tr>
+		<td>{{loop.index}}</td>
+		{% if list_fields %}
+		{% for field in list_fields %}
+		<td>
+			{{ record[loop.index0] }}
+		</td>
+		{% endfor %}
+		{% endif %}
+	</tr>
+	{% endfor %}
+</table>
+{%- endmacro %}

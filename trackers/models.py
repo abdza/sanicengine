@@ -3,7 +3,7 @@
 import datetime as dt
 
 from database import ModelBase, dbsession, reference_col
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, Table, MetaData
+from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolean, Date, Table, MetaData, select
 from sqlalchemy.orm import relationship, backref
 from template import render_string
 
@@ -13,9 +13,21 @@ class Tracker(ModelBase):
     title = Column(String(200))
     slug = Column(String(100),unique=True)
     module = Column(String(100),default='pages')
+    list_fields = Column(Text)
 
     def __repr__(self):
         return self.title
+
+    def list_fields_list(self):
+        if self.list_fields:
+            pfields = self.list_fields.split(',')
+            rfields = []
+            for pfield in pfields:
+                print("pfield:" + pfield)
+                rfield = dbsession.query(TrackerField).filter_by(tracker=self,name=pfield.strip()).first()
+                if rfield:
+                    rfields.append(rfield)
+            return rfields
 
     def data_table(self):
         return "trak_" + self.slug + "_data"
@@ -66,6 +78,13 @@ class Tracker(ModelBase):
         dbsession.execute(query)
         dbsession.commit()
 
+    def records(self):
+        results = None
+        select_st = select([ field.dbcolumn() for field in self.list_fields_list() ]).select_from(self.data_table())
+        print(select_st)
+        results = dbsession.execute(select_st)
+        return results
+
 class TrackerField(ModelBase):
     __tablename__ = 'tracker_fields'
     id = Column(Integer, primary_key=True)
@@ -90,6 +109,9 @@ class TrackerField(ModelBase):
                 return str(1)
             else:
                 return str(0)
+
+    def dbcolumn(self):
+        return column(self.name)
 
     def db_field_type(self):
         if self.field_type=='string':
