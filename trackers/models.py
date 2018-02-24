@@ -23,6 +23,10 @@ class Tracker(ModelBase):
     def update_table(self):
         return "trak_" + self.slug + "_updates"
 
+    def field(self, name):
+        field = dbsession.query(TrackerField).filter_by(tracker=self,name=name.strip()).first()
+        return field
+
     def updatedb(self):
         query = """
             do $$
@@ -46,10 +50,21 @@ class Tracker(ModelBase):
             end$$;
         """
         print(query)
-        session.execute(query)
-        session.commit()
+        dbsession.execute(query)
+        dbsession.commit()
         for field in self.fields:
             field.updatedb()
+
+    def addrecord(self, form):
+        print(str(form))
+        fieldnames = list(form.keys())
+        query = """
+            insert into """ + self.data_table() + """ ( """ + ",".join(fieldnames) + """) values 
+            (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """)
+        """
+        print(query)
+        dbsession.execute(query)
+        dbsession.commit()
 
 class TrackerField(ModelBase):
     __tablename__ = 'tracker_fields'
@@ -63,6 +78,18 @@ class TrackerField(ModelBase):
 
     def __repr__(self):
         return self.label
+
+    def sqlvalue(self, value):
+        print("val:" + str(value))
+        if self.field_type in ['string','text','date','datetime']:
+            return "'" + str(value) + "'"
+        elif self.field_type in ['integer','number']:
+            return str(value)
+        elif self.field_type=='boolean':
+            if value:
+                return str(1)
+            else:
+                return str(0)
 
     def db_field_type(self):
         if self.field_type=='string':
@@ -92,8 +119,8 @@ class TrackerField(ModelBase):
             end$$;
         """
         print(query)
-        session.execute(query)
-        session.commit()
+        dbsession.execute(query)
+        dbsession.commit()
 
 class TrackerRole(ModelBase):
     __tablename__ = 'tracker_roles'
@@ -146,3 +173,21 @@ class TrackerTransition(ModelBase):
     def __repr__(self):
         return self.name
 
+    def edit_fields_list(self):
+        pfields = self.edit_fields.split(',')
+        rfields = []
+        for pfield in pfields:
+            print("pfield:" + pfield)
+            rfield = dbsession.query(TrackerField).filter_by(tracker=self.tracker,name=pfield.strip()).first()
+            if rfield:
+                rfields.append(rfield)
+        return rfields
+
+    def display_fields_list(self):
+        pfields = self.display_fields.split(',')
+        rfields = []
+        for pfield in pfields:
+            rfield = dbsession.query(TrackerField).filter_by(tracker=self.tracker,name=pfield.strip()).first()
+            if rfield:
+                rfields.append(rfield)
+        return rfields

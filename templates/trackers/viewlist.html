@@ -1,0 +1,5 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>{{ tracker.title }}</h1>
+    <a href='{{ app.url_for('trackers.addrecord',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+{% endblock %}
