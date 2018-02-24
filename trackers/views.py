@@ -139,14 +139,13 @@ def updatedb(request,id=None):
 
 @bp.route('/trackers/create',methods=['POST','GET'])
 @bp.route('/trackers/edit/',methods=['POST','GET'],name='edit')
-@bp.route('/trackers/edit/<slug>',methods=['POST','GET'])
-def form(request,slug=None):
+@bp.route('/trackers/edit/<id>',methods=['POST','GET'],name='edit')
+def form(request,id=None):
     title = 'Create Tracker'
     form = TrackerForm(request.form)
     if request.method=='POST':
-        tracker = dbsession.query(Tracker).filter_by(slug=form.slug.data).first()
-        if not tracker and slug:
-            tracker = dbsession.query(Tracker).get(int(slug))
+        if id:
+            tracker = dbsession.query(Tracker).get(int(id))
         if tracker:
             title = 'Edit Tracker'
         if form.validate():
@@ -159,12 +158,10 @@ def form(request,slug=None):
             adminrole = TrackerRole(name='Admin',role_type='module',tracker=tracker)
             dbsession.add(adminrole)
             dbsession.commit()
-            return redirect('/trackers')
+            return redirect('/trackers/view/' + str(tracker.id))
     else:
-        if slug is not None:
-            tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
-            if not tracker:
-                tracker = dbsession.query(Tracker).get(int(slug))
+        if id:
+            tracker = dbsession.query(Tracker).get(int(id))
             if tracker:
                 form = TrackerForm(obj=tracker)
                 title = 'Edit Tracker'
@@ -175,7 +172,7 @@ def form(request,slug=None):
 def index(request):
     trackers = dbsession.query(Tracker)
     paginator = Paginator(trackers, 5)
-    return html(render(request, 'generic/list.html',title='Trackers',editlink=request.app.url_for('trackers.view'),addlink=request.app.url_for('trackers.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['tracker'][0]) if 'tracker' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Trackers',editlink=request.app.url_for('trackers.view'),addlink=request.app.url_for('trackers.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'List Fields','name':'list_fields'}],paginator=paginator,curpage=paginator.page(int(request.args['tracker'][0]) if 'tracker' in request.args else 1)))
 
 @bp.route('/system/<slug>/')
 def viewlist(request,slug=None):
@@ -187,5 +184,6 @@ def addrecord(request,slug=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
     if request.method=='POST':
         tracker.addrecord(request.form)
+        return redirect('/system/' + slug)
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
     return html(render(request,'trackers/addrecord.html',tracker=tracker,newtransition=newtransition))

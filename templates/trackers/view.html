@@ -13,6 +13,7 @@
 <div class="tab-content">
   <div id="details" class="tab-pane fade in show active">
     <h3>Details</h3>
+    <a href='{{ app.url_for('trackers.edit') }}/{{ tracker.id }}' class='btn btn-primary'>Edit</a>
     <a href='{{ app.url_for('trackers.updatedb',id=tracker.id) }}' class='btn btn-primary'>Update DB</a>
 	<dl>
 		<dt>Title</dt>
@@ -21,6 +22,8 @@
 		<dd>{{tracker.slug}}</dd>
 		<dt>Module</dt>
 		<dd>{{tracker.module}}</dd>
+		<dt>List Fields</dt>
+		<dd>{{tracker.list_fields}}</dd>
 	</dl>
   </div>
   <div id="fields" class="tab-pane fade">
