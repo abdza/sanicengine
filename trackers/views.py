@@ -131,6 +131,12 @@ def view(request,id=None):
     tracker = dbsession.query(Tracker).get(int(id))
     return html(render(request,'trackers/view.html',tracker=tracker))
 
+@bp.route('/trackers/updatedb/<id>')
+def updatedb(request,id=None):
+    tracker = dbsession.query(Tracker).get(int(id))
+    tracker.updatedb()
+    return redirect('/trackers/view/' + str(id))
+
 @bp.route('/trackers/create',methods=['POST','GET'])
 @bp.route('/trackers/edit/',methods=['POST','GET'],name='edit')
 @bp.route('/trackers/edit/<slug>',methods=['POST','GET'])
@@ -148,6 +154,10 @@ def form(request,slug=None):
                 tracker=Tracker()
             form.populate_obj(tracker)
             dbsession.add(tracker)
+            newstatus = TrackerStatus(name='New',tracker=tracker)
+            dbsession.add(newstatus)
+            adminrole = TrackerRole(name='Admin',role_type='module',tracker=tracker)
+            dbsession.add(adminrole)
             dbsession.commit()
             return redirect('/trackers')
     else:
@@ -166,3 +176,16 @@ def index(request):
     trackers = dbsession.query(Tracker)
     paginator = Paginator(trackers, 5)
     return html(render(request, 'generic/list.html',title='Trackers',editlink=request.app.url_for('trackers.view'),addlink=request.app.url_for('trackers.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['tracker'][0]) if 'tracker' in request.args else 1)))
+
+@bp.route('/system/<slug>/')
+def viewlist(request,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    return html(render(request,'trackers/viewlist.html',tracker=tracker))
+
+@bp.route('/system/<slug>/addrecord',methods=['POST','GET'])
+def addrecord(request,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    if request.method=='POST':
+        tracker.addrecord(request.form)
+    newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
+    return html(render(request,'trackers/addrecord.html',tracker=tracker,newtransition=newtransition))
