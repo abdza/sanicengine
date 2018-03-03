@@ -5,6 +5,7 @@ import datetime as dt
 from database import ModelBase, dbsession, reference_col
 from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolean, Date, Table, MetaData, select
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.sql import text
 from template import render_string
 
 class Tracker(ModelBase):
@@ -78,11 +79,23 @@ class Tracker(ModelBase):
         dbsession.execute(query)
         dbsession.commit()
 
-    def records(self):
+    def records(self,id=None):
         results = None
-        select_st = select([ field.dbcolumn() for field in self.list_fields_list() ]).select_from(self.data_table())
-        print(select_st)
-        results = dbsession.execute(select_st)
+        if id:
+            sqltext = text(
+                    "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table() +  " where id=:id"
+                    )
+            sqltext = sqltext.bindparams(id=id)
+        else:
+            sqltext = text(
+                    "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table()
+                    )
+        results = dbsession.execute(sqltext)
+        if(id):
+            results = results.fetchone()
+            status = dbsession.query(TrackerStatus).filter_by(tracker=self,name=results['record_status']).first()
+            if status:
+                results.status = status
         return results
 
 class TrackerField(ModelBase):

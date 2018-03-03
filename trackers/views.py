@@ -157,6 +157,10 @@ def form(request,id=None):
             dbsession.add(newstatus)
             adminrole = TrackerRole(name='Admin',role_type='module',tracker=tracker)
             dbsession.add(adminrole)
+            statusfield = TrackerField(name='record_status',label='Status',tracker=tracker,field_type='string')
+            dbsession.add(statusfield)
+            idfield = TrackerField(name='id',label='ID',tracker=tracker,field_type='integer')
+            dbsession.add(idfield)
             dbsession.commit()
             return redirect('/trackers/view/' + str(tracker.id))
     else:
@@ -187,3 +191,15 @@ def addrecord(request,slug=None):
         return redirect('/system/' + slug)
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
     return html(render(request,'trackers/addrecord.html',tracker=tracker,newtransition=newtransition))
+
+@bp.route('/system/<slug>/<id>',methods=['POST','GET'])
+def viewrecord(request,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    print("tracksser:" + str(tracker))
+    record = None
+    if request.method=='POST':
+        return redirect('/system/' + slug + '/viewrecord/' + id)
+    if(id):
+        record = tracker.records(id)
+        print("dfstracksser:" + str(tracker))
+    return html(render(request,'trackers/viewrecord.html',tracker=tracker,record=record))
