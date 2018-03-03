@@ -33,7 +33,7 @@
 	</tr>
 	{% for record in tracker.records() %}
 	<tr>
-		<td>{{loop.index}}</td>
+		<td><a href='{{ app.url_for('trackers.viewrecord',id=record.id,slug=tracker.slug) }}'>{{loop.index}}</a></td>
 		{% if list_fields %}
 		{% for field in list_fields %}
 		<td>
@@ -44,4 +44,17 @@
 	</tr>
 	{% endfor %}
 </table>
+{%- endmacro %}
+
+{% macro displayrecord(tracker,record) -%}
+{% if record.status %}
+Status: {{ record.status }}
+{% else %}
+<dl>
+{% for field in tracker.list_fields_list() %}
+<dt>{{ field.label }}</dt>
+<dd>{{ record[field.name] }}</dd>
+{% endfor %}
+</dl>
+{% endif %}
 {%- endmacro %}
