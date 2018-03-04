@@ -1,4 +1,5 @@
 from wtforms import Form, StringField, TextAreaField, BooleanField, DateField, SelectField
+from .models import TrackerStatus
 
 class TrackerForm(Form):
     title = StringField('Title')
@@ -24,3 +25,5 @@ class TrackerTransitionForm(Form):
     name = StringField('Name')
     display_fields = TextAreaField('Display Fields')
     edit_fields = TextAreaField('Edit Fields')
+    prev_status_id = SelectField('Prev Status')
+    next_status_id = SelectField('Next Status')
