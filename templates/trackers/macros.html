@@ -37,7 +37,7 @@
 		{% if list_fields %}
 		{% for field in list_fields %}
 		<td>
-			{{ record[loop.index0] }}
+			{{ record[loop.index+1] }}
 		</td>
 		{% endfor %}
 		{% endif %}

@@ -45,6 +45,9 @@ def transitionform(request,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
     title = 'Create Tracker Transition'
     form = TrackerTransitionForm(request.form)
+    dstatuses = [('','None'),] + [(str(g.id),g.name) for g in dbsession.query(TrackerStatus).filter(TrackerStatus.tracker==tracker).all()]
+    form.prev_status_id.choices = dstatuses
+    form.next_status_id.choices = dstatuses
     trackertransition = None
     if id:
         trackertransition = dbsession.query(TrackerTransition).get(int(id))
@@ -55,6 +58,10 @@ def transitionform(request,slug=None,id=None):
             if not trackertransition:
                 trackertransition=TrackerTransition()
             form.populate_obj(trackertransition)
+            if form.prev_status_id.data=='':
+                trackertransition.prev_status = None
+            if form.next_status_id.data=='':
+                trackertransition.next_status = None
             trackertransition.tracker = tracker
             dbsession.add(trackertransition)
             dbsession.commit()
@@ -64,6 +71,8 @@ def transitionform(request,slug=None,id=None):
             trackertransition = dbsession.query(TrackerTransition).get(int(id))
         if trackertransition:
             form = TrackerTransitionForm(obj=trackertransition)
+            form.prev_status_id.choices = dstatuses
+            form.next_status_id.choices = dstatuses
             title = 'Edit Tracker Transition'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
