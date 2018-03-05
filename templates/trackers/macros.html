@@ -1,5 +1,6 @@
 {% macro transitionform(transition) -%}
 <form method='POST' id='trackerform'>
+	<input type='hidden' name='transition_id' value='{{transition.id}}'/>
 {% for field in transition.edit_fields_list() %}
 <div class="form-group row">
 	<label class="col-sm-2 col-form-label" for="{{ field.name }}">{{ field.label }}</label>

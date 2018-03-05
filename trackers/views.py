@@ -199,16 +199,14 @@ def addrecord(request,slug=None):
         tracker.addrecord(request.form)
         return redirect('/system/' + slug)
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
-    return html(render(request,'trackers/addrecord.html',tracker=tracker,newtransition=newtransition))
+    return html(render(request,'trackers/addrecord.html',tracker=tracker,transition=newtransition))
 
 @bp.route('/system/<slug>/<id>',methods=['POST','GET'])
 def viewrecord(request,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
-    print("tracksser:" + str(tracker))
     record = None
     if request.method=='POST':
         return redirect('/system/' + slug + '/viewrecord/' + id)
     if(id):
         record = tracker.records(id)
-        print("dfstracksser:" + str(tracker))
     return html(render(request,'trackers/viewrecord.html',tracker=tracker,record=record))

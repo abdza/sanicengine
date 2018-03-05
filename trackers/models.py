@@ -69,13 +69,16 @@ class Tracker(ModelBase):
             field.updatedb()
 
     def addrecord(self, form):
-        print(str(form))
+        if 'transition_id' in form:
+            transition = dbsession.query(TrackerTransition).get(form['transition_id'][0])
+            if transition and transition.next_status:
+                form['record_status'] = [transition.next_status.name,]
+                del(form['transition_id'])
         fieldnames = list(form.keys())
         query = """
             insert into """ + self.data_table() + """ ( """ + ",".join(fieldnames) + """) values 
             (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """)
         """
-        print(query)
         dbsession.execute(query)
         dbsession.commit()
 
