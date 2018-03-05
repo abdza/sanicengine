@@ -2,7 +2,7 @@
 {% from 'trackers/macros.html' import transitionform %}
 {% block content %}
 <h1>Add {{ tracker.title }}</h1>
-{% if newtransition %}
-{{ transitionform(newtransition) }}
+{% if transition %}
+{{ transitionform(transition) }}
 {% endif %}
 {% endblock %}
