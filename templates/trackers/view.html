@@ -31,12 +31,13 @@
     <h3>Fields</h3>
     <a href='{{ app.url_for('trackers.fieldform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
-	    <tr><th>Name</th><th>Label</th><th>Type</th></tr>
+	    <tr><th>Name</th><th>Label</th><th>Type</th><th>Action</th></tr>
 	    {% for field in tracker.fields %}
 	    <tr>
 		    <td><a href="{{ app.url_for('trackers.editfield',slug=tracker.slug) }}/{{field.id}}">{{field.name}}</a></td>
 		    <td>{{field.label}}</td>
 		    <td>{{field.field_type}}</td>
+		    <td><form action='{{ app.url_for('trackers.deletefield',slug=tracker.slug,field_id=field.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete field {{field.label}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -45,11 +46,12 @@
     <h3>Statuses</h3>
     <a href='{{ app.url_for('trackers.statusform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
-	    <tr><th>Name</th><th>Display Fields</th></tr>
+	    <tr><th>Name</th><th>Display Fields</th><th>Action</th></tr>
 	    {% for status in tracker.statuses %}
 	    <tr>
 		    <td><a href="{{ app.url_for('trackers.editstatus',slug=tracker.slug) }}/{{status.id}}">{{status.name}}</a></td>
 		    <td>{{status.display_fields}}</td>
+		    <td><form action='{{ app.url_for('trackers.deletestatus',slug=tracker.slug,status_id=status.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete status {{status.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -58,12 +60,13 @@
     <h3>Roles</h3>
     <a href='{{ app.url_for('trackers.roleform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
-	    <tr><th>Name</th><th>Role Type</th><th>Compare</th></tr>
+	    <tr><th>Name</th><th>Role Type</th><th>Compare</th><th>Action</th></tr>
 	    {% for role in tracker.roles %}
 	    <tr>
 		    <td><a href="{{ app.url_for('trackers.editrole',slug=tracker.slug) }}/{{role.id}}">{{role.name}}</a></td>
 		    <td>{{role.role_type}}</td>
 		    <td>{{role.compare}}</td>
+		    <td><form action='{{ app.url_for('trackers.deleterole',slug=tracker.slug,role_id=role.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete role {{role.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -72,7 +75,7 @@
     <h3>Transitions</h3>
     <a href='{{ app.url_for('trackers.transitionform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
-	    <tr><th>Name</th><th>Prev Status</th><th>Next Status</th><th>Display Fields</th><th>Edit Fields</th></tr>
+	    <tr><th>Name</th><th>Prev Status</th><th>Next Status</th><th>Display Fields</th><th>Edit Fields</th><th>Action</th></tr>
 	    {% for transition in tracker.transitions %}
 	    <tr>
 		    <td><a href="{{ app.url_for('trackers.edittransition',slug=tracker.slug) }}/{{transition.id}}">{{transition.name}}</a></td>
@@ -80,6 +83,7 @@
 		    <td>{{transition.next_status}}</td>
 		    <td>{{transition.display_fields}}</td>
 		    <td>{{transition.edit_fields}}</td>
+		    <td><form action='{{ app.url_for('trackers.deletetransition',slug=tracker.slug,transition_id=transition.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete transition {{transition.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>

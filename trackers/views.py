@@ -38,6 +38,16 @@ def statusform(request,slug=None,id=None):
             title = 'Edit Tracker Status'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
+@bp.route('/trackers/<slug>/status/<status_id>/delete',methods=['POST'])
+def deletestatus(request,slug=None,status_id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    if status_id:
+        trackerstatus = dbsession.query(TrackerStatus).get(int(status_id))
+        if(trackerstatus):
+            dbsession.delete(trackerstatus)
+            dbsession.commit()
+    return redirect('/trackers/view/' + str(trackerstatus.tracker.id) + '#statuses')
+
 @bp.route('/trackers/<slug>/addtransition',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/edittransition/',methods=['POST','GET'],name='edittransition')
 @bp.route('/trackers/<slug>/edittransition/<id>',methods=['POST','GET'],name='edittransition')
@@ -78,6 +88,16 @@ def transitionform(request,slug=None,id=None):
             title = 'Edit Tracker Transition'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
+@bp.route('/trackers/<slug>/transition/<transition_id>/delete',methods=['POST'])
+def deletetransition(request,slug=None,transition_id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    if transition_id:
+        trackertransition = dbsession.query(TrackerTransition).get(int(transition_id))
+        if(trackertransition):
+            dbsession.delete(trackertransition)
+            dbsession.commit()
+    return redirect('/trackers/view/' + str(trackertransition.tracker.id) + '#transitions')
+
 @bp.route('/trackers/<slug>/addrole',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/editrole/',methods=['POST','GET'],name='editrole')
 @bp.route('/trackers/<slug>/editrole/<id>',methods=['POST','GET'],name='editrole')
@@ -107,6 +127,16 @@ def roleform(request,slug=None,id=None):
             title = 'Edit Tracker Role'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
+@bp.route('/trackers/<slug>/role/<role_id>/delete',methods=['POST'])
+def deleterole(request,slug=None,role_id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    if role_id:
+        trackerrole = dbsession.query(TrackerRole).get(int(role_id))
+        if(trackerrole):
+            dbsession.delete(trackerrole)
+            dbsession.commit()
+    return redirect('/trackers/view/' + str(trackerrole.tracker.id) + '#roles')
+
 @bp.route('/trackers/<slug>/addfield',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/editfield/',methods=['POST','GET'],name='editfield')
 @bp.route('/trackers/<slug>/editfield/<id>',methods=['POST','GET'],name='editfield')
@@ -135,6 +165,17 @@ def fieldform(request,slug=None,id=None):
             form = TrackerFieldForm(obj=trackerfield)
             title = 'Edit Tracker Field'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+
+@bp.route('/trackers/<slug>/field/<field_id>/delete',methods=['POST'])
+def deletefield(request,slug=None,field_id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    if field_id:
+        trackerfield = dbsession.query(TrackerField).get(int(field_id))
+        if(trackerfield):
+            dbsession.delete(trackerfield)
+            dbsession.commit()
+    return redirect('/trackers/view/' + str(trackerfield.tracker.id) + '#fields')
+
 
 @bp.route('/trackers/view/')
 @bp.route('/trackers/view/<id>')
