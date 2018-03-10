@@ -1,7 +1,8 @@
 {% extends "layout.html" %}
-{% from 'trackers/macros.html' import displayrecord %}
+{% from 'trackers/macros.html' import displayrecord, transitionbuttons with context %}
 {% block content %}
 <h1>{{ tracker.title }}</h1>
     <a href='{{ app.url_for('trackers.viewlist',slug=tracker.slug) }}' class='btn btn-primary'>List</a>
 {{ displayrecord(tracker, record) }}
+{{ transitionbuttons(tracker, record) }}
 {% endblock %}

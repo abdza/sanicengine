@@ -82,6 +82,24 @@ class Tracker(ModelBase):
         dbsession.execute(query)
         dbsession.commit()
 
+    def editrecord(self, form):
+        if 'transition_id' in form:
+            transition = dbsession.query(TrackerTransition).get(form['transition_id'][0])
+            if transition and transition.next_status:
+                form['record_status'] = [transition.next_status.name,]
+            del(form['transition_id'])
+        oldrecord = None
+        if 'id' in form:
+            oldrecord = self.records(form['id'][0])
+            del(form['id'])
+        fieldnames = list(form.keys())
+        print('fieldnames:' + str(fieldnames))
+        print('oldrecord:' + str(oldrecord))
+        query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id'])
+        print("qry:" + query)
+        dbsession.execute(query)
+        dbsession.commit()
+
     def records(self,id=None):
         results = None
         if id:
@@ -95,11 +113,27 @@ class Tracker(ModelBase):
                     )
         results = dbsession.execute(sqltext)
         if(id):
-            results = results.fetchone()
-            status = dbsession.query(TrackerStatus).filter_by(tracker=self,name=results['record_status']).first()
-            if status:
-                results.status = status
+            drows = None
+            for row in results:
+                drows = row
+            results = drows
         return results
+
+    def status(self,record):
+        if record['record_status']:
+            status = dbsession.query(TrackerStatus).filter_by(name=record['record_status']).first()
+            if status:
+                return status
+        return None
+
+    def activetransitions(self,record):
+        status = self.status(record)
+        if status:
+            transitions = dbsession.query(TrackerTransition).filter_by(prev_status=status).all()
+            if len(transitions):
+                return transitions
+        return None
+
 
 class TrackerField(ModelBase):
     __tablename__ = 'tracker_fields'
