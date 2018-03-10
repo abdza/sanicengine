@@ -1,6 +1,10 @@
-{% macro transitionform(transition) -%}
+{% macro transitionform(transition,record=None) -%}
 <form method='POST' id='trackerform'>
 	<input type='hidden' name='transition_id' value='{{transition.id}}'/>
+	{% if record %}
+	<input type='hidden' name='id' value='{{record['id']}}'/>
+	{% endif %}
+
 {% for field in transition.edit_fields_list() %}
 <div class="form-group row">
 	<label class="col-sm-2 col-form-label" for="{{ field.name }}">{{ field.label }}</label>
@@ -38,7 +42,7 @@
 		{% if list_fields %}
 		{% for field in list_fields %}
 		<td>
-			{{ record[loop.index+1] }}
+			{{ record[field.name] }}
 		</td>
 		{% endfor %}
 		{% endif %}
@@ -48,14 +52,18 @@
 {%- endmacro %}
 
 {% macro displayrecord(tracker,record) -%}
-{% if record.status %}
-Status: {{ record.status }}
-{% else %}
 <dl>
 {% for field in tracker.list_fields_list() %}
 <dt>{{ field.label }}</dt>
 <dd>{{ record[field.name] }}</dd>
 {% endfor %}
 </dl>
-{% endif %}
+{%- endmacro %}
+
+{% macro transitionbuttons(tracker,record) -%}
+{% for transition in tracker.activetransitions(record) %}
+<a href='{{ app.url_for('trackers.editrecord',record_id=record['id'],transition_id=transition.id,slug=tracker.slug) }}' class='btn btn-primary'>
+{{ transition.name }}
+</a>
+{% endfor %}
 {%- endmacro %}

@@ -199,7 +199,21 @@ def addrecord(request,slug=None):
         tracker.addrecord(request.form)
         return redirect('/system/' + slug)
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
-    return html(render(request,'trackers/addrecord.html',tracker=tracker,transition=newtransition))
+    return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition))
+
+@bp.route('/system/<slug>/edit/<transition_id>/<record_id>',methods=['POST','GET'])
+def editrecord(request,slug=None,transition_id=None,record_id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    transition = None
+    record = None
+    if record_id:
+        record = tracker.records(record_id)
+    if transition_id:
+        transition = dbsession.query(TrackerTransition).get(transition_id)
+    if request.method=='POST':
+        tracker.editrecord(request.form)
+        return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=record_id))
+    return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=transition,record=record))
 
 @bp.route('/system/<slug>/<id>',methods=['POST','GET'])
 def viewrecord(request,slug=None,id=None):
