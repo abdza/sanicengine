@@ -60,8 +60,10 @@ def transitionform(request,slug=None,id=None):
             form.populate_obj(trackertransition)
             if form.prev_status_id.data=='':
                 trackertransition.prev_status = None
+                trackertransition.prev_status_id = None
             if form.next_status_id.data=='':
                 trackertransition.next_status = None
+                trackertransition.next_status_id = None
             trackertransition.tracker = tracker
             dbsession.add(trackertransition)
             dbsession.commit()
