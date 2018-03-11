@@ -1,4 +1,8 @@
 {% extends "layout.html" %}
+{% block endhead %}
+	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input.css') }}'>
+	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input-facebook.css') }}'>
+{% endblock %}
 {% block content %}
 <h1>
 	{% if title %}
@@ -21,4 +25,12 @@
 {% endfor %}
 <input type='submit' value='Submit'/>
 </form>
+{% endblock %}
+{% block endbody %}
+	<script src='{{ app.url_for('static', filename='/js/jquery.tokeninput.js')}}'></script>
+	<script type='text/javascript'>
+		$(document).ready(function(){
+			$('input#user').tokenInput('{{ app.url_for('users.userjson') }}',{tokenLimit:1{% if userdata %},prePopulate:[{id:{{ userdata.id }},name:"{{ userdata.name }}"}]{% endif %}});
+		});
+	</script>
 {% endblock %}
