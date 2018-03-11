@@ -67,9 +67,8 @@ def module_roles(request):
     return html(render(request, 'generic/list.html',title='Module Roles',editlink=request.app.url_for('users.module_role_edit'),addlink=request.app.url_for('users.module_role_form'),fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/users/json/')
-@bp.route('/users/json/<namequery>')
-def userjson(request,namequery=None):
-    users = dbsession.query(User).filter(or_(User.name.like("%" + request.args['q'][0] + "%"),User.username.like("%" + request.args['q'][0] + "%"))).all()
+def userjson(request):
+    users = dbsession.query(User).filter(or_(User.name.ilike("%" + request.args['q'][0] + "%"),User.username.ilike("%" + request.args['q'][0] + "%"))).all()
     return json([ {'id':user.id,'name':user.name} for user in users ])
 
 @bp.route('/users')

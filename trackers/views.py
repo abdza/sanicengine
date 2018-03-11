@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
-from sanic.response import html, redirect
+from sanic.response import html, redirect, json
 from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition
 from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
 from database import dbsession
 from template import render
 from sqlalchemy_paginator import Paginator
+from sqlalchemy import or_
 
 bp = Blueprint('trackers')
 
@@ -48,6 +49,12 @@ def deletestatus(request,slug=None,status_id=None):
             dbsession.commit()
     return redirect('/trackers/view/' + str(trackerstatus.tracker.id) + '#statuses')
 
+@bp.route('/trackers/<slug>/roles/json')
+def rolesjson(request,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    trackerroles = dbsession.query(TrackerRole).filter(TrackerRole.tracker==tracker,TrackerRole.name.ilike('%' + request.args['q'][0] + '%')).all() 
+    return json([ {'id':role.id,'name':role.name} for role in trackerroles ])
+
 @bp.route('/trackers/<slug>/addtransition',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/edittransition/',methods=['POST','GET'],name='edittransition')
 @bp.route('/trackers/<slug>/edittransition/<id>',methods=['POST','GET'],name='edittransition')
@@ -67,6 +74,13 @@ def transitionform(request,slug=None,id=None):
         if form.validate():
             if not trackertransition:
                 trackertransition=TrackerTransition()
+            if form.roles.data:
+                role_ids = form.roles.data.split(',')
+                roles = [ dbsession.query(TrackerRole).get(role_id) for role_id in role_ids ]
+                trackertransition.roles = roles
+            else:
+                trackertransition.roles = []
+            del(form['roles'])
             form.populate_obj(trackertransition)
             if form.prev_status_id.data=='':
                 trackertransition.prev_status = None
@@ -86,7 +100,7 @@ def transitionform(request,slug=None,id=None):
             form.prev_status_id.choices = dstatuses
             form.next_status_id.choices = dstatuses
             title = 'Edit Tracker Transition'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+    return html(render(request,'generic/form.html',title=title,rolesdata=trackertransition.roles,form=form,tracker=tracker,enctype='multipart/form-data'))
 
 @bp.route('/trackers/<slug>/transition/<transition_id>/delete',methods=['POST'])
 def deletetransition(request,slug=None,transition_id=None):

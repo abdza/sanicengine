@@ -75,10 +75,11 @@
     <h3>Transitions</h3>
     <a href='{{ app.url_for('trackers.transitionform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
-	    <tr><th>Name</th><th>Prev Status</th><th>Next Status</th><th>Display Fields</th><th>Edit Fields</th><th>Action</th></tr>
+	    <tr><th>Name</th><th>Roles</th><th>Prev Status</th><th>Next Status</th><th>Display Fields</th><th>Edit Fields</th><th>Action</th></tr>
 	    {% for transition in tracker.transitions %}
 	    <tr>
 		    <td><a href="{{ app.url_for('trackers.edittransition',slug=tracker.slug) }}/{{transition.id}}">{{transition.name}}</a></td>
+		    <td>{{transition.roles|join(',')}}</td>
 		    <td>{{transition.prev_status}}</td>
 		    <td>{{transition.next_status}}</td>
 		    <td>{{transition.display_fields}}</td>
