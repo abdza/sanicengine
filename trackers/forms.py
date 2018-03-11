@@ -23,6 +23,7 @@ class TrackerStatusForm(Form):
 
 class TrackerTransitionForm(Form):
     name = StringField('Name')
+    roles = StringField('Roles')
     display_fields = TextAreaField('Display Fields')
     edit_fields = TextAreaField('Edit Fields')
     prev_status_id = SelectField('Prev Status')
