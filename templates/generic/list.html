@@ -25,7 +25,11 @@
 			{% endif %}
 		</td>
 		{% for field in fields %}
+		{% if field.name=='user' %}
+		<td>{{ item['user'].name }}</td>
+		{% else %}
 		<td>{{ item[field.name] }}</td>
+		{% endif %}
 		{% endfor %}
 	</tr>
 	{% endfor %}
