@@ -4,5 +4,5 @@
 <h1>{{ tracker.title }}</h1>
     <a href='{{ app.url_for('trackers.viewlist',slug=tracker.slug) }}' class='btn btn-primary'>List</a>
 {{ displayrecord(tracker, record) }}
-{{ transitionbuttons(tracker, record) }}
+{{ transitionbuttons(tracker, record, curuser) }}
 {% endblock %}
