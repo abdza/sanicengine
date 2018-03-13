@@ -18,3 +18,6 @@ class ModuleRole(ModelBase):
 
     role = Column(String(100))
     module = Column(String(200))
+
+    def __str__(self):
+        return str(self.user) + '-' + str(self.module) + '-' + str(self.role)

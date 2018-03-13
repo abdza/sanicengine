@@ -7,6 +7,7 @@ from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolea
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
 from template import render_string
+from users.models import ModuleRole
 
 class Tracker(ModelBase):
     __tablename__ = 'trackers'
@@ -126,8 +127,19 @@ class Tracker(ModelBase):
                 return status
         return None
 
-    def activetransitions(self,record):
+    def userroles(self,curuser,record=None):
+        croles = []
+        for role in self.roles:
+            if role.role_type=='module':
+                usermoduleroles = dbsession.query(ModuleRole).filter(ModuleRole.module==self.module,ModuleRole.user==curuser,ModuleRole.role==role.name).all()
+                if len(usermoduleroles):
+                    croles.append(role)
+
+        print('role:' + str(croles))
+
+    def activetransitions(self,record,curuser):
         status = self.status(record)
+        roles = self.userroles(curuser,record)
         if status:
             transitions = dbsession.query(TrackerTransition).filter_by(prev_status=status).all()
             if len(transitions):
