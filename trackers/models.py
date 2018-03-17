@@ -177,7 +177,7 @@ class TrackerField(ModelBase):
             return self.obj_fields()[0]
 
     def disp_value(self, value):
-        if self.field_type=='object':
+        if self.field_type=='object' and value:
             sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=" + str(value)
             result = dbsession.execute(sqlq)
             for r in result:
@@ -186,7 +186,6 @@ class TrackerField(ModelBase):
         return value
 
     def sqlvalue(self, value):
-        print("val:" + str(value))
         if self.field_type in ['string','text','date','datetime']:
             return "'" + str(value) + "'"
         elif self.field_type in ['integer','number','object']:
