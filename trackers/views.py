@@ -197,7 +197,6 @@ def fieldjson(request,slug=None,field_id=None):
         trackerfield = dbsession.query(TrackerField).get(int(field_id))
         if(trackerfield):
             sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where " + " or ".join([field + " like '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ])
-            print("sqlq:" + sqlq)
             results = dbsession.execute(sqlq)
             return json([ {'id':result.id,'name':result.name} for result in results ])
 

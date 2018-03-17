@@ -27,6 +27,7 @@
 $('#{{field.name}}').datepicker({
 	format:'yyyy-mm-dd',
 	todayBtn:true,
+	zIndexOffset: 1000,
 	orientation:'bottom',
 	autoclose:true,
 	container:'#div_{{field.name}}',
@@ -41,7 +42,7 @@ $('#{{field.name}}').datepicker({
 	<script src='{{ app.url_for('static', filename='/js/jquery.tokeninput.js')}}'></script>
 {% endif %}
 <script> 
-$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',slug=tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
+$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',slug=tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
 </script> 
 {% endif %}
 {% endfor %}

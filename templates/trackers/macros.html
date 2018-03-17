@@ -38,7 +38,7 @@
 		{% if list_fields %}
 		{% for field in list_fields %}
 		<td>
-			{{ record[field.name] }}
+		{{ field.disp_value(record[field.name]) }}
 		</td>
 		{% endfor %}
 		{% endif %}
