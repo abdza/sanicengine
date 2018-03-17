@@ -168,6 +168,23 @@ class TrackerField(ModelBase):
     def __repr__(self):
         return self.label
 
+    def obj_fields(self):
+        if self.obj_field:
+            return self.obj_field.split(',')
+
+    def main_obj_field(self):
+        if self.obj_field:
+            return self.obj_fields()[0]
+
+    def disp_value(self, value):
+        if self.field_type=='object':
+            sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=" + str(value)
+            result = dbsession.execute(sqlq)
+            for r in result:
+                return r[0]
+            
+        return value
+
     def sqlvalue(self, value):
         print("val:" + str(value))
         if self.field_type in ['string','text','date','datetime']:

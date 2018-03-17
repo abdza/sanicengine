@@ -15,7 +15,7 @@
 {% endif %}
 {% endblock %}
 {% block endbody %}
-{% set ns = namespace(gotdate = false) %}
+{% set ns = namespace(gotdate = false,gottoken = false) %}
 {% for field in transition.edit_fields_list() %}
 {% if field.field_type=='date' %}
 {% if not ns.gotdate %}
@@ -32,6 +32,17 @@ $('#{{field.name}}').datepicker({
 	container:'#div_{{field.name}}',
 });
 </script>
+{% endif %}
+{% if field.field_type=='object' %}
+{% if not ns.gottoken %}
+{% set ns.gottoken = true %}
+	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input.css') }}'>
+	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input-facebook.css') }}'>
+	<script src='{{ app.url_for('static', filename='/js/jquery.tokeninput.js')}}'></script>
+{% endif %}
+<script> 
+$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',slug=tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
+</script> 
 {% endif %}
 {% endfor %}
 {% endblock %}
