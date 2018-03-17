@@ -53,3 +53,7 @@ main {
         border-top:0 none;
     }
 }
+
+.form-group {
+	position: relative;
+}

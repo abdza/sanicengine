@@ -25,7 +25,11 @@
 {% endif %}
 <script>
 $('#{{field.name}}').datepicker({
-	format: 'yyyy-mm-dd'
+	format:'yyyy-mm-dd',
+	todayBtn:true,
+	orientation:'bottom',
+	autoclose:true,
+	container:'#div_{{field.name}}',
 });
 </script>
 {% endif %}
