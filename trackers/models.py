@@ -76,6 +76,7 @@ class Tracker(ModelBase):
                 form['record_status'] = [transition.next_status.name,]
                 del(form['transition_id'])
         fieldnames = list(form.keys())
+        print("fieldnames:" + str(fieldnames))
         query = """
             insert into """ + self.data_table() + """ ( """ + ",".join(fieldnames) + """) values 
             (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """)
@@ -136,15 +137,20 @@ class Tracker(ModelBase):
                     croles.append(role)
 
         print('role:' + str(croles))
+        return croles
 
     def activetransitions(self,record,curuser):
         status = self.status(record)
         roles = self.userroles(curuser,record)
+        atransitions = []
         if status:
-            transitions = dbsession.query(TrackerTransition).filter_by(prev_status=status).all()
-            if len(transitions):
-                return transitions
-        return None
+            transitions = dbsession.query(TrackerTransition).filter(TrackerTransition.prev_status==status,TrackerTransition.tracker==self).all()
+            if len(transitions) and len(roles):
+                for t in transitions:
+                    for r in roles:
+                        if r in t.roles:
+                            atransitions.append(t)
+        return atransitions
 
 
 class TrackerField(ModelBase):
@@ -153,6 +159,8 @@ class TrackerField(ModelBase):
     name = Column(String(50))
     label = Column(String(50))
     field_type = Column(String(20))
+    obj_table = Column(String(50))
+    obj_field = Column(String(100))
 
     tracker_id = reference_col('trackers')
     tracker = relationship('Tracker',backref='fields')
@@ -164,7 +172,7 @@ class TrackerField(ModelBase):
         print("val:" + str(value))
         if self.field_type in ['string','text','date','datetime']:
             return "'" + str(value) + "'"
-        elif self.field_type in ['integer','number']:
+        elif self.field_type in ['integer','number','object']:
             return str(value)
         elif self.field_type=='boolean':
             if value:
@@ -181,6 +189,8 @@ class TrackerField(ModelBase):
         elif self.field_type=='text':
             return 'text'
         elif self.field_type=='integer':
+            return 'integer'
+        elif self.field_type=='object':
             return 'integer'
         elif self.field_type=='number':
             return 'double precision'

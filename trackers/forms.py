@@ -10,7 +10,9 @@ class TrackerForm(Form):
 class TrackerFieldForm(Form):
     name = StringField('Name')
     label = StringField('Label')
-    field_type = SelectField('Type',choices=[('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean')])
+    field_type = SelectField('Type',choices=[('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')])
+    obj_table = StringField('Object Table')
+    obj_field = StringField('Object Field')
 
 class TrackerRoleForm(Form):
     name = StringField('Name')

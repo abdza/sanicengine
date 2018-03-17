@@ -14,3 +14,20 @@
 {% endif %}
 {% endif %}
 {% endblock %}
+{% block endbody %}
+{% set ns = namespace(gotdate = false) %}
+{% for field in transition.edit_fields_list() %}
+{% if field.field_type=='date' %}
+{% if not ns.gotdate %}
+{% set ns.gotdate = true %}
+<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap-datepicker.css') }}'>
+<script src='{{ app.url_for('static', filename='/js/bootstrap-datepicker.min.js')}}'></script>
+{% endif %}
+<script>
+$('#{{field.name}}').datepicker({
+	format: 'yyyy-mm-dd'
+});
+</script>
+{% endif %}
+{% endfor %}
+{% endblock %}
