@@ -7,8 +7,54 @@ from database import dbsession
 from template import render
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
+import os
+from openpyxl import load_workbook
 
 bp = Blueprint('trackers')
+
+@bp.route('/trackers/<slug>/create_from_excel',methods=['POST','GET'])
+def create_from_excel(request,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    fields = []
+    field_types = []
+    if request.method=='POST':
+        if request.form.get('field_name'):
+            field_names = request.form['field_name']
+            field_label = request.form['field_label']
+            field_type = request.form['field_type']
+            for i,name in enumerate(field_names):
+                tfield = TrackerField(tracker=tracker, name=name, label=field_label[i], field_type=field_type[i])
+                dbsession.add(tfield)
+            dbsession.commit()
+            return redirect('/trackers/view/' + str(tracker.id) + '#fields')
+        if request.files.get('excelfile'):
+            dfile = request.files.get('excelfile')
+            ext = dfile.type.split('/')[1]
+            dst = os.path.join('upload',dfile.name)
+            try:
+                # extract starting byte from Content-Range header string
+                range_str = request.headers['Content-Range']
+                start_bytes = int(range_str.split(' ')[1].split('-')[0])
+                with open(dst, 'ab') as f:
+                    f.seek(start_bytes)
+                    f.write(dfile.body)
+            except KeyError:
+                with open(dst, 'wb') as f:
+                    f.write(dfile.body)
+            wb = load_workbook(filename = dst)
+            ws = wb['data']
+            fieldtitles = []
+            fieldtypes = []
+            for row in ws.iter_rows(max_row=1):
+                for cell in row:
+                    fieldtitles.append(cell.value)
+            for row in ws.iter_rows(max_row=1,row_offset=1):
+                for cell in row:
+                    fieldtypes.append(cell.data_type)
+            for i,title in enumerate(fieldtitles):
+                fields.append({'field_name':title,'field_type':fieldtypes[i]})
+        field_types = [('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')]
+    return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types))
 
 @bp.route('/trackers/<slug>/addstatus',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/editstatus/',methods=['POST','GET'],name='editstatus')
@@ -219,6 +265,7 @@ def updatedb(request,id=None):
 def form(request,id=None):
     title = 'Create Tracker'
     form = TrackerForm(request.form)
+    tracker = None
     if request.method=='POST':
         if id:
             tracker = dbsession.query(Tracker).get(int(id))

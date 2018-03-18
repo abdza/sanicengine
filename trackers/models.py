@@ -104,21 +104,23 @@ class Tracker(ModelBase):
 
     def records(self,id=None):
         results = None
-        if id:
-            sqltext = text(
-                    "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table() +  " where id=:id"
-                    )
-            sqltext = sqltext.bindparams(id=id)
-        else:
-            sqltext = text(
-                    "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table()
-                    )
-        results = dbsession.execute(sqltext)
-        if(id):
-            drows = None
-            for row in results:
-                drows = row
-            results = drows
+        fields = self.list_fields_list()
+        if len(fields):
+            if id:
+                sqltext = text(
+                        "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table() +  " where id=:id"
+                        )
+                sqltext = sqltext.bindparams(id=id)
+            else:
+                sqltext = text(
+                        "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table()
+                        )
+            results = dbsession.execute(sqltext)
+            if id:
+                drows = None
+                for row in results:
+                    drows = row
+                results = drows
         return results
 
     def status(self,record):
