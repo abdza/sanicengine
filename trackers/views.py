@@ -25,6 +25,8 @@ def create_from_excel(request,slug=None):
             for i,name in enumerate(field_names):
                 tfield = TrackerField(tracker=tracker, name=name, label=field_label[i], field_type=field_type[i])
                 dbsession.add(tfield)
+            tracker.list_fields = ','.join(field_names)
+            dbsession.add(tracker)
             dbsession.commit()
             return redirect('/trackers/view/' + str(tracker.id) + '#fields')
         if request.files.get('excelfile'):
@@ -52,7 +54,8 @@ def create_from_excel(request,slug=None):
                 for cell in row:
                     fieldtypes.append(cell.data_type)
             for i,title in enumerate(fieldtitles):
-                fields.append({'field_name':title,'field_type':fieldtypes[i]})
+                if title.lower()!='id':
+                    fields.append({'field_name':title,'field_type':fieldtypes[i]})
         field_types = [('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')]
     return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types))
 
