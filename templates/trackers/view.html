@@ -8,6 +8,7 @@
   <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#statuses">Statuses</a></li>
   <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#roles">Roles</a></li>
   <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#transitions">Transitions</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#dataupdates">Data Updates</a></li>
 </ul>
 
 <div class="tab-content">
@@ -86,6 +87,20 @@
 		    <td>{{transition.display_fields}}</td>
 		    <td>{{transition.edit_fields}}</td>
 		    <td><form action='{{ app.url_for('trackers.deletetransition',slug=tracker.slug,transition_id=transition.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete transition {{transition.name}}?")'></form></td>
+	    </tr>
+	    {% endfor %}
+    </table>
+  </div>
+  <div id="dataupdates" class="tab-pane fade">
+    <h3>Data Updates</h3>
+    <a href='{{ app.url_for('trackers.data_update',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <table class='table'>
+	    <tr><th>Created Date</th><th>File Name</th><th>Action</th></tr>
+	    {% for dataupdate in tracker.dataupdates %}
+	    <tr>
+		    <td>{{dataupdate.created_date}}</td>
+		    <td>{{dataupdate.filename}}</td>
+		    <td><form action='{{ app.url_for('trackers.deleteupdate',slug=tracker.slug,update_id=dataupdate.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete data update {{dataupdate.created_date}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>

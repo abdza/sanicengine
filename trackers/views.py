@@ -1,16 +1,76 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
-from sanic.response import html, redirect, json
-from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition
+from sanic.response import html, redirect, json as jsonresponse
+from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition, TrackerDataUpdate
 from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
 from database import dbsession
 from template import render
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
 import os
+import datetime
+import json
 from openpyxl import load_workbook
 
 bp = Blueprint('trackers')
+
+@bp.route('/trackers/<slug>/update/<update_id>/delete',methods=['POST'])
+def deleteupdate(request,slug=None,update_id=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    if update_id:
+        update = dbsession.query(TrackerDataUpdate).get(int(update_id))
+        if(update):
+            if update.filename and os.path.exists(update.filename):
+                os.remove(update.filename)
+            if os.path.exists(os.path.join('upload',tracker.slug,'dataupdate',str(update.id))):
+                os.rmdir(os.path.join('upload',tracker.slug,'dataupdate',str(update.id)))
+            dbsession.delete(update)
+            dbsession.commit()
+    return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
+
+@bp.route('/trackers/<slug>/data_update',methods=['GET','POST'])
+def data_update(request,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    columns = []
+    dataupdate = None
+    if request.method=='POST':
+        if request.form.get('dataupdate_id'):
+            dataupdate = dbsession.query(TrackerDataUpdate).get(str(request.form.get('dataupdate_id')))
+            dataupdate.data_params=json.dumps(request.form)
+            dbsession.add(dataupdate)
+            dbsession.commit()
+            return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
+        if request.files.get('excelfile'):
+            dataupdate = TrackerDataUpdate(tracker=tracker,created_date=datetime.datetime.now())
+            dbsession.add(dataupdate)
+            dbsession.commit()
+            dfile = request.files.get('excelfile')
+            ext = dfile.type.split('/')[1]
+            if not os.path.exists(os.path.join('upload',tracker.slug,'dataupdate',str(dataupdate.id))):
+                os.makedirs(os.path.join('upload',tracker.slug,'dataupdate',str(dataupdate.id)))
+            dst = os.path.join('upload',tracker.slug,'dataupdate',str(dataupdate.id),dfile.name)
+            try:
+                # extract starting byte from Content-Range header string
+                range_str = request.headers['Content-Range']
+                start_bytes = int(range_str.split(' ')[1].split('-')[0])
+                with open(dst, 'ab') as f:
+                    f.seek(start_bytes)
+                    f.write(dfile.body)
+            except KeyError:
+                with open(dst, 'wb') as f:
+                    f.write(dfile.body)
+            dataupdate.filename = dst
+            dbsession.add(dataupdate)
+            dbsession.commit()
+            wb = load_workbook(filename = dst)
+            ws = wb.active
+            columns.append({'field_val':'ignore','field_name':'Ignore'})
+            columns.append({'field_val':'custom','field_name':'Custom'})
+            for row in ws.iter_rows(max_row=1):
+                for cell in row:
+                    if cell.value.lower() != 'id':
+                        columns.append({'field_val':cell.column,'field_name':cell.value})
+    return html(render(request,'/trackers/data_update.html',tracker=tracker,columns=columns,dataupdate=dataupdate))
 
 @bp.route('/trackers/<slug>/create_from_excel',methods=['POST','GET'])
 def create_from_excel(request,slug=None):
@@ -44,7 +104,7 @@ def create_from_excel(request,slug=None):
                 with open(dst, 'wb') as f:
                     f.write(dfile.body)
             wb = load_workbook(filename = dst)
-            ws = wb['data']
+            ws = wb.active
             fieldtitles = []
             fieldtypes = []
             for row in ws.iter_rows(max_row=1):
@@ -56,6 +116,7 @@ def create_from_excel(request,slug=None):
             for i,title in enumerate(fieldtitles):
                 if title.lower()!='id':
                     fields.append({'field_name':title,'field_type':fieldtypes[i]})
+            os.remove(dst)
         field_types = [('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')]
     return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types))
 
@@ -102,7 +163,7 @@ def deletestatus(request,slug=None,status_id=None):
 def rolesjson(request,slug=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
     trackerroles = dbsession.query(TrackerRole).filter(TrackerRole.tracker==tracker,TrackerRole.name.ilike('%' + request.args['q'][0] + '%')).all() 
-    return json([ {'id':role.id,'name':role.name} for role in trackerroles ])
+    return jsonresponse([ {'id':role.id,'name':role.name} for role in trackerroles ])
 
 @bp.route('/trackers/<slug>/addtransition',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/edittransition/',methods=['POST','GET'],name='edittransition')
@@ -247,7 +308,7 @@ def fieldjson(request,slug=None,field_id=None):
         if(trackerfield):
             sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where " + " or ".join([field + " like '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ])
             results = dbsession.execute(sqlq)
-            return json([ {'id':result.id,'name':result.name} for result in results ])
+            return jsonresponse([ {'id':result.id,'name':result.name} for result in results ])
 
 
 @bp.route('/trackers/view/')
@@ -302,7 +363,8 @@ def form(request,id=None):
 def index(request):
     trackers = dbsession.query(Tracker)
     paginator = Paginator(trackers, 5)
-    return html(render(request, 'generic/list.html',title='Trackers',editlink=request.app.url_for('trackers.view'),addlink=request.app.url_for('trackers.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'List Fields','name':'list_fields'}],paginator=paginator,curpage=paginator.page(int(request.args['tracker'][0]) if 'tracker' in request.args else 1)))
+    print('page:' + str(request.args['page'][0]))
+    return html(render(request, 'generic/list.html',title='Trackers',editlink=request.app.url_for('trackers.view'),addlink=request.app.url_for('trackers.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'List Fields','name':'list_fields'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/system/<slug>/')
 def viewlist(request,slug=None):
