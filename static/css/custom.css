@@ -57,3 +57,7 @@ main {
 .form-group {
 	position: relative;
 }
+
+.navbar-dark span {
+	color: #fff;
+}

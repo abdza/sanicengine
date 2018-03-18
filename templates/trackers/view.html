@@ -16,6 +16,7 @@
     <a href='{{ app.url_for('trackers.edit') }}/{{ tracker.id }}' class='btn btn-primary'>Edit</a>
     <a href='{{ app.url_for('trackers.updatedb',id=tracker.id) }}' class='btn btn-primary'>Update DB</a>
     <a href='{{ app.url_for('trackers.viewlist',slug=tracker.slug) }}' class='btn btn-primary'>View Tracker</a>
+    <a href='{{ app.url_for('trackers.create_from_excel',slug=tracker.slug) }}' class='btn btn-primary'>From Excel</a>
 	<dl>
 		<dt>Title</dt>
 		<dd>{{tracker.title}}</dd>

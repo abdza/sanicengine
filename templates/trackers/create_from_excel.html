@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>Create From Excel</h1>
+<h2>{{tracker.title}}</h2>
+<form method='POST' enctype='multipart/form-data'>
+	{% if fields|length %}
+	<table class='table'>
+		<tr><th>Name</th><th>Label</th><th>Type</th></tr>
+	{% for field in fields %}
+	<tr>
+		<td><input name='field_name' value='{{field.field_name}}'></td>
+		<td><input name='field_label' value='{{field.field_name|replace('_',' ')|title}}'></td>
+		<td>
+			<select name='field_type'>
+				{% for v,t in field_types %}
+				<option value='{{v}}' {% if field.field_type=='n' and v=='integer' %}selected{% endif %}>{{t}}</option>
+				{% endfor %}
+			</select>
+		</td>
+	</tr>
+	{% endfor %}
+	</table>
+	{% else %}
+<div class="form-group row">
+	<label class="col-sm-2 col-form-label" for="excelfile">Excel File</label>
+	<input class="col-sm-10 form-control" id="excelfile" name="excelfile" type="file">
+</div>
+{% endif %}
+<input type='submit' value='Submit' class='btn btn-primary'>
+</form>
+{% endblock %}

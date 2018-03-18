@@ -7,3 +7,4 @@ wtforms
 sqlalchemy-paginator
 sanic_session
 cryptography
+openpyxl
