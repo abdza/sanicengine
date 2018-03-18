@@ -3,7 +3,7 @@
 import datetime as dt
 
 from database import ModelBase, dbsession, reference_col
-from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolean, Date, Table, MetaData, select
+from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolean, DateTime, Date, Table, MetaData, select
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
 from template import render_string
@@ -25,7 +25,6 @@ class Tracker(ModelBase):
             pfields = self.list_fields.split(',')
             rfields = []
             for pfield in pfields:
-                print("pfield:" + pfield)
                 rfield = dbsession.query(TrackerField).filter_by(tracker=self,name=pfield.strip()).first()
                 if rfield:
                     rfields.append(rfield)
@@ -243,6 +242,19 @@ class TrackerRole(ModelBase):
 
     tracker_id = reference_col('trackers')
     tracker = relationship('Tracker',backref='roles')
+
+    def __repr__(self):
+        return self.name
+
+class TrackerDataUpdate(ModelBase):
+    __tablename__ = 'tracker_data_update'
+    id = Column(Integer, primary_key=True)
+    created_date = Column(DateTime)
+    filename = Column(String(200))
+    data_params = Column(Text,nullable=True)
+
+    tracker_id = reference_col('trackers')
+    tracker = relationship('Tracker',backref='dataupdates')
 
     def __repr__(self):
         return self.name
