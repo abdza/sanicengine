@@ -18,6 +18,7 @@
     <a href='{{ app.url_for('trackers.updatedb',id=tracker.id) }}' class='btn btn-primary'>Update DB</a>
     <a href='{{ app.url_for('trackers.viewlist',slug=tracker.slug) }}' class='btn btn-primary'>View Tracker</a>
     <a href='{{ app.url_for('trackers.create_from_excel',slug=tracker.slug) }}' class='btn btn-primary'>From Excel</a>
+    <a href='{{ app.url_for('trackers.runupdate',slug=tracker.slug) }}' class='btn btn-primary'>Run Update</a>
 	<dl>
 		<dt>Title</dt>
 		<dd>{{tracker.title}}</dd>
@@ -95,11 +96,12 @@
     <h3>Data Updates</h3>
     <a href='{{ app.url_for('trackers.data_update',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
-	    <tr><th>Created Date</th><th>File Name</th><th>Action</th></tr>
+	    <tr><th>Created Date</th><th>File Name</th><th>Status</th><th>Action</th></tr>
 	    {% for dataupdate in tracker.dataupdates %}
 	    <tr>
 		    <td>{{dataupdate.created_date}}</td>
 		    <td>{{dataupdate.filename}}</td>
+		    <td>{{dataupdate.status}}</td>
 		    <td><form action='{{ app.url_for('trackers.deleteupdate',slug=tracker.slug,update_id=dataupdate.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete data update {{dataupdate.created_date}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
