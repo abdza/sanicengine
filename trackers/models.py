@@ -8,6 +8,8 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
 from template import render_string
 from users.models import ModuleRole
+from openpyxl import load_workbook
+import json
 
 class Tracker(ModelBase):
     __tablename__ = 'trackers'
@@ -57,12 +59,12 @@ class Tracker(ModelBase):
             then
                 create table public.""" + self.data_table() + """(
                     id integer not null default nextval('""" + self.data_table() + """_id_seq'::regclass),
-                    record_status character varying(50) 
+                    record_status character varying(50) ,
+                    batch_no integer
                 );
             end if;
             end$$;
         """
-        print(query)
         dbsession.execute(query)
         dbsession.commit()
         for field in self.fields:
@@ -188,7 +190,7 @@ class TrackerField(ModelBase):
 
     def sqlvalue(self, value):
         if self.field_type in ['string','text','date','datetime']:
-            return "'" + str(value) + "'"
+            return "'" + str(value.replace("'","''")) + "'"
         elif self.field_type in ['integer','number','object']:
             return str(value)
         elif self.field_type=='boolean':
@@ -249,6 +251,7 @@ class TrackerRole(ModelBase):
 class TrackerDataUpdate(ModelBase):
     __tablename__ = 'tracker_data_update'
     id = Column(Integer, primary_key=True)
+    status = Column(String(10))
     created_date = Column(DateTime)
     filename = Column(String(200))
     data_params = Column(Text,nullable=True)
@@ -258,6 +261,37 @@ class TrackerDataUpdate(ModelBase):
 
     def __repr__(self):
         return self.name
+
+    def run(self):
+        wb = load_workbook(filename = self.filename)
+        ws = wb.active
+        datas = json.loads(self.data_params)
+        fields = []
+        for field in self.tracker.fields:
+            if field.name != 'id' and datas[field.name + '_column'][0]!='ignore':
+                fields.append(field)
+        query = 'insert into ' + self.tracker.data_table() + ' (' + ','.join([ f.name for f in fields ]) + ') values '
+        rows = []
+        headerend = 1
+        query = 'insert into ' + self.tracker.data_table() + ' (' + ','.join([ f.name for f in fields ]) + ') values '
+        for i,row in enumerate(ws.rows):
+            if i>headerend:
+                cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] for f in fields]
+                cellpos = [ datas[f.name + '_column'][0] + str(i+1) for f in fields ]
+                drowdata = [ f.value for f in cellrows ]
+                sqlrowdata = [ f.sqlvalue(drowdata[dd]) for dd,f in enumerate(fields) ]
+                drow = '('
+                drow = drow + ','.join(sqlrowdata)
+                drow = drow + ')'
+                rows.append(drow)
+        query = query + ','.join(rows)
+        try:
+            dbsession.execute(query)
+            dbsession.commit()
+        except Exception as inst:
+            print(inst)
+            dbsession.rollback()
+        return True
 
 class TrackerStatus(ModelBase):
     __tablename__ = 'tracker_statuses'
@@ -301,7 +335,6 @@ class TrackerTransition(ModelBase):
         pfields = self.edit_fields.split(',')
         rfields = []
         for pfield in pfields:
-            print("pfield:" + pfield)
             rfield = dbsession.query(TrackerField).filter_by(tracker=self.tracker,name=pfield.strip()).first()
             if rfield:
                 rfields.append(rfield)

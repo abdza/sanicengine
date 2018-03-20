@@ -14,6 +14,18 @@ from openpyxl import load_workbook
 
 bp = Blueprint('trackers')
 
+@bp.route('/trackers/<slug>/update/run',methods=['GET'])
+def runupdate(request,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    updates = dbsession.query(TrackerDataUpdate).filter_by(status='new').all()
+    for update in updates:
+        update.status = 'in queue'
+        dbsession.add(update)
+    dbsession.commit()
+    for update in updates:
+        update.run()
+    return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
+
 @bp.route('/trackers/<slug>/update/<update_id>/delete',methods=['POST'])
 def deleteupdate(request,slug=None,update_id=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
@@ -41,7 +53,7 @@ def data_update(request,slug=None):
             dbsession.commit()
             return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
         if request.files.get('excelfile'):
-            dataupdate = TrackerDataUpdate(tracker=tracker,created_date=datetime.datetime.now())
+            dataupdate = TrackerDataUpdate(status='new',tracker=tracker,created_date=datetime.datetime.now())
             dbsession.add(dataupdate)
             dbsession.commit()
             dfile = request.files.get('excelfile')
@@ -363,7 +375,6 @@ def form(request,id=None):
 def index(request):
     trackers = dbsession.query(Tracker)
     paginator = Paginator(trackers, 5)
-    print('page:' + str(request.args['page'][0]))
     return html(render(request, 'generic/list.html',title='Trackers',editlink=request.app.url_for('trackers.view'),addlink=request.app.url_for('trackers.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'List Fields','name':'list_fields'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/system/<slug>/')
