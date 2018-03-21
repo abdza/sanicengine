@@ -38,6 +38,11 @@
 			$('input#roles').tokenInput('{{ app.url_for('trackers.rolesjson',slug=tracker.slug) }}',{ {% if rolesdata %}prePopulate:[{% for role in rolesdata %}{id:{{ role.id }},name:"{{ role.name }}"},{% endfor %}]{% endif %}});
 			{% endif %}
 			{% endif %}
+			{% if tokeninput %}
+			{% for key,input in tokeninput.items() %}
+			$('input#{{key}}').tokenInput('{{ input.url }}',{ {% if input.prePopulate %}prePopulate:[{% for data in input.prePopulate %}{id:{{ data.id }},name:"{{ data.name }}"},{% endfor %}]{% endif %}});
+			{% endfor %}
+			{% endif %}
 		});
 	</script>
 {% endblock %}

@@ -5,7 +5,7 @@ class TrackerForm(Form):
     title = StringField('Title')
     slug = StringField('Slug')
     module = StringField('Module')
-    list_fields = TextAreaField('List Fields')
+    list_fields = StringField('List Fields')
 
 class TrackerFieldForm(Form):
     name = StringField('Name')

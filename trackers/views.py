@@ -177,6 +177,12 @@ def rolesjson(request,slug=None):
     trackerroles = dbsession.query(TrackerRole).filter(TrackerRole.tracker==tracker,TrackerRole.name.ilike('%' + request.args['q'][0] + '%')).all() 
     return jsonresponse([ {'id':role.id,'name':role.name} for role in trackerroles ])
 
+@bp.route('/trackers/<slug>/fields/json')
+def trackerfieldsjson(request,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    trackerfields = dbsession.query(TrackerField).filter(TrackerField.tracker==tracker,TrackerField.name.ilike('%' + request.args['q'][0] + '%')).all() 
+    return jsonresponse([ {'id':field.id,'name':field.name} for field in trackerfields ])
+
 @bp.route('/trackers/<slug>/addtransition',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/edittransition/',methods=['POST','GET'],name='edittransition')
 @bp.route('/trackers/<slug>/edittransition/<id>',methods=['POST','GET'],name='edittransition')
@@ -344,6 +350,8 @@ def form(request,id=None):
     title = 'Create Tracker'
     form = TrackerForm(request.form)
     tracker = None
+    tokeninput = None
+    newtracker = False
     if request.method=='POST':
         if id:
             tracker = dbsession.query(Tracker).get(int(id))
@@ -352,16 +360,21 @@ def form(request,id=None):
         if form.validate():
             if not tracker:
                 tracker=Tracker()
+                newtracker = True
             form.populate_obj(tracker)
+            print('list:' + str(form['list_fields'].data))
+            if form['list_fields'].data:
+                tracker.list_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['list_fields'].data.split(',') ])
             dbsession.add(tracker)
-            newstatus = TrackerStatus(name='New',tracker=tracker)
-            dbsession.add(newstatus)
-            adminrole = TrackerRole(name='Admin',role_type='module',tracker=tracker)
-            dbsession.add(adminrole)
-            statusfield = TrackerField(name='record_status',label='Status',tracker=tracker,field_type='string')
-            dbsession.add(statusfield)
-            idfield = TrackerField(name='id',label='ID',tracker=tracker,field_type='integer')
-            dbsession.add(idfield)
+            if newtracker:
+                newstatus = TrackerStatus(name='New',tracker=tracker)
+                dbsession.add(newstatus)
+                adminrole = TrackerRole(name='Admin',role_type='module',tracker=tracker)
+                dbsession.add(adminrole)
+                statusfield = TrackerField(name='record_status',label='Status',tracker=tracker,field_type='string')
+                dbsession.add(statusfield)
+                idfield = TrackerField(name='id',label='ID',tracker=tracker,field_type='integer')
+                dbsession.add(idfield)
             dbsession.commit()
             return redirect('/trackers/view/' + str(tracker.id))
     else:
@@ -370,8 +383,14 @@ def form(request,id=None):
             if tracker:
                 form = TrackerForm(obj=tracker)
                 title = 'Edit Tracker'
+                tokeninput = {
+                        'list_fields': {
+                            'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
+                            'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.list_fields_list() ]
+                            },
+                        }
 
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',tokeninput=tokeninput))
 
 @bp.route('/trackers')
 def index(request):
