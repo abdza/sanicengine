@@ -251,7 +251,7 @@ class TrackerRole(ModelBase):
 class TrackerDataUpdate(ModelBase):
     __tablename__ = 'tracker_data_update'
     id = Column(Integer, primary_key=True)
-    status = Column(String(10))
+    status = Column(String(50))
     created_date = Column(DateTime)
     filename = Column(String(200))
     data_params = Column(Text,nullable=True)
@@ -287,6 +287,9 @@ class TrackerDataUpdate(ModelBase):
         query = query + ','.join(rows)
         try:
             dbsession.execute(query)
+            dbsession.commit()
+            self.status = 'Uploaded ' + str(len(rows)) + ' rows'
+            dbsession.add(self)
             dbsession.commit()
         except Exception as inst:
             print(inst)
