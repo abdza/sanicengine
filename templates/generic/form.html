@@ -33,11 +33,6 @@
 			{% if 'user' in form %}
 			$('input#user').tokenInput('{{ app.url_for('users.userjson') }}',{tokenLimit:1{% if userdata %},prePopulate:[{id:{{ userdata.id }},name:"{{ userdata.name }}"}]{% endif %}});
 			{% endif %}
-			{% if 'roles' in form %}
-			{% if tracker %}
-			$('input#roles').tokenInput('{{ app.url_for('trackers.rolesjson',slug=tracker.slug) }}',{ {% if rolesdata %}prePopulate:[{% for role in rolesdata %}{id:{{ role.id }},name:"{{ role.name }}"},{% endfor %}]{% endif %}});
-			{% endif %}
-			{% endif %}
 			{% if tokeninput %}
 			{% for key,input in tokeninput.items() %}
 			$('input#{{key}}').tokenInput('{{ input.url }}',{ {% if input.prePopulate %}prePopulate:[{% for data in input.prePopulate %}{id:{{ data.id }},name:"{{ data.name }}"},{% endfor %}]{% endif %}});
