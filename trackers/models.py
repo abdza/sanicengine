@@ -66,7 +66,10 @@ class Tracker(ModelBase):
             end$$;
         """
         dbsession.execute(query)
-        dbsession.commit()
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
         for field in self.fields:
             field.updatedb()
 
@@ -96,10 +99,7 @@ class Tracker(ModelBase):
             oldrecord = self.records(form['id'][0])
             del(form['id'])
         fieldnames = list(form.keys())
-        print('fieldnames:' + str(fieldnames))
-        print('oldrecord:' + str(oldrecord))
         query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id'])
-        print("qry:" + query)
         dbsession.execute(query)
         dbsession.commit()
 
@@ -292,7 +292,6 @@ class TrackerDataUpdate(ModelBase):
             dbsession.add(self)
             dbsession.commit()
         except Exception as inst:
-            print(inst)
             dbsession.rollback()
         return True
 

@@ -21,7 +21,11 @@ def runupdate(request,slug=None):
     for update in updates:
         update.status = 'in queue'
         dbsession.add(update)
-    dbsession.commit()
+    try:
+        dbsession.commit()
+    except Exception as inst:
+        dbsession.rollback()
+
     for update in updates:
         update.run()
     return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
@@ -37,7 +41,10 @@ def deleteupdate(request,slug=None,update_id=None):
             if os.path.exists(os.path.join('upload',tracker.slug,'dataupdate',str(update.id))):
                 os.rmdir(os.path.join('upload',tracker.slug,'dataupdate',str(update.id)))
             dbsession.delete(update)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
     return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
 
 @bp.route('/trackers/<slug>/data_update',methods=['GET','POST'])
@@ -50,12 +57,18 @@ def data_update(request,slug=None):
             dataupdate = dbsession.query(TrackerDataUpdate).get(str(request.form.get('dataupdate_id')))
             dataupdate.data_params=json.dumps(request.form)
             dbsession.add(dataupdate)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
         if request.files.get('excelfile'):
             dataupdate = TrackerDataUpdate(status='new',tracker=tracker,created_date=datetime.datetime.now())
             dbsession.add(dataupdate)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             dfile = request.files.get('excelfile')
             ext = dfile.type.split('/')[1]
             if not os.path.exists(os.path.join('upload',tracker.slug,'dataupdate',str(dataupdate.id))):
@@ -73,7 +86,10 @@ def data_update(request,slug=None):
                     f.write(dfile.body)
             dataupdate.filename = dst
             dbsession.add(dataupdate)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             wb = load_workbook(filename = dst)
             ws = wb.active
             columns.append({'field_val':'ignore','field_name':'Ignore'})
@@ -99,7 +115,10 @@ def create_from_excel(request,slug=None):
                 dbsession.add(tfield)
             tracker.list_fields = ','.join(field_names)
             dbsession.add(tracker)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             return redirect('/trackers/view/' + str(tracker.id) + '#fields')
         if request.files.get('excelfile'):
             dfile = request.files.get('excelfile')
@@ -153,7 +172,10 @@ def statusform(request,slug=None,id=None):
             if form['display_fields'].data:
                 trackerstatus.display_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['display_fields'].data.split(',') ])
             dbsession.add(trackerstatus)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             return redirect('/trackers/view/' + str(trackerstatus.tracker.id) + '#statuses')
     else:
         if id:
@@ -176,7 +198,10 @@ def deletestatus(request,slug=None,status_id=None):
         trackerstatus = dbsession.query(TrackerStatus).get(int(status_id))
         if(trackerstatus):
             dbsession.delete(trackerstatus)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
     return redirect('/trackers/view/' + str(trackerstatus.tracker.id) + '#statuses')
 
 @bp.route('/trackers/<slug>/roles/json')
@@ -252,7 +277,10 @@ def transitionform(request,slug=None,id=None):
                 trackertransition.next_status_id = None
             trackertransition.tracker = tracker
             dbsession.add(trackertransition)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             return redirect('/trackers/view/' + str(trackertransition.tracker.id) + '#transitions')
     else:
         if id:
@@ -274,7 +302,10 @@ def deletetransition(request,slug=None,transition_id=None):
         trackertransition = dbsession.query(TrackerTransition).get(int(transition_id))
         if(trackertransition):
             dbsession.delete(trackertransition)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
     return redirect('/trackers/view/' + str(trackertransition.tracker.id) + '#transitions')
 
 @bp.route('/trackers/<slug>/addrole',methods=['POST','GET'])
@@ -296,7 +327,10 @@ def roleform(request,slug=None,id=None):
             form.populate_obj(trackerrole)
             trackerrole.tracker = tracker
             dbsession.add(trackerrole)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             return redirect('/trackers/view/' + str(trackerrole.tracker.id) + '#roles')
     else:
         if id:
@@ -313,7 +347,10 @@ def deleterole(request,slug=None,role_id=None):
         trackerrole = dbsession.query(TrackerRole).get(int(role_id))
         if(trackerrole):
             dbsession.delete(trackerrole)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
     return redirect('/trackers/view/' + str(trackerrole.tracker.id) + '#roles')
 
 @bp.route('/trackers/<slug>/addfield',methods=['POST','GET'])
@@ -335,7 +372,10 @@ def fieldform(request,slug=None,id=None):
             form.populate_obj(trackerfield)
             trackerfield.tracker = tracker
             dbsession.add(trackerfield)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             return redirect('/trackers/view/' + str(trackerfield.tracker.id) + '#fields')
     else:
         if id:
@@ -352,7 +392,10 @@ def deletefield(request,slug=None,field_id=None):
         trackerfield = dbsession.query(TrackerField).get(int(field_id))
         if(trackerfield):
             dbsession.delete(trackerfield)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
     return redirect('/trackers/view/' + str(trackerfield.tracker.id) + '#fields')
 
 @bp.route('/trackers/<slug>/field/<field_id>/json')
@@ -411,7 +454,10 @@ def form(request,id=None):
                 dbsession.add(statusfield)
                 idfield = TrackerField(name='id',label='ID',tracker=tracker,field_type='integer')
                 dbsession.add(idfield)
-            dbsession.commit()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
             return redirect('/trackers/view/' + str(tracker.id))
     else:
         if id:
