@@ -21,12 +21,12 @@ class TrackerRoleForm(Form):
 
 class TrackerStatusForm(Form):
     name = StringField('Name')
-    display_fields = TextAreaField('Display Fields')
+    display_fields = StringField('Display Fields')
 
 class TrackerTransitionForm(Form):
     name = StringField('Name')
     roles = StringField('Roles')
-    display_fields = TextAreaField('Display Fields')
-    edit_fields = TextAreaField('Edit Fields')
+    display_fields = StringField('Display Fields')
+    edit_fields = StringField('Edit Fields')
     prev_status_id = SelectField('Prev Status')
     next_status_id = SelectField('Next Status')

@@ -150,6 +150,8 @@ def statusform(request,slug=None,id=None):
                 trackerstatus=TrackerStatus()
             form.populate_obj(trackerstatus)
             trackerstatus.tracker = tracker
+            if form['display_fields'].data:
+                trackerstatus.display_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['display_fields'].data.split(',') ])
             dbsession.add(trackerstatus)
             dbsession.commit()
             return redirect('/trackers/view/' + str(trackerstatus.tracker.id) + '#statuses')
@@ -159,7 +161,13 @@ def statusform(request,slug=None,id=None):
         if trackerstatus:
             form = TrackerStatusForm(obj=trackerstatus)
             title = 'Edit Tracker Status'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+            tokeninput = {
+                    'display_fields': {
+                        'url': request.app.url_for('trackers.trackerfieldsjson',slug=trackerstatus.tracker.slug),
+                        'prePopulate':[ {'id':field.id,'name':field.name} for field in trackerstatus.tracker.list_fields_list() ]
+                        },
+                    }
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',tokeninput=tokeninput))
 
 @bp.route('/trackers/<slug>/status/<status_id>/delete',methods=['POST'])
 def deletestatus(request,slug=None,status_id=None):
@@ -183,6 +191,17 @@ def trackerfieldsjson(request,slug=None):
     trackerfields = dbsession.query(TrackerField).filter(TrackerField.tracker==tracker,TrackerField.name.ilike('%' + request.args['q'][0] + '%')).all() 
     return jsonresponse([ {'id':field.id,'name':field.name} for field in trackerfields ])
 
+@bp.route('/trackers/test')
+def test(request):
+    slug='hghg'
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    dstatuses = [('','None'),] + [(str(g.id),g.name) for g in dbsession.query(TrackerStatus).filter(TrackerStatus.tracker==tracker).all()]
+    role_ids = [17,18]
+    roles = [ dbsession.query(TrackerRole).get(role_id) for role_id in role_ids ]
+    field_ids = '81,82,83'
+    display_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in field_ids.split(',') ])
+    return html('<h1>SD</h1>')
+
 @bp.route('/trackers/<slug>/addtransition',methods=['POST','GET'])
 @bp.route('/trackers/<slug>/edittransition/',methods=['POST','GET'],name='edittransition')
 @bp.route('/trackers/<slug>/edittransition/<id>',methods=['POST','GET'],name='edittransition')
@@ -194,6 +213,17 @@ def transitionform(request,slug=None,id=None):
     form.prev_status_id.choices = dstatuses
     form.next_status_id.choices = dstatuses
     trackertransition = None
+    tokeninput = {
+            'display_fields': {
+                'url': request.app.url_for('trackers.trackerfieldsjson',slug=slug),
+                },
+            'edit_fields': {
+                'url': request.app.url_for('trackers.trackerfieldsjson',slug=slug),
+                },
+            'roles': {
+                'url': request.app.url_for('trackers.rolesjson',slug=slug),
+                },
+            }
     if id:
         trackertransition = dbsession.query(TrackerTransition).get(int(id))
     if trackertransition:
@@ -210,6 +240,10 @@ def transitionform(request,slug=None,id=None):
                 trackertransition.roles = []
             del(form['roles'])
             form.populate_obj(trackertransition)
+            if form['display_fields'].data:
+                trackertransition.display_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['display_fields'].data.split(',') ])
+            if form['edit_fields'].data:
+                trackertransition.edit_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['edit_fields'].data.split(',') ])
             if form.prev_status_id.data=='':
                 trackertransition.prev_status = None
                 trackertransition.prev_status_id = None
@@ -228,7 +262,10 @@ def transitionform(request,slug=None,id=None):
             form.prev_status_id.choices = dstatuses
             form.next_status_id.choices = dstatuses
             title = 'Edit Tracker Transition'
-    return html(render(request,'generic/form.html',title=title,rolesdata=trackertransition.roles,form=form,tracker=tracker,enctype='multipart/form-data'))
+            tokeninput['display_fields']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.tracker.list_fields_list() ]
+            tokeninput['edit_fields']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.tracker.list_fields_list() ]
+            tokeninput['roles']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.roles ]
+    return html(render(request,'generic/form.html',title=title,form=form,tracker=tracker,enctype='multipart/form-data',tokeninput=tokeninput))
 
 @bp.route('/trackers/<slug>/transition/<transition_id>/delete',methods=['POST'])
 def deletetransition(request,slug=None,transition_id=None):
@@ -362,7 +399,6 @@ def form(request,id=None):
                 tracker=Tracker()
                 newtracker = True
             form.populate_obj(tracker)
-            print('list:' + str(form['list_fields'].data))
             if form['list_fields'].data:
                 tracker.list_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['list_fields'].data.split(',') ])
             dbsession.add(tracker)
