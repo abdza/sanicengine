@@ -19,7 +19,7 @@ async def download(request,slug):
 @bp.route('/files/create',methods=['POST','GET'])
 @bp.route('/files/edit/',methods=['POST','GET'],name='edit')
 @bp.route('/files/edit/<slug>',methods=['POST','GET'])
-def form(request,slug=None):
+async def form(request,slug=None):
     title = 'Create File Link'
     form = FileLinkForm(request.form)
     if request.method=='POST':
@@ -65,7 +65,7 @@ def form(request,slug=None):
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
 @bp.route('/files')
-def index(request):
+async def index(request):
     filelinks = dbsession.query(FileLink)
     paginator = Paginator(filelinks, 5)
     return html(render(request, 'generic/list.html',title='Files',editlink=request.app.url_for('fileLinks.edit'),addlink=request.app.url_for('fileLinks.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'Module','name':'module'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

@@ -10,7 +10,7 @@ from sqlalchemy_paginator import Paginator
 bp = Blueprint('pages')
 
 @bp.route('/view/<slug>')
-def view(request, slug):
+async def view(request, slug):
     page = dbsession.query(Page).filter_by(slug=slug).first()
     if page:
         return html(page.render())
@@ -21,7 +21,7 @@ def view(request, slug):
 @bp.route('/pages/create',methods=['POST','GET'])
 @bp.route('/pages/edit/',methods=['POST','GET'],name='edit')
 @bp.route('/pages/edit/<slug>',methods=['POST','GET'])
-def form(request,slug=None):
+async def form(request,slug=None):
     title = 'Create Page'
     form = PageForm(request.form)
     if request.method=='POST':
@@ -49,7 +49,7 @@ def form(request,slug=None):
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
 @bp.route('/pages')
-def index(request):
+async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 5)
     return html(render(request, 'generic/list.html',title='Pages',editlink=request.app.url_for('pages.edit'),addlink=request.app.url_for('pages.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
