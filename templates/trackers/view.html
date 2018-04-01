@@ -19,6 +19,7 @@
     <a href='{{ app.url_for('trackers.viewlist',slug=tracker.slug) }}' class='btn btn-primary'>View Tracker</a>
     <a href='{{ app.url_for('trackers.create_from_excel',slug=tracker.slug) }}' class='btn btn-primary'>From Excel</a>
     <a href='{{ app.url_for('trackers.runupdate',slug=tracker.slug) }}' class='btn btn-primary'>Run Update</a>
+    <form style='display: inline;' method='post' action='{{ app.url_for('trackers.delete', slug=tracker.slug) }}' onsubmit='return confirm("Delete tracker {{ tracker.title }}");'><input type='submit' class="btn btn-primary" value='Delete' ></form>
 	<dl>
 		<dt>Title</dt>
 		<dd>{{tracker.title}}</dd>

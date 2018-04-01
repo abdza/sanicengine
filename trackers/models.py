@@ -7,7 +7,7 @@ from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolea
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
 from template import render_string
-from users.models import ModuleRole
+from users.models import ModuleRole, User
 from openpyxl import load_workbook
 import json
 
@@ -31,6 +31,17 @@ class Tracker(ModelBase):
                 if rfield:
                     rfields.append(rfield)
             return rfields
+
+    def fields_from_list(self,field_list=None):
+        rfields = []
+        if field_list:
+            pfields = field_list.split(',')
+            rfields = []
+            for pfield in pfields:
+                rfield = dbsession.query(TrackerField).filter_by(tracker=self,name=pfield.strip()).first()
+                if rfield:
+                    rfields.append(rfield)
+        return rfields
 
     def data_table(self):
         return "trak_" + self.slug + "_data"
@@ -63,6 +74,26 @@ class Tracker(ModelBase):
                     batch_no integer
                 );
             end if;
+            if (select to_regclass('public.""" + self.update_table() + """_id_seq')) is null
+            then
+                create sequence public.""" + self.update_table() + """_id_seq
+                increment 1
+                minvalue 1
+                maxvalue 9223372036854775807
+                start 1
+                cache 1;
+            end if;
+            if (select to_regclass('public.""" + self.update_table() + """')) is null
+            then
+                create table public.""" + self.update_table() + """(
+                    id integer not null default nextval('""" + self.update_table() + """_id_seq'::regclass),
+                    record_id integer,
+                    user_id integer,
+                    record_status character varying(50),
+                    update_date timestamp,
+                    description text
+                );
+            end if;
             end$$;
         """
         dbsession.execute(query)
@@ -73,7 +104,10 @@ class Tracker(ModelBase):
         for field in self.fields:
             field.updatedb()
 
-    def addrecord(self, form):
+    def addrecord(self, form, request):
+        curuser = None
+        if 'user_id' in request['session']:
+            curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'transition_id' in form:
             transition = dbsession.query(TrackerTransition).get(form['transition_id'][0])
             if transition and transition.next_status:
@@ -83,12 +117,32 @@ class Tracker(ModelBase):
         print("fieldnames:" + str(fieldnames))
         query = """
             insert into """ + self.data_table() + """ ( """ + ",".join(fieldnames) + """) values 
-            (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """)
+            (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """) returning *
         """
-        dbsession.execute(query)
-        dbsession.commit()
+        try:
+            data = dbsession.execute(query).fetchone()
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+        desc = ''
+        if curuser:
+            desc = 'Updated by ' + curuser.name
+        else:
+            desc = 'Updated by anonymous'
 
-    def editrecord(self, form):
+        query = """
+            insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
+            ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
+        try:
+            dbsession.execute(query)
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+
+    def editrecord(self, form, request):
+        curuser = None
+        if 'user_id' in request['session']:
+            curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'transition_id' in form:
             transition = dbsession.query(TrackerTransition).get(form['transition_id'][0])
             if transition and transition.next_status:
@@ -99,9 +153,25 @@ class Tracker(ModelBase):
             oldrecord = self.records(form['id'][0])
             del(form['id'])
         fieldnames = list(form.keys())
-        query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id'])
-        dbsession.execute(query)
-        dbsession.commit()
+        query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id'] + " returning *")
+        try:
+            data = dbsession.execute(query).fetchone()
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+        desc = ''
+        if curuser:
+            desc = 'Updated by ' + curuser.name
+        else:
+            desc = 'Updated by anonymous'
+        query = """
+            insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
+            ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
+        try:
+            dbsession.execute(query)
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
 
     def records(self,id=None):
         results = None
@@ -116,7 +186,10 @@ class Tracker(ModelBase):
                 sqltext = text(
                         "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table()
                         )
-            results = dbsession.execute(sqltext)
+            try:
+                results = dbsession.execute(sqltext)
+            except Exception as inst:
+                dbsession.rollback()
             if id:
                 drows = None
                 for row in results:

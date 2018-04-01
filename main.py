@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from sanic import Sanic
 from sanic.response import json, html, redirect
 from sanic_session import InMemorySessionInterface

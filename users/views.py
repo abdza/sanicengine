@@ -29,7 +29,7 @@ async def logout(request):
 @bp.route('/module_roles/create',methods=['POST','GET'])
 @bp.route('/module_roles/edit/',methods=['POST','GET'],name='module_role_edit')
 @bp.route('/module_roles/edit/<module_role_id>',methods=['POST','GET'])
-def module_role_form(request,module_role_id=None):
+async def module_role_form(request,module_role_id=None):
     title = 'Create ModuleRole'
     form = ModuleRoleForm(request.form)
     module_role = None
@@ -61,18 +61,18 @@ def module_role_form(request,module_role_id=None):
     return html(render(request,'generic/form.html',title=title,form=form,userdata=userdata,enctype='multipart/form-data'))
 
 @bp.route('/module_roles')
-def module_roles(request):
+async def module_roles(request):
     module_roles = dbsession.query(ModuleRole)
     paginator = Paginator(module_roles, 5)
     return html(render(request, 'generic/list.html',title='Module Roles',editlink=request.app.url_for('users.module_role_edit'),addlink=request.app.url_for('users.module_role_form'),fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/users/json/')
-def userjson(request):
+async def userjson(request):
     users = dbsession.query(User).filter(or_(User.name.ilike("%" + request.args['q'][0] + "%"),User.username.ilike("%" + request.args['q'][0] + "%"))).all()
     return json([ {'id':user.id,'name':user.name} for user in users ])
 
 @bp.route('/users')
-def index(request):
+async def index(request):
     users = dbsession.query(User)
     paginator = Paginator(users, 5)
     return html(render(request, 'generic/list.html',title='Users',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
