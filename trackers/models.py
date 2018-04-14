@@ -32,6 +32,11 @@ class Tracker(ModelBase):
                     rfields.append(rfield)
             return rfields
 
+    def display_fields_list(self,record):
+        curstatus = self.status(record)
+        if curstatus:
+            return self.fields_from_list(curstatus.display_fields)
+
     def fields_from_list(self,field_list=None):
         rfields = []
         if field_list:
@@ -114,7 +119,6 @@ class Tracker(ModelBase):
                 form['record_status'] = [transition.next_status.name,]
                 del(form['transition_id'])
         fieldnames = list(form.keys())
-        print("fieldnames:" + str(fieldnames))
         query = """
             insert into """ + self.data_table() + """ ( """ + ",".join(fieldnames) + """) values 
             (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """) returning *
@@ -153,7 +157,7 @@ class Tracker(ModelBase):
             oldrecord = self.records(form['id'][0])
             del(form['id'])
         fieldnames = list(form.keys())
-        query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id'] + " returning *")
+        query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
         try:
             data = dbsession.execute(query).fetchone()
             dbsession.commit()
@@ -173,33 +177,44 @@ class Tracker(ModelBase):
         except Exception as inst:
             dbsession.rollback()
 
-    def records(self,id=None):
+    def records(self,id=None,curuser=None,request=None):
         results = None
-        fields = self.list_fields_list()
-        if len(fields):
-            if id:
-                sqltext = text(
-                        "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table() +  " where id=:id"
-                        )
-                sqltext = sqltext.bindparams(id=id)
-            else:
-                sqltext = text(
-                        "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table()
-                        )
-            try:
-                results = dbsession.execute(sqltext)
-            except Exception as inst:
-                dbsession.rollback()
-            if id:
-                drows = None
-                for row in results:
-                    drows = row
-                results = drows
+        if id:
+            sqltext = text(
+                    "select * from " + self.data_table() +  " where id=:id and " + self.rolesrule(curuser,request)
+                    )
+            sqltext = sqltext.bindparams(id=id)
+        else:
+            sqltext = text(
+                    "select * from " + self.data_table() + " where " + self.rolesrule(curuser,request)
+                    )
+        try:
+            results = dbsession.execute(sqltext)
+        except Exception as inst:
+            dbsession.rollback()
+        if id:
+            drows = None
+            for row in results:
+                drows = row
+            results = drows
         return results
+
+    def rolesrule(self,curuser,request):
+        if self.userroles(curuser):
+            rolesrule = '1=1'
+        else:
+            queryroles = dbsession.query(TrackerRole).filter_by(tracker=self,role_type='query').all()
+            rolesrule = '1=0'
+            rulestext = [ render_string(request,role.compare) for role in queryroles ]
+            if len(rulestext):
+                trolesrule = ' or '.join(rulestext)
+                if len(trolesrule):
+                    rolesrule = trolesrule
+        return rolesrule
 
     def status(self,record):
         if record['record_status']:
-            status = dbsession.query(TrackerStatus).filter_by(name=record['record_status']).first()
+            status = dbsession.query(TrackerStatus).filter_by(tracker=self,name=record['record_status']).first()
             if status:
                 return status
         return None
@@ -212,7 +227,6 @@ class Tracker(ModelBase):
                 if len(usermoduleroles):
                     croles.append(role)
 
-        print('role:' + str(croles))
         return croles
 
     def activetransitions(self,record,curuser):
@@ -253,18 +267,24 @@ class TrackerField(ModelBase):
             return self.obj_fields()[0]
 
     def disp_value(self, value):
-        if self.field_type=='object' and value:
-            sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=" + str(value)
-            result = dbsession.execute(sqlq)
-            for r in result:
-                return r[0]
+        if value:
+            if self.field_type=='object':
+                sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=" + str(value)
+                result = dbsession.execute(sqlq)
+                for r in result:
+                    return r[0]
+            elif self.field_type=='user':
+                sqlq = "select name from users where id=" + str(value)
+                result = dbsession.execute(sqlq)
+                for r in result:
+                    return r[0]
             
         return value
 
     def sqlvalue(self, value):
         if self.field_type in ['string','text','date','datetime']:
             return "'" + str(value.replace("'","''")) + "'"
-        elif self.field_type in ['integer','number','object']:
+        elif self.field_type in ['integer','number','object','user']:
             return str(value)
         elif self.field_type=='boolean':
             if value:
@@ -283,6 +303,8 @@ class TrackerField(ModelBase):
         elif self.field_type=='integer':
             return 'integer'
         elif self.field_type=='object':
+            return 'integer'
+        elif self.field_type=='user':
             return 'integer'
         elif self.field_type=='number':
             return 'double precision'
@@ -304,7 +326,6 @@ class TrackerField(ModelBase):
                 end if;
             end$$;
         """
-        print(query)
         dbsession.execute(query)
         dbsession.commit()
 

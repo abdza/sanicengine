@@ -34,7 +34,7 @@ $('#{{field.name}}').datepicker({
 });
 </script>
 {% endif %}
-{% if field.field_type=='object' %}
+{% if field.field_type in ['object','user'] %}
 {% if not ns.gottoken %}
 {% set ns.gottoken = true %}
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input.css') }}'>

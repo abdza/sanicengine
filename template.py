@@ -8,6 +8,7 @@ def render(request, template_file, *args, **kwargs):
     curuser = None
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    print('cursuser:' + str(curuser))
     return jinja_env.get_template(template_file).render(app=request.app,request=request,curuser=curuser,*args,**kwargs)
 
 def render_string(request, template_string, *args, **kwargs):
