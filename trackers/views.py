@@ -163,6 +163,11 @@ async def statusform(request,slug=None,id=None):
         trackerstatus = dbsession.query(TrackerStatus).get(int(id))
     if trackerstatus:
         title = 'Edit Tracker Status'
+    tokeninput = {
+            'display_fields': {
+                'url': request.app.url_for('trackers.trackerfieldsjson',slug=slug),
+                },
+            }
     if request.method=='POST':
         if form.validate():
             if not trackerstatus:
@@ -264,11 +269,17 @@ async def transitionform(request,slug=None,id=None):
             else:
                 trackertransition.roles = []
             del(form['roles'])
-            form.populate_obj(trackertransition)
+            display_fields = []
+            edit_fields = []
             if form['display_fields'].data:
-                trackertransition.display_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['display_fields'].data.split(',') ])
+                display_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['display_fields'].data + ")") ])
+                del(form['display_fields'])
             if form['edit_fields'].data:
-                trackertransition.edit_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['edit_fields'].data.split(',') ])
+                edit_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['edit_fields'].data + ")") ])
+                del(form['edit_fields'])
+            form.populate_obj(trackertransition)
+            trackertransition.display_fields = display_fields
+            trackertransition.edit_fields = edit_fields
             if form.prev_status_id.data=='':
                 trackertransition.prev_status = None
                 trackertransition.prev_status_id = None
@@ -404,7 +415,10 @@ async def fieldjson(request,slug=None,field_id=None):
     if field_id:
         trackerfield = dbsession.query(TrackerField).get(int(field_id))
         if(trackerfield):
-            sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where " + " or ".join([field + " like '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ])
+            if trackerfield.field_type=='user':
+                sqlq = "select id,name from users where name ilike '%" + request.args['q'][0] + "%' "
+            elif trackerfield.field_type=='object':
+                sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where " + " or ".join([field + " ilike '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ])
             results = dbsession.execute(sqlq)
             return jsonresponse([ {'id':result.id,'name':result.name} for result in results ])
 
@@ -443,7 +457,7 @@ async def form(request,id=None):
                 newtracker = True
             form.populate_obj(tracker)
             if form['list_fields'].data:
-                tracker.list_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['list_fields'].data.split(',') ])
+                tracker.list_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['list_fields'].data + ")") ])
             dbsession.add(tracker)
             if newtracker:
                 newstatus = TrackerStatus(name='New',tracker=tracker)
