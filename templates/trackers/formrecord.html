@@ -46,4 +46,9 @@ $('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',slug=t
 </script> 
 {% endif %}
 {% endfor %}
+{% if transition.edit_fields|length == 0 %}
+<script>
+$('#trackerform').submit();
+</script>
+{% endif %}
 {% endblock %}
