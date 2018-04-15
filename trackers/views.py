@@ -554,7 +554,11 @@ async def addrecord(request,slug=None):
         tracker.addrecord(request.form,request)
         return redirect('/system/' + slug)
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
-    return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition))
+    page = dbsession.query(Page).filter_by(slug=tracker.slug + '_addrecord').first()
+    if page:
+        return html(page.render(request,tracker=tracker,transition=newtransition))
+    else:
+        return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition))
 
 @bp.route('/system/<slug>/edit/<transition_id>/<record_id>',methods=['POST','GET'])
 async def editrecord(request,slug=None,transition_id=None,record_id=None):
@@ -568,7 +572,11 @@ async def editrecord(request,slug=None,transition_id=None,record_id=None):
     if request.method=='POST':
         tracker.editrecord(request.form,request,id=record_id)
         return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=record_id))
-    return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=transition,record=record))
+    page = dbsession.query(Page).filter_by(slug=tracker.slug + '_editrecord').first()
+    if page:
+        return html(page.render(request,tracker=tracker,transition=transition,record=record))
+    else:
+        return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=transition,record=record))
 
 @bp.route('/system/<slug>/<id>',methods=['POST','GET'])
 async def viewrecord(request,slug=None,id=None):
@@ -581,4 +589,8 @@ async def viewrecord(request,slug=None,id=None):
         return redirect('/system/' + slug + '/viewrecord/' + id)
     if(id):
         record = tracker.records(id,curuser=curuser,request=request)
-    return html(render(request,'trackers/viewrecord.html',tracker=tracker,record=record))
+    page = dbsession.query(Page).filter_by(slug=tracker.slug + '_view_default').first()
+    if page:
+        return html(page.render(request,tracker=tracker,record=record))
+    else:
+        return html(render(request,'trackers/viewrecord.html',tracker=tracker,record=record))
