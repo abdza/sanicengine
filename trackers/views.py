@@ -585,11 +585,18 @@ async def viewrecord(request,slug=None,id=None):
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
     record = None
+    status = None
+    page = None
     if request.method=='POST':
         return redirect('/system/' + slug + '/viewrecord/' + id)
     if(id):
         record = tracker.records(id,curuser=curuser,request=request)
-    page = dbsession.query(Page).filter_by(slug=tracker.slug + '_view_default').first()
+        if record:
+            status = tracker.status(record)
+    if status:
+        page = dbsession.query(Page).filter_by(slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
+    if not page:
+        page = dbsession.query(Page).filter_by(slug=tracker.slug + '_view_default').first()
     if page:
         return html(page.render(request,tracker=tracker,record=record))
     else:
