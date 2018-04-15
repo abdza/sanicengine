@@ -4,7 +4,7 @@ locust
 psycopg2
 sqlalchemy
 wtforms
--e https://github.com/miki725/sqlalchemy-paginator.git#egg=sqlalchemy-paginator
+-e git://github.com/miki725/sqlalchemy-paginator.git#egg=sqlalchemy-paginator
 sanic_session
 cryptography
 openpyxl

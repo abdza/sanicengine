@@ -23,14 +23,14 @@ class Tracker(ModelBase):
         return self.title
 
     def list_fields_list(self):
+        rfields = []
         if self.list_fields:
             pfields = self.list_fields.split(',')
-            rfields = []
             for pfield in pfields:
                 rfield = dbsession.query(TrackerField).filter_by(tracker=self,name=pfield.strip()).first()
                 if rfield:
                     rfields.append(rfield)
-            return rfields
+        return rfields
 
     def display_fields_list(self,record):
         curstatus = self.status(record)
@@ -112,12 +112,23 @@ class Tracker(ModelBase):
 
     def addrecord(self, form, request):
         curuser = None
+        data = None
         if 'user_id' in request['session']:
             curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'transition_id' in form:
             transition = dbsession.query(TrackerTransition).get(form['transition_id'][0])
-            if transition and transition.next_status:
-                form['record_status'] = [transition.next_status.name,]
+            if transition:
+                if transition.next_status:
+                    form['record_status'] = [transition.next_status.name,]
+                for field in transition.edit_fields_list():
+                    print("editcheck:" + str(field))
+                    if field.default and field.name in form and form[field.name][0]=='systemdefault':
+                        print("processing default:" + str(field))
+                        output=None
+                        ldict = locals()
+                        exec(field.default,globals(),ldict)
+                        output=ldict['output']
+                        form[field.name][0]=output
                 del(form['transition_id'])
         fieldnames = list(form.keys())
         query = """
@@ -164,6 +175,7 @@ class Tracker(ModelBase):
         if oldrecord:
             query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
         try:
+            print("update query:" + str(query))
             data = dbsession.execute(query).fetchone()
             dbsession.commit()
         except Exception as inst:
@@ -173,10 +185,35 @@ class Tracker(ModelBase):
             desc = 'Updated by ' + curuser.name
         else:
             desc = 'Updated by anonymous'
+<<<<<<< HEAD
         if data:
             query = """
                 insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
                 ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
+=======
+        query = """
+            insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
+            ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
+        try:
+            dbsession.execute(query)
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+
+    def records(self,id=None):
+        results = []
+        fields = self.list_fields_list()
+        if fields and len(fields):
+            if id:
+                sqltext = text(
+                        "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table() +  " where id=:id"
+                        )
+                sqltext = sqltext.bindparams(id=id)
+            else:
+                sqltext = text(
+                        "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table()
+                        )
+>>>>>>> dafc0997d77153a9f55ceb276bfd55aa0c2d9697
             try:
                 dbsession.execute(query)
                 dbsession.commit()
@@ -232,6 +269,7 @@ class Tracker(ModelBase):
                 usermoduleroles = dbsession.query(ModuleRole).filter(ModuleRole.module==self.module,ModuleRole.user==curuser,ModuleRole.role==role.name).all()
                 if len(usermoduleroles):
                     croles.append(role)
+<<<<<<< HEAD
             elif record:
                 rolesrule = render_string(request,role.compare)
                 sqltext = "select id from " + self.data_table() + " where id=" + str(record['id']) + " and " + rolesrule
@@ -239,6 +277,9 @@ class Tracker(ModelBase):
                 if results:
                     for row in results:
                         croles.append(role)
+=======
+
+>>>>>>> dafc0997d77153a9f55ceb276bfd55aa0c2d9697
         return croles
 
     def activetransitions(self,record,curuser,request):
@@ -263,6 +304,7 @@ class TrackerField(ModelBase):
     field_type = Column(String(20))
     obj_table = Column(String(50))
     obj_field = Column(String(100))
+    default = Column(Text())
 
     tracker_id = reference_col('trackers')
     tracker = relationship('Tracker',backref='fields')
@@ -294,6 +336,7 @@ class TrackerField(ModelBase):
         return value
 
     def sqlvalue(self, value):
+<<<<<<< HEAD
         if self.field_type in ['string','text','date','datetime']:
             return "'" + str(value.replace("'","''")) + "'"
         elif self.field_type in ['integer','number','object','user']:
@@ -303,6 +346,19 @@ class TrackerField(ModelBase):
                 return str(1)
             else:
                 return str(0)
+=======
+        if value:
+            if self.field_type in ['string','text','date','datetime']:
+                return "'" + str(value.replace("'","''")) + "'"
+            elif self.field_type in ['integer','number','object']:
+                return str(value)
+            elif self.field_type=='boolean':
+                if value:
+                    return str(1)
+                else:
+                    return str(0)
+        return ''
+>>>>>>> dafc0997d77153a9f55ceb276bfd55aa0c2d9697
 
     def dbcolumn(self):
         return column(self.name)
@@ -440,7 +496,7 @@ class TrackerTransition(ModelBase):
         return self.name
 
     def edit_fields_list(self):
-        pfields = self.edit_fields.split(',')
+        pfields = self.edit_fields.split(',') if self.edit_fields else []
         rfields = []
         for pfield in pfields:
             rfield = dbsession.query(TrackerField).filter_by(tracker=self.tracker,name=pfield.strip()).first()
