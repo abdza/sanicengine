@@ -3,6 +3,7 @@ from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse
 from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition, TrackerDataUpdate
 from users.models import User
+from pages.models import Page
 from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
 from database import dbsession
 from template import render
@@ -540,7 +541,11 @@ async def delete(request,slug=None):
 @bp.route('/system/<slug>/')
 async def viewlist(request,slug=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
-    return html(render(request,'trackers/viewlist.html',tracker=tracker))
+    page = dbsession.query(Page).filter_by(slug=tracker.slug + '_list').first()
+    if page:
+        return html(page.render(request,tracker=tracker))
+    else:
+        return html(render(request,'trackers/viewlist.html',tracker=tracker))
 
 @bp.route('/system/<slug>/addrecord',methods=['POST','GET'])
 async def addrecord(request,slug=None):
