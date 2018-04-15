@@ -121,9 +121,7 @@ class Tracker(ModelBase):
                 if transition.next_status:
                     form['record_status'] = [transition.next_status.name,]
                 for field in transition.edit_fields_list():
-                    print("editcheck:" + str(field))
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
-                        print("processing default:" + str(field))
                         output=None
                         ldict = locals()
                         exec(field.default,globals(),ldict)
@@ -175,7 +173,6 @@ class Tracker(ModelBase):
         if oldrecord:
             query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
         try:
-            print("update query:" + str(query))
             data = dbsession.execute(query).fetchone()
             dbsession.commit()
         except Exception as inst:
@@ -185,35 +182,10 @@ class Tracker(ModelBase):
             desc = 'Updated by ' + curuser.name
         else:
             desc = 'Updated by anonymous'
-<<<<<<< HEAD
         if data:
             query = """
                 insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
                 ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
-=======
-        query = """
-            insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
-            ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
-        try:
-            dbsession.execute(query)
-            dbsession.commit()
-        except Exception as inst:
-            dbsession.rollback()
-
-    def records(self,id=None):
-        results = []
-        fields = self.list_fields_list()
-        if fields and len(fields):
-            if id:
-                sqltext = text(
-                        "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table() +  " where id=:id"
-                        )
-                sqltext = sqltext.bindparams(id=id)
-            else:
-                sqltext = text(
-                        "select id, record_status, " + ','.join([ field.name for field in self.list_fields_list() ]) + " from " + self.data_table()
-                        )
->>>>>>> dafc0997d77153a9f55ceb276bfd55aa0c2d9697
             try:
                 dbsession.execute(query)
                 dbsession.commit()
@@ -269,7 +241,6 @@ class Tracker(ModelBase):
                 usermoduleroles = dbsession.query(ModuleRole).filter(ModuleRole.module==self.module,ModuleRole.user==curuser,ModuleRole.role==role.name).all()
                 if len(usermoduleroles):
                     croles.append(role)
-<<<<<<< HEAD
             elif record:
                 rolesrule = render_string(request,role.compare)
                 sqltext = "select id from " + self.data_table() + " where id=" + str(record['id']) + " and " + rolesrule
@@ -277,9 +248,6 @@ class Tracker(ModelBase):
                 if results:
                     for row in results:
                         croles.append(role)
-=======
-
->>>>>>> dafc0997d77153a9f55ceb276bfd55aa0c2d9697
         return croles
 
     def activetransitions(self,record,curuser,request):
@@ -336,21 +304,10 @@ class TrackerField(ModelBase):
         return value
 
     def sqlvalue(self, value):
-<<<<<<< HEAD
-        if self.field_type in ['string','text','date','datetime']:
-            return "'" + str(value.replace("'","''")) + "'"
-        elif self.field_type in ['integer','number','object','user']:
-            return str(value)
-        elif self.field_type=='boolean':
-            if value:
-                return str(1)
-            else:
-                return str(0)
-=======
         if value:
             if self.field_type in ['string','text','date','datetime']:
                 return "'" + str(value.replace("'","''")) + "'"
-            elif self.field_type in ['integer','number','object']:
+            elif self.field_type in ['integer','number','object','user']:
                 return str(value)
             elif self.field_type=='boolean':
                 if value:
@@ -358,7 +315,6 @@ class TrackerField(ModelBase):
                 else:
                     return str(0)
         return ''
->>>>>>> dafc0997d77153a9f55ceb276bfd55aa0c2d9697
 
     def dbcolumn(self):
         return column(self.name)

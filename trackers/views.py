@@ -270,7 +270,6 @@ async def transitionform(request,slug=None,id=None):
             else:
                 trackertransition.roles = []
             del(form['roles'])
-<<<<<<< HEAD
             display_fields = []
             edit_fields = []
             if form['display_fields'].data:
@@ -282,8 +281,6 @@ async def transitionform(request,slug=None,id=None):
             form.populate_obj(trackertransition)
             trackertransition.display_fields = display_fields
             trackertransition.edit_fields = edit_fields
-=======
->>>>>>> dafc0997d77153a9f55ceb276bfd55aa0c2d9697
             if form.prev_status_id.data=='':
                 trackertransition.prev_status = None
                 trackertransition.prev_status_id = None
