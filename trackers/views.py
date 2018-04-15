@@ -270,6 +270,7 @@ async def transitionform(request,slug=None,id=None):
             else:
                 trackertransition.roles = []
             del(form['roles'])
+<<<<<<< HEAD
             display_fields = []
             edit_fields = []
             if form['display_fields'].data:
@@ -281,12 +282,21 @@ async def transitionform(request,slug=None,id=None):
             form.populate_obj(trackertransition)
             trackertransition.display_fields = display_fields
             trackertransition.edit_fields = edit_fields
+=======
+>>>>>>> dafc0997d77153a9f55ceb276bfd55aa0c2d9697
             if form.prev_status_id.data=='':
                 trackertransition.prev_status = None
                 trackertransition.prev_status_id = None
+                del(form['prev_status_id'])
             if form.next_status_id.data=='':
                 trackertransition.next_status = None
                 trackertransition.next_status_id = None
+                del(form['next_status_id'])
+            form.populate_obj(trackertransition)
+            if form['display_fields'].data:
+                trackertransition.display_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['display_fields'].data.split(',') ])
+            if form['edit_fields'].data:
+                trackertransition.edit_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['edit_fields'].data.split(',') ])
             trackertransition.tracker = tracker
             dbsession.add(trackertransition)
             try:
