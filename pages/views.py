@@ -13,7 +13,7 @@ bp = Blueprint('pages')
 async def view(request, slug):
     page = dbsession.query(Page).filter_by(slug=slug).first()
     if page:
-        return html(page.render())
+        return html(page.render(request))
     else:
         print("No page to view")
         return redirect('/')

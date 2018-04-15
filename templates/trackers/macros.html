@@ -57,7 +57,7 @@
 {%- endmacro %}
 
 {% macro transitionbuttons(tracker,record, curuser) -%}
-{% for transition in tracker.activetransitions(record,curuser) %}
+{% for transition in tracker.activetransitions(record,curuser,request) %}
 <a href='{{ app.url_for('trackers.editrecord',record_id=record['id'],transition_id=transition.id,slug=tracker.slug) }}' class='btn btn-primary'>
 {{ transition.name }}
 </a>
