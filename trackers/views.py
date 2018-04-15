@@ -2,6 +2,7 @@
 from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse
 from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition, TrackerDataUpdate
+from users.models import User
 from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
 from database import dbsession
 from template import render
@@ -553,20 +554,23 @@ async def editrecord(request,slug=None,transition_id=None,record_id=None):
     transition = None
     record = None
     if record_id:
-        record = tracker.records(record_id)
+        record = tracker.records(record_id,request=request)
     if transition_id:
         transition = dbsession.query(TrackerTransition).get(transition_id)
     if request.method=='POST':
-        tracker.editrecord(request.form,request)
+        tracker.editrecord(request.form,request,id=record_id)
         return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=record_id))
     return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=transition,record=record))
 
 @bp.route('/system/<slug>/<id>',methods=['POST','GET'])
 async def viewrecord(request,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    curuser = None
+    if 'user_id' in request['session']:
+        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
     record = None
     if request.method=='POST':
         return redirect('/system/' + slug + '/viewrecord/' + id)
     if(id):
-        record = tracker.records(id)
+        record = tracker.records(id,curuser=curuser,request=request)
     return html(render(request,'trackers/viewrecord.html',tracker=tracker,record=record))

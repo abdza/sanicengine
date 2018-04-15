@@ -36,6 +36,7 @@ class Tracker(ModelBase):
         curstatus = self.status(record)
         if curstatus:
             return self.fields_from_list(curstatus.display_fields)
+        return []
 
     def fields_from_list(self,field_list=None):
         rfields = []
@@ -143,7 +144,7 @@ class Tracker(ModelBase):
         except Exception as inst:
             dbsession.rollback()
 
-    def editrecord(self, form, request):
+    def editrecord(self, form, request, id=None):
         curuser = None
         if 'user_id' in request['session']:
             curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
@@ -153,11 +154,15 @@ class Tracker(ModelBase):
                 form['record_status'] = [transition.next_status.name,]
             del(form['transition_id'])
         oldrecord = None
-        if 'id' in form:
-            oldrecord = self.records(form['id'][0])
+        if id:
+            oldrecord = self.records(id,curuser=curuser,request=request)
+        elif 'id' in form:
+            oldrecord = self.records(form['id'][0],curuser=curuser,request=request)
             del(form['id'])
         fieldnames = list(form.keys())
-        query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
+        data = None
+        if oldrecord:
+            query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
         try:
             data = dbsession.execute(query).fetchone()
             dbsession.commit()
@@ -168,14 +173,15 @@ class Tracker(ModelBase):
             desc = 'Updated by ' + curuser.name
         else:
             desc = 'Updated by anonymous'
-        query = """
-            insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
-            ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
-        try:
-            dbsession.execute(query)
-            dbsession.commit()
-        except Exception as inst:
-            dbsession.rollback()
+        if data:
+            query = """
+                insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
+                ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
+            try:
+                dbsession.execute(query)
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
 
     def records(self,id=None,curuser=None,request=None):
         results = None
@@ -213,25 +219,31 @@ class Tracker(ModelBase):
         return rolesrule
 
     def status(self,record):
-        if record['record_status']:
+        if record and 'record_status' in record and record['record_status']:
             status = dbsession.query(TrackerStatus).filter_by(tracker=self,name=record['record_status']).first()
             if status:
                 return status
         return None
 
-    def userroles(self,curuser,record=None):
+    def userroles(self,curuser,record=None,request=None):
         croles = []
         for role in self.roles:
             if role.role_type=='module':
                 usermoduleroles = dbsession.query(ModuleRole).filter(ModuleRole.module==self.module,ModuleRole.user==curuser,ModuleRole.role==role.name).all()
                 if len(usermoduleroles):
                     croles.append(role)
-
+            elif record:
+                rolesrule = render_string(request,role.compare)
+                sqltext = "select id from " + self.data_table() + " where id=" + str(record['id']) + " and " + rolesrule
+                results = dbsession.execute(sqltext)
+                if results:
+                    for row in results:
+                        croles.append(role)
         return croles
 
-    def activetransitions(self,record,curuser):
+    def activetransitions(self,record,curuser,request):
         status = self.status(record)
-        roles = self.userroles(curuser,record)
+        roles = self.userroles(curuser,record,request=request)
         atransitions = []
         if status:
             transitions = dbsession.query(TrackerTransition).filter(TrackerTransition.prev_status==status,TrackerTransition.tracker==self).all()
