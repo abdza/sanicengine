@@ -153,6 +153,8 @@ class Tracker(ModelBase):
         except Exception as inst:
             dbsession.rollback()
 
+        return data
+
     def editrecord(self, form, request, id=None):
         curuser = None
         if 'user_id' in request['session']:
@@ -191,6 +193,8 @@ class Tracker(ModelBase):
                 dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
+
+        return data
 
     def records(self,id=None,curuser=None,request=None):
         results = None
@@ -436,6 +440,7 @@ class TrackerTransition(ModelBase):
     name = Column(String(50))
     display_fields = Column(Text)
     edit_fields = Column(Text)
+    postpage = Column(Text)
 
     roles = relationship('TrackerRole',secondary=transition_roles,backref=backref('transitions',lazy='dynamic'))
 

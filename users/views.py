@@ -68,7 +68,10 @@ async def module_roles(request):
 
 @bp.route('/users/json/')
 async def userjson(request):
-    users = dbsession.query(User).filter(or_(User.name.ilike("%" + request.args['q'][0] + "%"),User.username.ilike("%" + request.args['q'][0] + "%"))).all()
+    searchval = ''
+    if 'q' in request.args:
+        searchval = request.args['q'][0]
+    users = dbsession.query(User).filter(or_(User.name.ilike("%" + searchval + "%"),User.username.ilike("%" + searchval + "%"))).all()
     return json([ {'id':user.id,'name':user.name} for user in users ])
 
 @bp.route('/users')

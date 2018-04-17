@@ -550,10 +550,20 @@ async def viewlist(request,slug=None):
 @bp.route('/system/<slug>/addrecord',methods=['POST','GET'])
 async def addrecord(request,slug=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
-    if request.method=='POST':
-        tracker.addrecord(request.form,request)
-        return redirect('/system/' + slug)
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
+    if request.method=='POST':
+        data = tracker.addrecord(request.form,request)
+        if newtransition.postpage:
+            print("got postpage:" + str(newtransition.postpage))
+            output=None
+            ldict = locals()
+            exec(newtransition.postpage,globals(),ldict)
+            if 'output' in ldict and ldict['output']:
+                return redirect(ldict['output'])
+            else:
+                return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=data['id']))
+        else:
+            return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=data['id']))
     page = dbsession.query(Page).filter_by(slug=tracker.slug + '_addrecord').first()
     if page:
         return html(page.render(request,tracker=tracker,transition=newtransition))
@@ -570,8 +580,17 @@ async def editrecord(request,slug=None,transition_id=None,record_id=None):
     if transition_id:
         transition = dbsession.query(TrackerTransition).get(transition_id)
     if request.method=='POST':
-        tracker.editrecord(request.form,request,id=record_id)
-        return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=record_id))
+        data = tracker.editrecord(request.form,request,id=record_id)
+        if transition.postpage:
+            output=None
+            ldict = locals()
+            exec(newtransition.postpage,globals(),ldict)
+            if 'output' in ldict and ldict['output']:
+                return redirect(ldict['output'])
+            else:
+                return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=data['id']))
+        else:
+            return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=record_id))
     page = dbsession.query(Page).filter_by(slug=tracker.slug + '_editrecord').first()
     if page:
         return html(page.render(request,tracker=tracker,transition=transition,record=record))
