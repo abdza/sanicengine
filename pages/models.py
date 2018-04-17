@@ -14,6 +14,7 @@ class Page(ModelBase):
     module = Column(String(100),default='pages')
     content = Column(Text())
     published = Column(Boolean(),default=False)
+    runable = Column(Boolean(),default=False)
     require_login = Column(Boolean(),default=False)
     publish_date = Column(Date(),nullable=True)
     expire_date = Column(Date(),nullable=True)

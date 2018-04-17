@@ -58,7 +58,6 @@ class Tracker(ModelBase):
 
     @property
     def pages(self):
-        print("mod:" + str(self.module))
         return dbsession.query(Page).filter_by(module=self.module).all()
 
     def field(self, name):
@@ -115,6 +114,25 @@ class Tracker(ModelBase):
             dbsession.rollback()
         for field in self.fields:
             field.updatedb()
+
+    def saverecord(self, record, request=None):
+        curuser = None
+        data = None
+        if request:
+            if 'user_id' in request['session']:
+                curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+        if 'id' in record:
+            query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(record[formfield]) for formfield in record.keys()  ]) + """ where id=""" + str(record['id']) + " returning *"
+        else:
+            query = """
+                insert into """ + self.data_table() + """ ( """ + ",".join(record.keys()) + """) values 
+                (""" + ",".join([ self.field(formfield).sqlvalue(record[formfield]) for formfield in record.keys()  ]) + """) returning *
+            """
+        try:
+            data = dbsession.execute(query).fetchone()
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
 
     def addrecord(self, form, request):
         curuser = None
@@ -316,7 +334,7 @@ class TrackerField(ModelBase):
     def sqlvalue(self, value):
         if value:
             if self.field_type in ['string','text','date','datetime']:
-                return "'" + str(value.replace("'","''")) + "'"
+                return "'" + str(value).replace("'","''") + "'"
             elif self.field_type in ['integer','number','object','user']:
                 return str(value)
             elif self.field_type=='boolean':
