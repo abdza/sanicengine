@@ -188,8 +188,12 @@ async def updatelist(request):
                 modules.append(md.lower())
         print("l:" + str(moduledirs))
     for module in modules:
-        dbsession.execute("insert into modules (title) values ('" + module + "') on conflict(title) do nothing");
-    dbsession.commit()
+        try:
+            dbsession.execute("insert into modules (title) values ('" + module + "')");
+            dbsession.commit()
+        except e:
+            print("Got error inserting module:" + str(e))
+            dbsession.rollback()
 
     return redirect(request.app.url_for('modules.index'))
 
