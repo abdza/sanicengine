@@ -16,7 +16,7 @@ async def run(request, slug):
         redirecturl=None
         ldict = locals()
         exec(page.content,globals(),ldict)
-        if 'redirect' in ldict:
+        if 'redirecturl' in ldict:
            redirecturl=ldict['redirecturl']
         if redirecturl:
             return redirect(redirecturl)
