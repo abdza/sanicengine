@@ -9,7 +9,24 @@ from sqlalchemy_paginator import Paginator
 
 bp = Blueprint('pages')
 
-@bp.route('/view/<slug>')
+@bp.route('/run/<slug>',methods=['GET','POST'])
+async def run(request, slug):
+    page = dbsession.query(Page).filter_by(slug=slug).first()
+    if page and page.runable:
+        redirecturl=None
+        ldict = locals()
+        exec(page.content,globals(),ldict)
+        if 'redirect' in ldict:
+           redirecturl=ldict['redirecturl']
+        if redirecturl:
+            return redirect(redirecturl)
+        else:
+            return redirect('/')
+    else:
+        print("No page to view")
+        return redirect('/')
+
+@bp.route('/view/<slug>',methods=['GET','POST'])
 async def view(request, slug):
     page = dbsession.query(Page).filter_by(slug=slug).first()
     if page:

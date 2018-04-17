@@ -534,7 +534,6 @@ async def delete(request,slug=None):
     try:
         dbsession.commit()
     except Exception as inst:
-        print(str(inst))
         dbsession.rollback()
     return redirect('/trackers/')
 

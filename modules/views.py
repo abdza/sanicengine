@@ -85,7 +85,7 @@ async def importmodule(request,slug=None):
                 if transition:
                     transition.display_fields = ctransition['display_fields']
                     transition.edit_fields = ctransition['edit_fields']
-                    transition.postpage = ctransition['postpage']
+                    transition.postpage = ctransition['postpage'] if 'postpage' in ctransition else ''
                 else:
                     transition = TrackerTransition(tracker=tracker,name=ctransition['name'],postpage=ctransition['postpage'],display_fields=ctransition['display_fields'],edit_fields=ctransition['edit_fields'])
 

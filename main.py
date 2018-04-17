@@ -38,7 +38,6 @@ async def register_bp(app, loop):
 @app.route("/",methods=['GET','POST'])
 async def test(request):
     form = users.forms.UserForm(request.form)
-    print(request.method)
     if request.method=='POST' and form.validate():
         user=users.models.User()
         form.populate_obj(user)

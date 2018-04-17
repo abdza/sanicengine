@@ -6,6 +6,7 @@ class PageForm(Form):
     module = StringField('Module')
     content = TextAreaField('Content')
     published = BooleanField('Published')
+    runable = BooleanField('Runable')
     require_login = BooleanField('Require Login')
     publish_date = DateField('Publish Date')
     expire_date = DateField('Expire Date')
