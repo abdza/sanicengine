@@ -191,8 +191,8 @@ async def updatelist(request):
         try:
             dbsession.execute("insert into modules (title) values ('" + module + "')");
             dbsession.commit()
-        except e:
-            print("Got error inserting module:" + str(e))
+        except:
+            print("Got error inserting module")
             dbsession.rollback()
 
     return redirect(request.app.url_for('modules.index'))
