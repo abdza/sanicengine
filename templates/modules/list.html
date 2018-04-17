@@ -13,6 +13,7 @@
 		<th>No.</th>
 		{% for field in fields %}
 		<th>{{ field.label }}</th>
+		<th>Action</th>
 		{% endfor %}
 	</tr>
 	{% for item in curpage.object_list %}
@@ -30,6 +31,10 @@
 		{% else %}
 		<td>{{ item[field.name] }}</td>
 		{% endif %}
+		<th>
+			<a href='{{ request.app.url_for('modules.export',slug=item.title) }}' class='btn btn-primary'>Export</a>
+			<a href='{{ request.app.url_for('modules.importmodule',slug=item.title) }}' class='btn btn-primary'>Import</a>
+		</th>
 		{% endfor %}
 	</tr>
 	{% endfor %}
