@@ -181,7 +181,7 @@ async def updatelist(request):
     for rm in rolemodule:
         if rm.module.lower() not in modules:
             modules.append(rm.module.lower())
-    if os.exists(modulepath):
+    if os.path.exists(modulepath):
         moduledirs = os.listdir(modulepath)
         for md in moduledirs:
             if md.lower() not in modules:
