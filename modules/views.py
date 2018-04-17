@@ -181,11 +181,12 @@ async def updatelist(request):
     for rm in rolemodule:
         if rm.module.lower() not in modules:
             modules.append(rm.module.lower())
-    moduledirs = os.listdir(modulepath)
-    for md in moduledirs:
-        if md.lower() not in modules:
-            modules.append(md.lower())
-    print("l:" + str(moduledirs))
+    if os.exists(modulepath):
+        moduledirs = os.listdir(modulepath)
+        for md in moduledirs:
+            if md.lower() not in modules:
+                modules.append(md.lower())
+        print("l:" + str(moduledirs))
     for module in modules:
         dbsession.execute("insert into modules (title) values ('" + module + "') on conflict(title) do nothing");
     dbsession.commit()
