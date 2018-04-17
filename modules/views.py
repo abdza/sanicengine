@@ -87,7 +87,7 @@ async def importmodule(request,slug=None):
                     transition.edit_fields = ctransition['edit_fields']
                     transition.postpage = ctransition['postpage'] if 'postpage' in ctransition else ''
                 else:
-                    transition = TrackerTransition(tracker=tracker,name=ctransition['name'],postpage=ctransition['postpage'],display_fields=ctransition['display_fields'],edit_fields=ctransition['edit_fields'])
+                    transition = TrackerTransition(tracker=tracker,name=ctransition['name'],postpage=ctransition['postpage'] if 'postpage' in ctransition else '',display_fields=ctransition['display_fields'],edit_fields=ctransition['edit_fields'])
 
                 if ctransition['prev_status']:
                     transition.prev_status = dbsession.query(TrackerStatus).filter_by(name=ctransition['prev_status'],tracker=tracker).first()
