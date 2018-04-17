@@ -31,3 +31,4 @@ class TrackerTransitionForm(Form):
     edit_fields = StringField('Edit Fields')
     prev_status_id = SelectField('Prev Status')
     next_status_id = SelectField('Next Status')
+    postpage = TextAreaField('Post Page Url')
