@@ -8,6 +8,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
 from template import render_string
 from users.models import ModuleRole, User
+from pages.models import Page
 from openpyxl import load_workbook
 import json
 
@@ -54,6 +55,11 @@ class Tracker(ModelBase):
 
     def update_table(self):
         return "trak_" + self.slug + "_updates"
+
+    @property
+    def pages(self):
+        print("mod:" + str(self.module))
+        return dbsession.query(Page).filter_by(module=self.module).all()
 
     def field(self, name):
         field = dbsession.query(TrackerField).filter_by(tracker=self,name=name.strip()).first()

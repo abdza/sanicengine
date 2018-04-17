@@ -8,6 +8,7 @@
   <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#statuses">Statuses</a></li>
   <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#roles">Roles</a></li>
   <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#transitions">Transitions</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#pages">Pages</a></li>
   <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#dataupdates">Data Updates</a></li>
 </ul>
 
@@ -89,6 +90,19 @@
 		    <td>{{transition.display_fields}}</td>
 		    <td>{{transition.edit_fields}}</td>
 		    <td><form action='{{ app.url_for('trackers.deletetransition',slug=tracker.slug,transition_id=transition.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete transition {{transition.name}}?")'></form></td>
+	    </tr>
+	    {% endfor %}
+    </table>
+  </div>
+  <div id="pages" class="tab-pane fade">
+    <h3>Pages</h3>
+    <a href='{{ app.url_for('pages.form') }}' class='btn btn-primary'>Add</a>
+    <table class='table'>
+	    <tr><th>Title</th><th>Slug</th><th>Action</th></tr>
+	    {% for page in tracker.pages %}
+	    <tr>
+		    <td><a href="{{ app.url_for('pages.edit',slug=page.slug) }}/{{page.id}}">{{page.title}}</a></td>
+		    <td>{{page.slug}}</td>
 	    </tr>
 	    {% endfor %}
     </table>

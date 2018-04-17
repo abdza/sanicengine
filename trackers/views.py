@@ -554,12 +554,11 @@ async def addrecord(request,slug=None):
     if request.method=='POST':
         data = tracker.addrecord(request.form,request)
         if newtransition.postpage:
-            print("got postpage:" + str(newtransition.postpage))
             output=None
             ldict = locals()
             exec(newtransition.postpage,globals(),ldict)
-            if 'output' in ldict and ldict['output']:
-                return redirect(ldict['output'])
+            if 'output' in ldict and str(ldict['output']):
+                return redirect(str(ldict['output']))
             else:
                 return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=data['id']))
         else:
@@ -584,9 +583,9 @@ async def editrecord(request,slug=None,transition_id=None,record_id=None):
         if transition.postpage:
             output=None
             ldict = locals()
-            exec(newtransition.postpage,globals(),ldict)
-            if 'output' in ldict and ldict['output']:
-                return redirect(ldict['output'])
+            exec(transition.postpage,globals(),ldict)
+            if 'output' in ldict and str(ldict['output']):
+                return redirect(str(ldict['output']))
             else:
                 return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=data['id']))
         else:
