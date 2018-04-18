@@ -12,11 +12,16 @@ from sqlalchemy import or_
 import os
 import datetime
 import json
+import re
 from openpyxl import load_workbook
 
 bp = Blueprint('trackers')
 
 uploadfolder = 'upload'
+
+def slugify(slug):
+    slug = re.sub('[^0-9a-zA-Z]+', '_', slug.lower())
+    return slug
 
 @bp.route('/trackers/<slug>/update/run',methods=['GET'])
 async def runupdate(request,slug=None):
@@ -151,8 +156,8 @@ async def create_from_excel(request,slug=None):
                 for cell in row:
                     fieldtypes.append(cell.data_type)
             for i,title in enumerate(fieldtitles):
-                if title.lower()!='id':
-                    fields.append({'field_name':title,'field_type':fieldtypes[i]})
+                if slugify(title)!='id':
+                    fields.append({'field_name':slugify(title),'field_type':fieldtypes[i]})
             os.remove(dst)
         field_types = [('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')]
     return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types))
