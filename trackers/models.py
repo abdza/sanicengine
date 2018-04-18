@@ -68,7 +68,7 @@ class Tracker(ModelBase):
         query = """
             do $$
             begin
-            if (select to_regclass('public.""" + self.data_table() + """_id_seq')) is null
+            if (select not exists(select  1 from information_schema.sequences where sequence_schema = 'public' and sequence_name = '""" + self.data_table() + """_id_seq'))
             then
                 create sequence public.""" + self.data_table() + """_id_seq
                 increment 1
@@ -77,7 +77,7 @@ class Tracker(ModelBase):
                 start 1
                 cache 1;
             end if;
-            if (select to_regclass('public.""" + self.data_table() + """')) is null
+            if (select not exists(select  1 from information_schema.tables where table_schema = 'public' and table_name = '""" + self.data_table() + """'))
             then
                 create table public.""" + self.data_table() + """(
                     id integer not null default nextval('""" + self.data_table() + """_id_seq'::regclass),
@@ -85,7 +85,7 @@ class Tracker(ModelBase):
                     batch_no integer
                 );
             end if;
-            if (select to_regclass('public.""" + self.update_table() + """_id_seq')) is null
+            if (select not exists(select  1 from information_schema.sequences where sequence_schema = 'public' and sequence_name = '""" + self.update_table() + """_id_seq'))
             then
                 create sequence public.""" + self.update_table() + """_id_seq
                 increment 1
@@ -94,7 +94,7 @@ class Tracker(ModelBase):
                 start 1
                 cache 1;
             end if;
-            if (select to_regclass('public.""" + self.update_table() + """')) is null
+            if (select not exists(select  1 from information_schema.tables where table_schema = 'public' and table_name = '""" + self.update_table() + """'))
             then
                 create table public.""" + self.update_table() + """(
                     id integer not null default nextval('""" + self.update_table() + """_id_seq'::regclass),
