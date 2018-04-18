@@ -16,6 +16,8 @@ from openpyxl import load_workbook
 
 bp = Blueprint('trackers')
 
+uploadfolder = 'upload'
+
 @bp.route('/trackers/<slug>/update/run',methods=['GET'])
 async def runupdate(request,slug=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
@@ -40,8 +42,8 @@ async def deleteupdate(request,slug=None,update_id=None):
         if(update):
             if update.filename and os.path.exists(update.filename):
                 os.remove(update.filename)
-            if os.path.exists(os.path.join('upload',tracker.slug,'dataupdate',str(update.id))):
-                os.rmdir(os.path.join('upload',tracker.slug,'dataupdate',str(update.id)))
+            if os.path.exists(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id))):
+                os.rmdir(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id)))
             dbsession.delete(update)
             try:
                 dbsession.commit()
@@ -73,9 +75,9 @@ async def data_update(request,slug=None):
                 dbsession.rollback()
             dfile = request.files.get('excelfile')
             ext = dfile.type.split('/')[1]
-            if not os.path.exists(os.path.join('upload',tracker.slug,'dataupdate',str(dataupdate.id))):
-                os.makedirs(os.path.join('upload',tracker.slug,'dataupdate',str(dataupdate.id)))
-            dst = os.path.join('upload',tracker.slug,'dataupdate',str(dataupdate.id),dfile.name)
+            if not os.path.exists(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(dataupdate.id))):
+                os.makedirs(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(dataupdate.id)))
+            dst = os.path.join(uploadfolder,tracker.slug,'dataupdate',str(dataupdate.id),dfile.name)
             try:
                 # extract starting byte from Content-Range header string
                 range_str = request.headers['Content-Range']
@@ -125,7 +127,9 @@ async def create_from_excel(request,slug=None):
         if request.files.get('excelfile'):
             dfile = request.files.get('excelfile')
             ext = dfile.type.split('/')[1]
-            dst = os.path.join('upload',dfile.name)
+            dst = os.path.join(uploadfolder,dfile.name)
+            if not os.path.exists(uploadfolder):
+                os.makedirs(uploadfolder)
             try:
                 # extract starting byte from Content-Range header string
                 range_str = request.headers['Content-Range']
@@ -507,8 +511,8 @@ async def delete(request,slug=None):
     for update in tracker.dataupdates:
         if update.filename and os.path.exists(update.filename):
             os.remove(update.filename)
-        if os.path.exists(os.path.join('upload',tracker.slug,'dataupdate',str(update.id))):
-            os.rmdir(os.path.join('upload',tracker.slug,'dataupdate',str(update.id)))
+        if os.path.exists(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id))):
+            os.rmdir(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id)))
         dbsession.delete(update)
         try:
             dbsession.commit()
