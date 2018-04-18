@@ -221,7 +221,7 @@ class Tracker(ModelBase):
         return data
 
     def records(self,id=None,curuser=None,request=None):
-        results = None
+        results = []
         if id:
             sqltext = text(
                     "select * from " + self.data_table() +  " where id=:id and " + self.rolesrule(curuser,request)
