@@ -133,6 +133,7 @@ class Tracker(ModelBase):
             dbsession.commit()
         except Exception as inst:
             dbsession.rollback()
+        return data
 
     def addrecord(self, form, request):
         curuser = None
@@ -220,17 +221,19 @@ class Tracker(ModelBase):
 
         return data
 
-    def records(self,id=None,curuser=None,request=None):
+    def records(self,id=None,curuser=None,request=None,cleared=False):
         results = []
         if id:
-            sqltext = text(
-                    "select * from " + self.data_table() +  " where id=:id and " + self.rolesrule(curuser,request)
-                    )
+            if cleared:
+                sqltext = text("select * from " + self.data_table() +  " where id=:id")
+            else:
+                sqltext = text("select * from " + self.data_table() +  " where id=:id and (" + self.rolesrule(curuser,request) + ")")
             sqltext = sqltext.bindparams(id=id)
         else:
-            sqltext = text(
-                    "select * from " + self.data_table() + " where " + self.rolesrule(curuser,request)
-                    )
+            if cleared:
+                sqltext = text("select * from " + self.data_table())
+            else:
+                sqltext = text("select * from " + self.data_table() + " where " + self.rolesrule(curuser,request))
         try:
             results = dbsession.execute(sqltext)
         except Exception as inst:
@@ -434,7 +437,6 @@ class TrackerDataUpdate(ModelBase):
                 rows.append(drow)
         query = query + ','.join(rows)
         try:
-            print("query:" + query)
             dbsession.execute(query)
             dbsession.commit()
             self.status = 'Uploaded ' + str(len(rows)) + ' rows'

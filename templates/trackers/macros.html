@@ -16,7 +16,8 @@
 	{% elif field.field_type=='text' %}
 	<textarea class="col-sm-10 form-control" id="{{ field.name }}" name="{{ field.name }}">{% if record %}{{record[field.name]}}{% endif %}</textarea>
 	{% elif field.field_type=='boolean' %}
-	<input class="col-sm-10 form-control" id="{{ field.name }}" name="{{ field.name }}" value="" type="checkbox">
+    <input class="col-sm-10 form-control" id="{{ field.name }}" name="{{ field.name }}" value="{% if record
+    %}{{record[field.name]}}{% endif %}" type="checkbox">
 	{% endif %}
 </div>
 {% endif %}
