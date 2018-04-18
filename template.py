@@ -16,3 +16,6 @@ def render_string(request, template_string, *args, **kwargs):
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
     return jinja_env.from_string(template_string).render(app=request.app,request=request,curuser=curuser,*args,**kwargs)
+
+def bare_render_string(template_string, *args, **kwargs):
+    return jinja_env.from_string(template_string).render(*args,**kwargs)
