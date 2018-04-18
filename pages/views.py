@@ -14,12 +14,17 @@ async def run(request, slug):
     page = dbsession.query(Page).filter_by(slug=slug).first()
     if page and page.runable:
         redirecturl=None
+        results=None
         ldict = locals()
         exec(page.content,globals(),ldict)
         if 'redirecturl' in ldict:
            redirecturl=ldict['redirecturl']
+        if 'results' in ldict:
+            results=ldict['results']
         if redirecturl:
             return redirect(redirecturl)
+        elif results:
+            return results
         else:
             return redirect('/')
     else:
@@ -42,6 +47,7 @@ async def form(request,slug=None):
     title = 'Create Page'
     form = PageForm(request.form)
     if request.method=='POST':
+        print("post:" + str(request.form))
         page = dbsession.query(Page).filter_by(slug=form.slug.data).first()
         if not page and slug:
             page = dbsession.query(Page).get(int(slug))
@@ -53,7 +59,10 @@ async def form(request,slug=None):
             form.populate_obj(page)
             dbsession.add(page)
             dbsession.commit()
-            return redirect('/pages')
+            if request.form['submit']=='Submit':
+                return redirect('/pages')
+            else:
+                return redirect('/pages/edit/' + slug)
     else:
         if slug is not None:
             page = dbsession.query(Page).filter_by(slug=slug).first()
@@ -63,7 +72,8 @@ async def form(request,slug=None):
                 form = PageForm(obj=page)
                 title = 'Edit Page'
 
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+    return html(render(request,'generic/form.html',title=title,
+            form=form,enctype='multipart/form-data',submitcontinue=True))
 
 @bp.route('/pages')
 async def index(request):

@@ -586,8 +586,11 @@ async def editrecord(request,slug=None,transition_id=None,record_id=None):
     tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
     transition = None
     record = None
+    curuser = None
+    if 'user_id' in request['session']:
+        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
     if record_id:
-        record = tracker.records(record_id,request=request)
+        record = tracker.records(record_id,curuser=curuser,request=request)
     if transition_id:
         transition = dbsession.query(TrackerTransition).get(transition_id)
     if request.method=='POST':
