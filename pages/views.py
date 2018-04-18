@@ -47,7 +47,6 @@ async def form(request,slug=None):
     title = 'Create Page'
     form = PageForm(request.form)
     if request.method=='POST':
-        print("post:" + str(request.form))
         page = dbsession.query(Page).filter_by(slug=form.slug.data).first()
         if not page and slug:
             page = dbsession.query(Page).get(int(slug))
@@ -59,10 +58,10 @@ async def form(request,slug=None):
             form.populate_obj(page)
             dbsession.add(page)
             dbsession.commit()
-            if request.form['submit']=='Submit':
+            if request.form['submit'][0]=='Submit':
                 return redirect('/pages')
             else:
-                return redirect('/pages/edit/' + slug)
+                return redirect('/pages/edit/' + page.slug)
     else:
         if slug is not None:
             page = dbsession.query(Page).filter_by(slug=slug).first()
