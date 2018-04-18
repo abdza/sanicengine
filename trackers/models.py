@@ -432,6 +432,7 @@ class TrackerDataUpdate(ModelBase):
                 rows.append(drow)
         query = query + ','.join(rows)
         try:
+            print("query:" + query)
             dbsession.execute(query)
             dbsession.commit()
             self.status = 'Uploaded ' + str(len(rows)) + ' rows'
