@@ -406,9 +406,9 @@ class TrackerDataUpdate(ModelBase):
     tracker = relationship('Tracker',backref='dataupdates')
 
     def __repr__(self):
-        return self.name
+        return self.tracker.title + ' ' + str(self.created_date)
 
-    def run(self):
+    async def run(self):
         wb = load_workbook(filename = self.filename)
         ws = wb.active
         datas = json.loads(self.data_params)

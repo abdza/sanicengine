@@ -13,6 +13,7 @@ import os
 import datetime
 import json
 import re
+import asyncio
 from openpyxl import load_workbook
 
 bp = Blueprint('trackers')
@@ -35,8 +36,7 @@ async def runupdate(request,slug=None):
     except Exception as inst:
         dbsession.rollback()
 
-    for update in updates:
-        update.run()
+    await asyncio.wait([ update.run() for update in updates])
     return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
 
 @bp.route('/trackers/<slug>/update/<update_id>/delete',methods=['POST'])
