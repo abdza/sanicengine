@@ -1,3 +1,4 @@
+uwsgi
 sanic
 Jinja2
 locust
