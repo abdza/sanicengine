@@ -36,7 +36,10 @@ async def runupdate(request,slug=None):
     except Exception as inst:
         dbsession.rollback()
 
-    await asyncio.wait([ update.run() for update in updates])
+    try:
+        await asyncio.wait([ update.run() for update in updates])
+    except:
+        print("Nothing to wait for")
     return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
 
 @bp.route('/trackers/<slug>/update/<update_id>/delete',methods=['POST'])

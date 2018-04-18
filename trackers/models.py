@@ -343,8 +343,7 @@ class TrackerField(ModelBase):
                 else:
                     return str(0)
         else:
-            if self.field_type in ['string','text','date','datetime']:
-                return "''"
+            return "null"
         return ''
 
     def dbcolumn(self):
