@@ -46,6 +46,7 @@ async def view(request, slug):
 async def form(request,slug=None):
     title = 'Create Page'
     form = PageForm(request.form)
+    page=None
     if request.method=='POST':
         page = dbsession.query(Page).filter_by(slug=form.slug.data).first()
         if not page and slug:
@@ -71,11 +72,12 @@ async def form(request,slug=None):
                 form = PageForm(obj=page)
                 title = 'Edit Page'
 
-    return html(render(request,'generic/form.html',title=title,
+    return html(render(request,'pages/form.html',title=title,page=page,
             form=form,enctype='multipart/form-data',submitcontinue=True))
 
 @bp.route('/pages')
 async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 5)
-    return html(render(request, 'generic/list.html',title='Pages',editlink=request.app.url_for('pages.edit'),addlink=request.app.url_for('pages.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request,
+        'generic/list.html',title='Pages',editlink=request.app.url_for('pages.edit'),addlink=request.app.url_for('pages.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
