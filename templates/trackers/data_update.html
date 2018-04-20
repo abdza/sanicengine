@@ -6,7 +6,7 @@
 	{% if columns|length %}
 	<input type='hidden' name='dataupdate_id' value='{{dataupdate.id}}'/>
 	<table class='table'>
-		<tr><th>Field</th><th>Column</th><th>Custom</th></tr>
+        <tr><th>Field</th><th>Column</th><th>Custom</th><th>Update</th></tr>
 		{% for field in tracker.fields %}
 		{% if field.name!='id' %}
 		<tr>
@@ -20,6 +20,9 @@
 			</td>
 			<td>
 				<input type='text' name='{{field.name}}_custom'>
+			</td>
+			<td>
+				<input type='checkbox' name='{{field.name}}_update'>
 			</td>
 		</tr>
 		{% endif %}
