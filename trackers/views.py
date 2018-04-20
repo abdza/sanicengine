@@ -443,10 +443,13 @@ async def fieldjson(request,slug=None,field_id=None):
 @bp.route('/trackers/view/')
 @bp.route('/trackers/view/<id>')
 async def view(request,id=None):
-    tracker = dbsession.query(Tracker).get(int(id))
-    dataupdates = dbsession.query(TrackerDataUpdate).filter(TrackerDataUpdate.tracker==tracker)
-    updatespaginator = Paginator(dataupdates, 10)
-    return html(render(request,'trackers/view.html',tracker=tracker,updatespaginator=updatespaginator,curupdatepage=updatespaginator.page(int(request.args['updatepage'][0]) if 'updatepage' in request.args else 1)))
+    if id:
+        tracker = dbsession.query(Tracker).get(int(id))
+        dataupdates = dbsession.query(TrackerDataUpdate).filter(TrackerDataUpdate.tracker==tracker)
+        updatespaginator = Paginator(dataupdates, 10)
+        return html(render(request,'trackers/view.html',tracker=tracker,updatespaginator=updatespaginator,curupdatepage=updatespaginator.page(int(request.args['updatepage'][0]) if 'updatepage' in request.args else 1)))
+    else:
+        return redirect('/')
 
 @bp.route('/trackers/updatedb/<id>')
 async def updatedb(request,id=None):

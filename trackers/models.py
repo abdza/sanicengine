@@ -418,32 +418,78 @@ class TrackerDataUpdate(ModelBase):
         ws = wb.active
         datas = json.loads(self.data_params)
         fields = []
+        optype = 'insert'
+        searchfield = []
         for field in self.tracker.fields:
             if field.name != 'id' and datas[field.name + '_column'][0]!='ignore':
                 fields.append(field)
-        query = 'insert into ' + self.tracker.data_table() + ' (' + ','.join([ f.name for f in fields ]) + ') values '
+            if field.name + '_update' in datas:
+                optype = 'update'
+                searchfield.append(field)
         rows = []
         headerend = 1
-        query = 'insert into ' + self.tracker.data_table() + ' (' + ','.join([ f.name for f in fields ]) + ') values '
-        for i,row in enumerate(ws.rows):
-            if i>headerend:
-                cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] for f in fields]
-                cellpos = [ datas[f.name + '_column'][0] + str(i+1) for f in fields ]
-                drowdata = [ f.value for f in cellrows ]
-                sqlrowdata = [ f.sqlvalue(drowdata[dd]) for dd,f in enumerate(fields) ]
-                drow = '('
-                drow = drow + ','.join(sqlrowdata)
-                drow = drow + ')'
-                rows.append(drow)
-        query = query + ','.join(rows)
-        try:
-            dbsession.execute(query)
-            dbsession.commit()
-            self.status = 'Uploaded ' + str(len(rows)) + ' rows'
-            dbsession.add(self)
-            dbsession.commit()
-        except Exception as inst:
-            dbsession.rollback()
+        if optype == 'insert':
+            query = 'insert into ' + self.tracker.data_table() + ' (' + ','.join([ f.name for f in fields ]) + ') values '
+            for i,row in enumerate(ws.rows):
+                if i>headerend:
+                    cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] for f in fields]
+                    cellpos = [ datas[f.name + '_column'][0] + str(i+1) for f in fields ]
+                    drowdata = [ f.value for f in cellrows ]
+                    sqlrowdata = [ f.sqlvalue(drowdata[dd]) for dd,f in enumerate(fields) ]
+                    drow = '('
+                    drow = drow + ','.join(sqlrowdata)
+                    drow = drow + ')'
+                    rows.append(drow)
+            query = query + ','.join(rows)
+            try:
+                dbsession.execute(query)
+                dbsession.commit()
+                self.status = 'Uploaded ' + str(len(rows)) + ' rows'
+                dbsession.add(self)
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
+        else:
+            allresults = []
+            for i,row in enumerate(ws.rows):
+                if i>headerend:
+                    fieldupdates = []
+                    for f in searchfield:
+                        cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
+                        fieldupdates.append( f.name + '=' + f.sqlvalue(cellrow.value) )
+                    queryrow = ' where ' + 'and'.join(fieldupdates)
+
+                    sqltext = text("select id from " + self.tracker.data_table() + queryrow)
+                    result = dbsession.execute(sqltext)
+                    gotdata = False
+                    for r in result:
+                        gotdata = True
+                    
+                    if gotdata:
+                        query = 'update ' + self.tracker.data_table() + ' set ' 
+                        fieldinfos = []
+                        for f in fields:
+                            if not f in searchfield:
+                                cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
+                                fieldinfos.append( f.name + '=' + f.sqlvalue(cellrow.value) )
+                        query += ','.join(fieldinfos) + queryrow + ' returning *'
+                        result = dbsession.execute(query)
+                    else:
+                        cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
+                        query = 'insert into ' + self.tracker.data_table() + ' (' + ','.join([ f.name for f in fields ]) + ') values (' + ','.join([ f.sqlvalue(cellrow.value) for f in fields ]) + ')'
+                        query += ' returning *'
+                        result = dbsession.execute(query)
+                    try:
+                        dbsession.commit()
+                        allresults.append('Uploaded ' + str(result.first()))
+                    except Exception as inst:
+                        dbsession.rollback()
+            try:
+                self.status = 'Updated ' + str(len(allresults)) + ' rows'
+                dbsession.add(self)
+                dbsession.commit()
+            except Exception as inst:
+                dbsession.rollback()
         return True
 
 class TrackerStatus(ModelBase):
