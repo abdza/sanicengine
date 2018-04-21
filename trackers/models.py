@@ -222,6 +222,27 @@ class Tracker(ModelBase):
 
         return data
 
+    def pagelinks(self,curuser=None,request=None,cleared=False):
+        recordamount = dbsession.execute("select count(*) as num from " + self.data_table() + self.queryrules(curuser=curuser, request=request)).first()['num']
+        pageamount = int(recordamount/(self.pagelimit if self.pagelimit else 10))
+        links = []
+        curoffset = 0
+        if request:
+            curoffset = int(request.args['offset'][0]) if 'offset' in request.args else 0
+        curindex = 0
+        for x in range(0,pageamount):
+            nextoffset=((x+1)*(self.pagelimit if self.pagelimit else 10) if x+1<pageamount else None)
+            prevoffset=((x-1)*(self.pagelimit if self.pagelimit else 10) if x else None)
+            offset=x*(self.pagelimit if self.pagelimit else 10)
+            url=request.app.url_for('trackers.viewlist',slug=self.slug,offset=offset, limit=(self.pagelimit if self.pagelimit else 10))
+            prevlink = (request.app.url_for('trackers.viewlist',slug=self.slug,offset=prevoffset, limit=(self.pagelimit if self.pagelimit else 10))) if prevoffset else None
+            nextlink = (request.app.url_for('trackers.viewlist',slug=self.slug,offset=nextoffset, limit=(self.pagelimit if self.pagelimit else 10))) if nextoffset else None
+            thislink = { 'url':url,'nextlink':nextlink,'prevlink':prevlink }
+            if curoffset==x*(self.pagelimit if self.pagelimit else 10):
+                curindex = x
+            links.append(thislink)
+        return curindex,links
+
     def queryrules(self,curuser=None,request=None,cleared=False):
         rules = ' where 1=1 '
         if not cleared:
@@ -231,6 +252,8 @@ class Tracker(ModelBase):
         return rules
 
     def records(self,id=None,curuser=None,request=None,cleared=False,offset=None,limit=None):
+        print("offset:" + str(offset))
+        print("limit:" + str(limit))
         results = []
         if id:
             if cleared:

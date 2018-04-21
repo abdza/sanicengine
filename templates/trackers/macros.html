@@ -37,7 +37,7 @@
 		{% endfor %}
 		{% endif %}
 	</tr>
-	{% for record in tracker.records(curuser=curuser,request=request,offset=0,limit=10) %}
+	{% for record in tracker.records(curuser=curuser,request=request,offset=(request.args['offset'][0] if 'offset' in request.args else 0),limit=(request.args['limit'][0] if 'limit' in request.args else tracker.pagelimit if tracker.pagelimit else 10)) %}
 	<tr>
 		<td><a href='{{ app.url_for('trackers.viewrecord',id=record.id,slug=tracker.slug) }}'>{{loop.index}}</a></td>
 		{% if list_fields %}
@@ -53,6 +53,47 @@
 {%- endmacro %}
 
 {% macro recordspage(tracker,curuser) -%}
+{% set curindex,links = tracker.pagelinks(curuser=curuser,request=request) %}
+{% if links %}
+<ul class='pagination'>
+    <li class="page-item {% if not links[curindex].prevlink %}disabled{% endif %}">
+        <a class="page-link" href="{{ links[curindex].prevlink }}" tabindex="-1">Previous</a>
+    </li>
+
+    {% if links|length > 11 %}
+    {% set startindex=0 %}
+    {% set endindex=links|length %}
+    {% if curindex>5 %}
+    {% set startindex=curindex-4 %}
+<li class='page-item {% if links[0]==curlink %}active{% endif %}'><a href='{{ links[0].url }}' class="page-link">1</a></li>
+<li class='page-item disabled'><span class='page-link'>...</span></li>
+    {% endif %}
+    {% if curindex<links|length-6 %}
+       {% set endindex=curindex+5 %}
+    {% endif %}
+
+{% for link in links[startindex:endindex] %}
+<li class='page-item {% if loop.index0 + startindex==curindex %}active{% endif %}'><a href='{{ link.url }}' class="page-link">{{ loop.index + startindex }}</a></li>
+{% endfor %}
+
+
+    {% if curindex<links|length-6 %}
+    <li class='page-item disabled'><span class='page-link'>...</span></li>
+<li class='page-item {% if links[links|length-1]==curlink %}active{% endif %}'><a href='{{ links[links|length-1].url }}' class="page-link">{{ links|length }}</a></li>
+    {% endif %}
+{% else %}
+
+{% for link in links %}
+<li class='page-item {% if loop.index0==curindex %}active{% endif %}'><a href='{{ link.url }}' class="page-link">{{ loop.index }}</a></li>
+{% endfor %}
+
+    {% endif %}
+
+    <li class="page-item {% if not links[curindex].nextlink %}disabled{% endif %}">
+        <a class="page-link" href="{{ links[curindex].nextlink }}" tabindex="-1">Next</a>
+    </li>
+</ul>
+{% endif %}
 {%- endmacro %}
 
 {% macro displayrecord(tracker,record) -%}
