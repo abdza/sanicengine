@@ -17,7 +17,10 @@ async def login(request):
     if curuser:
         if curuser.password == hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest():
             request['session']['user_id']=curuser.id
-            return redirect('/')
+            if 'targeturl' in request.form:
+                return redirect(request.form['targeturl'][0])
+            else:
+                return redirect('/')
     return html(render(request,'login.html'))
 
 @bp.route('/logout')

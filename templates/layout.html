@@ -51,6 +51,7 @@
 					{% else %}
 					<form method='post' class='row' action='{{ app.url_for('users.login') }}'>
 						<div class='col-md-6'>
+                            <input type='hidden' name='targeturl' value='{{request.url}}'/>
 						<input class='col-md-12' placeholder='Username' type='text' name='username' id='username'>
 						<input class='col-md-12' placeholder='Password' type='password' name='password' id='password'>
 						</div>
