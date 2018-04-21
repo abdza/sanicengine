@@ -19,6 +19,7 @@ class Tracker(ModelBase):
     slug = Column(String(100),unique=True)
     module = Column(String(100),default='pages')
     list_fields = Column(Text)
+    pagelimit = Column(Integer,default=10)
 
     def __repr__(self):
         return self.title
@@ -221,7 +222,15 @@ class Tracker(ModelBase):
 
         return data
 
-    def records(self,id=None,curuser=None,request=None,cleared=False):
+    def queryrules(self,curuser=None,request=None,cleared=False):
+        rules = ' where 1=1 '
+        if not cleared:
+            rrules = self.rolesrule(curuser,request)
+            if rrules:
+                rules += ' and (' + rrules + ') '
+        return rules
+
+    def records(self,id=None,curuser=None,request=None,cleared=False,offset=None,limit=None):
         results = []
         if id:
             if cleared:
@@ -230,10 +239,13 @@ class Tracker(ModelBase):
                 sqltext = text("select * from " + self.data_table() +  " where id=:id and (" + self.rolesrule(curuser,request) + ")")
             sqltext = sqltext.bindparams(id=id)
         else:
-            if cleared:
-                sqltext = text("select * from " + self.data_table())
-            else:
-                sqltext = text("select * from " + self.data_table() + " where " + self.rolesrule(curuser,request))
+            limitstr = ''
+            offsetstr = ''
+            if limit:
+                limitstr = ' limit ' + str(limit)
+            if offset:
+                offsetstr = ' offset ' + str(offset)
+            sqltext = text("select * from " + self.data_table() + self.queryrules(curuser=curuser,request=request,cleared=cleared) + limitstr + offsetstr)
         try:
             results = dbsession.execute(sqltext)
         except Exception as inst:

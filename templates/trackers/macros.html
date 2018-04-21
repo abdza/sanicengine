@@ -37,7 +37,7 @@
 		{% endfor %}
 		{% endif %}
 	</tr>
-	{% for record in tracker.records(curuser=curuser,request=request) %}
+	{% for record in tracker.records(curuser=curuser,request=request,offset=0,limit=10) %}
 	<tr>
 		<td><a href='{{ app.url_for('trackers.viewrecord',id=record.id,slug=tracker.slug) }}'>{{loop.index}}</a></td>
 		{% if list_fields %}
@@ -50,6 +50,9 @@
 	</tr>
 	{% endfor %}
 </table>
+{%- endmacro %}
+
+{% macro recordspage(tracker,curuser) -%}
 {%- endmacro %}
 
 {% macro displayrecord(tracker,record) -%}
