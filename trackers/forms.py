@@ -7,6 +7,7 @@ class TrackerForm(Form):
     module = StringField('Module')
     pagelimit = IntegerField('Page Limit')
     list_fields = StringField('List Fields')
+    search_fields = StringField('Search Fields')
 
 class TrackerFieldForm(Form):
     name = StringField('Name')
