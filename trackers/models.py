@@ -208,12 +208,14 @@ class Tracker(ModelBase):
             dbsession.commit()
         except Exception as inst:
             dbsession.rollback()
-        desc = ''
-        if curuser:
-            desc = 'Updated by ' + curuser.name
-        else:
-            desc = 'Updated by anonymous'
+        txtdesc = []
         if data:
+            for okey,oval in enumerate(oldrecord):
+                if oval!=data[okey]:
+                    dfield = dbsession.query(TrackerField).filter_by(name=oldrecord.keys()[okey]).first()
+                    txtdesc.append('Updated ' + dfield.label + ' from ' + str(oval) + ' to ' + str(data[okey]))
+            desc = '<br>'.join(txtdesc)
+
             query = """
                 insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
                 ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
