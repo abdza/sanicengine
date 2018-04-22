@@ -480,6 +480,8 @@ async def form(request,id=None):
                 tracker.list_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['list_fields'].data + ")") ])
             if form['search_fields'].data:
                 tracker.search_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['search_fields'].data + ")") ])
+            if form['filter_fields'].data:
+                tracker.filter_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['filter_fields'].data + ")") ])
             dbsession.add(tracker)
             if newtracker:
                 newstatus = TrackerStatus(name='New',tracker=tracker)
@@ -511,6 +513,10 @@ async def form(request,id=None):
                         'search_fields': {
                             'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
                             'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.search_fields) ]
+                            },
+                        'filter_fields': {
+                            'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
+                            'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.filter_fields) ]
                             },
                         }
 
