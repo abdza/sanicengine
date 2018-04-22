@@ -9,6 +9,9 @@ class User(ModelBase):
     username = Column(String(50))
     password = Column(String(300))
 
+    def getuser(self, userid):
+        return dbsession.query(User).get(userid)
+
 class ModuleRole(ModelBase):
     __tablename__ = 'module_roles'
     id = Column(Integer, primary_key=True)

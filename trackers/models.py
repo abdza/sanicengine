@@ -361,6 +361,12 @@ class Tracker(ModelBase):
                             atransitions.append(t)
         return atransitions
 
+    def recordupdates(self,record,curuser):
+        updates = []
+        if record:
+            updates = dbsession.execute("select * from " + self.update_table() + " where record_id=" + str(record['id']) + " order by update_date desc")
+        return updates
+
 
 class TrackerField(ModelBase):
     __tablename__ = 'tracker_fields'

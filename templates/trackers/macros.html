@@ -142,3 +142,23 @@
 </a>
 {% endfor %}
 {%- endmacro %}
+
+{% macro updatetrail(tracker,record,curuser) -%}
+<h2>Updates</h2>
+<table class='table'>
+    <tr><th>Date</th><th>Description</th><th>Updated By</th></tr>
+    {% for update in tracker.recordupdates(record,curuser) %}
+    <tr>
+        <td>
+            {{ update.update_date.strftime('%Y-%m-%d %H:%M') }}
+        </td>
+        <td>
+            {{ update.description }}
+        </td>
+        <td>
+            {{ curuser.getuser(update.user_id).name }}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{%- endmacro %}
