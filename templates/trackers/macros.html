@@ -28,12 +28,15 @@
 
 {% macro listform(tracker) -%}
 <form method='get'>
-    <input type='text' name='query' id='query' value='{% if request.args['query'] %}{{ request.args['query'][0] }}{% endif %}'/>
+    <input type='text' name='plq' id='plq' value='{% if request.args['plq'] %}{{ request.args['plq'][0] }}{% endif %}'/>
     <input type='submit' value='Search'/>
 </form>
 {%- endmacro %}
 
-{% macro recordslist(tracker,curuser) -%}
+{% macro recordslist(tracker,curuser,curindex=None,links=None) -%}
+{% if not links %}
+{% set curindex,links = tracker.pagelinks(curuser=curuser,request=request) %}
+{% endif %}
 {% set list_fields = tracker.list_fields_list() %}
 <table class='table'>
 	<tr>
@@ -44,9 +47,9 @@
 		{% endfor %}
 		{% endif %}
 	</tr>
-	{% for record in tracker.records(curuser=curuser,request=request,offset=(request.args['offset'][0] if 'offset' in request.args else 0),limit=(request.args['limit'][0] if 'limit' in request.args else tracker.pagelimit if tracker.pagelimit else 10)) %}
+	{% for record in tracker.records(curuser=curuser,request=request,offset=(request.args['plo'][0] if 'plo' in request.args else 0),limit=(request.args['pll'][0] if 'pll' in request.args else tracker.pagelimit if tracker.pagelimit else 10)) %}
 	<tr>
-		<td><a href='{{ app.url_for('trackers.viewrecord',id=record.id,slug=tracker.slug) }}'>{{loop.index}}</a></td>
+		<td><a href='{{ app.url_for('trackers.viewrecord',id=record.id,slug=tracker.slug) }}'>{{loop.index + (curindex*(tracker.pagelimit if tracker.pagelimit else 10)) }}</a></td>
 		{% if list_fields %}
 		{% for field in list_fields %}
 		<td>
@@ -59,8 +62,10 @@
 </table>
 {%- endmacro %}
 
-{% macro recordspage(tracker,curuser) -%}
+{% macro recordspage(tracker,curuser,curindex=None,links=None) -%}
+{% if not links %}
 {% set curindex,links = tracker.pagelinks(curuser=curuser,request=request) %}
+{% endif %}
 {% if links %}
 <ul class='pagination'>
     <li class="page-item {% if not links[curindex].prevlink %}disabled{% endif %}">

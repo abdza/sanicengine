@@ -3,7 +3,8 @@
 {% block content %}
 <h1>{{ tracker.title }}</h1>
     <a href='{{ app.url_for('trackers.addrecord',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+{% set curindex,links = tracker.pagelinks(curuser=curuser,request=request) %}
     {{ listform(tracker) }}
-    {{ recordslist(tracker,curuser) }}
-    {{ recordspage(tracker,curuser) }}
+    {{ recordslist(tracker,curuser,curindex=curindex,links=links) }}
+    {{ recordspage(tracker,curuser,curindex=curindex,links=links) }}
 {% endblock %}

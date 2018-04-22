@@ -230,20 +230,20 @@ class Tracker(ModelBase):
         links = []
         curoffset = 0
         if request:
-            curoffset = int(request.args['offset'][0]) if 'offset' in request.args else 0
+            curoffset = int(request.args['plo'][0]) if 'plo' in request.args else 0
         curindex = 0
         for x in range(0,pageamount):
             nextoffset=((x+1)*(self.pagelimit if self.pagelimit else 10) if x+1<pageamount else None)
             prevoffset=((x-1)*(self.pagelimit if self.pagelimit else 10) if x else None)
             offset=x*(self.pagelimit if self.pagelimit else 10)
-            if 'query' in request.args:
-                url=request.app.url_for('trackers.viewlist',query=request.args['query'][0],slug=self.slug,offset=offset, limit=(self.pagelimit if self.pagelimit else 10))
-                prevlink = (request.app.url_for('trackers.viewlist',query=request.args['query'][0],slug=self.slug,offset=prevoffset, limit=(self.pagelimit if self.pagelimit else 10))) if prevoffset else None
-                nextlink = (request.app.url_for('trackers.viewlist',query=request.args['query'][0],slug=self.slug,offset=nextoffset, limit=(self.pagelimit if self.pagelimit else 10))) if nextoffset else None
+            if 'plq' in request.args:
+                url=request.app.url_for('trackers.viewlist',plq=request.args['plq'][0],slug=self.slug,plo=offset, pll=(self.pagelimit if self.pagelimit else 10))
+                prevlink = (request.app.url_for('trackers.viewlist',plq=request.args['plq'][0],slug=self.slug,plo=prevoffset, pll=(self.pagelimit if self.pagelimit else 10))) if prevoffset else None
+                nextlink = (request.app.url_for('trackers.viewlist',plq=request.args['plq'][0],slug=self.slug,plo=nextoffset, pll=(self.pagelimit if self.pagelimit else 10))) if nextoffset else None
             else:
-                url=request.app.url_for('trackers.viewlist',slug=self.slug,offset=offset, limit=(self.pagelimit if self.pagelimit else 10))
-                prevlink = (request.app.url_for('trackers.viewlist',slug=self.slug,offset=prevoffset, limit=(self.pagelimit if self.pagelimit else 10))) if prevoffset else None
-                nextlink = (request.app.url_for('trackers.viewlist',slug=self.slug,offset=nextoffset, limit=(self.pagelimit if self.pagelimit else 10))) if nextoffset else None
+                url=request.app.url_for('trackers.viewlist',slug=self.slug,plo=offset, pll=(self.pagelimit if self.pagelimit else 10))
+                prevlink = (request.app.url_for('trackers.viewlist',slug=self.slug,plo=prevoffset, pll=(self.pagelimit if self.pagelimit else 10))) if prevoffset else None
+                nextlink = (request.app.url_for('trackers.viewlist',slug=self.slug,plo=nextoffset, pll=(self.pagelimit if self.pagelimit else 10))) if nextoffset else None
             thislink = { 'url':url,'nextlink':nextlink,'prevlink':prevlink }
             if curoffset==x*(self.pagelimit if self.pagelimit else 10):
                 curindex = x
@@ -252,12 +252,12 @@ class Tracker(ModelBase):
 
     def queryrules(self,curuser=None,request=None,cleared=False):
         rules = ' where 1=1 '
-        if 'query' in request.args:
-            if self.search_fields and len(request.args['query'][0]):
+        if 'plq' in request.args: # page list query exists
+            if self.search_fields and len(request.args['plq'][0]):
                 sfields = self.fields_from_list(self.search_fields)
                 sqs = []
                 for sfield in sfields:
-                    sqs.append(sfield.queryvalue(request.args['query'][0]))
+                    sqs.append(sfield.queryvalue(request.args['plq'][0]))
                 rules += ' and (' + ' or '.join(sqs) + ')'
 
         if not cleared:
@@ -267,8 +267,6 @@ class Tracker(ModelBase):
         return rules
 
     def records(self,id=None,curuser=None,request=None,cleared=False,offset=None,limit=None):
-        print("offset:" + str(offset))
-        print("limit:" + str(limit))
         results = []
         if id:
             if cleared:
