@@ -21,6 +21,7 @@ class Tracker(ModelBase):
     module = Column(String(100),default='pages')
     list_fields = Column(Text)
     search_fields = Column(Text)
+    filter_fields = Column(Text)
     pagelimit = Column(Integer,default=10)
 
     def __repr__(self):
@@ -225,6 +226,8 @@ class Tracker(ModelBase):
         return data
 
     def pagelinks(self,curuser=None,request=None,cleared=False):
+        # plo : page list offset
+        # pll : page list limit
         recordamount = dbsession.execute("select count(*) as num from " + self.data_table() + self.queryrules(curuser=curuser, request=request)).first()['num']
         pageamount = int(math.ceil(recordamount/(self.pagelimit if self.pagelimit else 10)))
         links = []
@@ -236,14 +239,21 @@ class Tracker(ModelBase):
             nextoffset=((x+1)*(self.pagelimit if self.pagelimit else 10) if x+1<pageamount else None)
             prevoffset=((x-1)*(self.pagelimit if self.pagelimit else 10) if x else None)
             offset=x*(self.pagelimit if self.pagelimit else 10)
+            params = {'slug':self.slug,'pll':(self.pagelimit if self.pagelimit else 10)}
             if 'plq' in request.args:
-                url=request.app.url_for('trackers.viewlist',plq=request.args['plq'][0],slug=self.slug,plo=offset, pll=(self.pagelimit if self.pagelimit else 10))
-                prevlink = (request.app.url_for('trackers.viewlist',plq=request.args['plq'][0],slug=self.slug,plo=prevoffset, pll=(self.pagelimit if self.pagelimit else 10))) if prevoffset else None
-                nextlink = (request.app.url_for('trackers.viewlist',plq=request.args['plq'][0],slug=self.slug,plo=nextoffset, pll=(self.pagelimit if self.pagelimit else 10))) if nextoffset else None
-            else:
-                url=request.app.url_for('trackers.viewlist',slug=self.slug,plo=offset, pll=(self.pagelimit if self.pagelimit else 10))
-                prevlink = (request.app.url_for('trackers.viewlist',slug=self.slug,plo=prevoffset, pll=(self.pagelimit if self.pagelimit else 10))) if prevoffset else None
-                nextlink = (request.app.url_for('trackers.viewlist',slug=self.slug,plo=nextoffset, pll=(self.pagelimit if self.pagelimit else 10))) if nextoffset else None
+                params.update({'plq':request.args['plq'][0]})
+            if self.filter_fields:
+                ffields = self.fields_from_list(self.filter_fields)
+                for ff in ffields:
+                    pname = 'filter_' + ff.name
+                    if pname in request.args:
+                        params.update({pname:request.args[pname][0]})
+            params.update({'plo':offset})
+            url=request.app.url_for('trackers.viewlist',**params)
+            params.update({'plo':prevoffset})
+            prevlink = (request.app.url_for('trackers.viewlist',**params)) if prevoffset else None
+            params.update({'plo':nextoffset})
+            nextlink = (request.app.url_for('trackers.viewlist',**params)) if nextoffset else None
             thislink = { 'url':url,'nextlink':nextlink,'prevlink':prevlink }
             if curoffset==x*(self.pagelimit if self.pagelimit else 10):
                 curindex = x
@@ -259,6 +269,15 @@ class Tracker(ModelBase):
                 for sfield in sfields:
                     sqs.append(sfield.queryvalue(request.args['plq'][0]))
                 rules += ' and (' + ' or '.join(sqs) + ')'
+
+        if self.filter_fields:
+            ffields = self.fields_from_list(self.filter_fields)
+            fqs = []
+            for ffield in ffields:
+                if 'filter_' + ffield.name in request.args and request.args['filter_'+ffield.name][0]!='plall':
+                    fqs.append(ffield.queryvalue(request.args['filter_'+ffield.name][0],equals=True))
+            if len(fqs):
+                rules += ' and (' + ' and '.join(fqs) + ')'
 
         if not cleared:
             rrules = self.rolesrule(curuser,request)
@@ -367,6 +386,10 @@ class TrackerField(ModelBase):
         if self.obj_field:
             return self.obj_fields()[0]
 
+    def filter_options(self):
+        values = dbsession.execute("select distinct " + self.name + " as val from " + self.tracker.data_table() + " order by " + self.name)
+        return values
+
     def disp_value(self, value):
         if value:
             if self.field_type=='object':
@@ -382,9 +405,12 @@ class TrackerField(ModelBase):
             
         return value
 
-    def queryvalue(self, value):
+    def queryvalue(self, value,equals=False):
         if self.field_type in ['string','text']:
-            return self.name + " ilike '%" + str(value) + "%'"
+            if equals:
+                return self.name + " = '" + str(value) + "'"
+            else:
+                return self.name + " ilike '%" + str(value) + "%'"
         elif self.field_type in ['integer','number','object','user']:
             return self.name + "=" + str(value)
         elif self.field_type in ['date','datetime']:
