@@ -3,7 +3,7 @@
 {% block content %}
 <h1>{{ tracker.title }}</h1>
     <a href='{{ app.url_for('trackers.addrecord',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
-    <a href='{{ app.url_for('trackers.listexcel',slug=tracker.slug) }}' class='btn btn-primary'>Excel</a>
+    <a href='{{ app.url_for('trackers.listexcel',slug=tracker.slug,**request.args) }}' class='btn btn-primary'>Excel</a>
 {% set curindex,links = tracker.pagelinks(curuser=curuser,request=request) %}
     {{ listform(tracker) }}
     {{ recordslist(tracker,curuser,curindex=curindex,links=links) }}
