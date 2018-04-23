@@ -9,6 +9,7 @@ class TrackerForm(Form):
     list_fields = StringField('List Fields')
     search_fields = StringField('Search Fields')
     filter_fields = StringField('Filter Fields')
+    excel_fields = StringField('Excel Fields')
 
 class TrackerFieldForm(Form):
     name = StringField('Name')

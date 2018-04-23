@@ -22,6 +22,7 @@ class Tracker(ModelBase):
     list_fields = Column(Text)
     search_fields = Column(Text)
     filter_fields = Column(Text)
+    excel_fields = Column(Text)
     pagelimit = Column(Integer,default=10)
 
     def __repr__(self):
@@ -315,7 +316,7 @@ class Tracker(ModelBase):
         return results
 
     def rolesrule(self,curuser,request):
-        if self.userroles(curuser):
+        if self.userroles(curuser,request=request):
             rolesrule = '1=1'
         else:
             queryroles = dbsession.query(TrackerRole).filter_by(tracker=self,role_type='query').all()

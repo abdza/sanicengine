@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
-from sanic.response import html, redirect, json as jsonresponse
+from sanic.response import html, redirect, json as jsonresponse, file_stream, stream, raw
 from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition, TrackerDataUpdate
 from users.models import User
 from pages.models import Page
@@ -14,7 +14,12 @@ import datetime
 import json
 import re
 import asyncio
-from openpyxl import load_workbook
+import io
+from openpyxl import load_workbook, Workbook
+from openpyxl.compat import range
+from openpyxl.utils import get_column_letter
+from openpyxl.writer.excel import save_virtual_workbook
+
 
 bp = Blueprint('trackers')
 
@@ -482,6 +487,8 @@ async def form(request,id=None):
                 tracker.search_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['search_fields'].data + ")") ])
             if form['filter_fields'].data:
                 tracker.filter_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['filter_fields'].data + ")") ])
+            if form['excel_fields'].data:
+                tracker.excel_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['excel_fields'].data + ")") ])
             dbsession.add(tracker)
             if newtracker:
                 newstatus = TrackerStatus(name='New',tracker=tracker)
@@ -517,6 +524,10 @@ async def form(request,id=None):
                         'filter_fields': {
                             'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
                             'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.filter_fields) ]
+                            },
+                        'excel_fields': {
+                            'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
+                            'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.excel_fields) ]
                             },
                         }
 
@@ -573,6 +584,34 @@ async def viewlist(request,slug=None):
         return html(page.render(request,tracker=tracker))
     else:
         return html(render(request,'trackers/viewlist.html',tracker=tracker))
+
+@bp.route('/system/<slug>/excel')
+async def listexcel(request,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+    curuser = None
+    if 'user_id' in request['session']:
+        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    print("rcd:" + str(request))
+    records = tracker.records(curuser=curuser,request=request)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = tracker.title
+    if records:
+        xfields = []
+        if tracker.excel_fields:
+            xfields = tracker.fields_from_list(tracker.excel_fields)
+        else:
+            xfields = tracker.fields_from_list(tracker.list_fields)
+        for i,f in enumerate(xfields):
+            ws.cell(row=1,column=i+1,value=f.label)
+        row=2
+        for rec in records:
+            for i,f in enumerate(xfields):
+                ws.cell(row=row,column=i+1,value=rec[f.name])
+            row+=1
+
+    virtual_wb = save_virtual_workbook(wb)
+    return raw(virtual_wb, content_type='application/vnd.ms-excel')
 
 @bp.route('/system/<slug>/addrecord',methods=['POST','GET'])
 async def addrecord(request,slug=None):
