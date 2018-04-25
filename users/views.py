@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
-from sanic.response import html, redirect, json
+from sanic.response import html, redirect, json as jsonresponse
 from template import render
 from .forms import UserForm, ModuleRoleForm
 from .models import User, ModuleRole
 from database import dbsession
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
+from main import send_email
 import hashlib
+import json
 
 bp = Blueprint('users')
 
@@ -75,7 +77,12 @@ async def userjson(request):
     if 'q' in request.args:
         searchval = request.args['q'][0]
     users = dbsession.query(User).filter(or_(User.name.ilike("%" + searchval + "%"),User.username.ilike("%" + searchval + "%"))).all()
-    return json([ {'id':user.id,'name':user.name} for user in users ])
+    return jsonresponse([ {'id':user.id,'name':user.name} for user in users ])
+
+@bp.route('/test')
+async def test(request):
+    await send_email({"email_to":["abdullah.zainul@gmail.com"],"subject":"done","body":"this"})
+    return html('try')
 
 @bp.route('/users')
 async def index(request):
