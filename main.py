@@ -5,11 +5,18 @@ from sanic_session import InMemorySessionInterface
 import users, pages, fileLinks, trackers, modules
 from template import render
 from database import dbsession, ModelBase, dbengine
+import asyncio
+import aiosmtplib
+import os
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from email.mime.text import MIMEText
+import settings
 
 app = Sanic()
 app.static('/static','./static')
 
 session_interface = InMemorySessionInterface()
+
 
 @app.middleware('request')
 async def add_session_to_request(request):
@@ -45,5 +52,36 @@ async def test(request):
         dbsession.commit()
     return html(render(request,'test.html',name='hi',form=form))
 
+async def send_email(data):
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(_send_email,args=[data])
+    scheduler.start()  #run one-off job, so the client not need to wait
+
+async def _send_email(data):
+
+    #Thanks: https://github.com/cole/aiosmtplib/issues/1
+    host = os.environ.get('MAIL_SERVER_HOST') if os.environ.get('MAIL_SERVER_HOST') else settings.MAIL_HOST 
+    port = os.environ.get('MAIL_SERVER_PORT') if os.environ.get('MAIL_SERVER_PORT') else settings.MAIL_PORT
+    user = os.environ.get('MAIL_SERVER_USER') if os.environ.get('MAIL_SERVER_USER') else settings.MAIL_USERNAME
+    password = os.environ.get('MAIL_SERVER_PASSWORD') if os.environ.get('MAIL_SERVER_PASSWORD') else settings.MAIL_PASSWORD
+
+
+    loop = asyncio.get_event_loop()
+
+    server = aiosmtplib.SMTP(host, port, loop=loop, use_tls=False)
+    await server.connect()
+
+    await server.starttls()
+    await server.login(user, password)
+
+    async def send_a_message():
+        message = MIMEText(data['body'])
+        message['From'] = os.environ.get('MAIL_SERVER_USER') if os.environ.get('MAIL_SERVER_USER') else settings.MAIL_USERNAME
+        message['To'] = ','.join(data['email_to'])
+        message['Subject'] = data['subject']
+        await server.send_message(message)
+
+    await send_a_message()
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+app.run(host="0.0.0.0", port=8000)
