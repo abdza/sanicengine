@@ -101,3 +101,12 @@ async def register(request):
         dbsession.commit()
         return redirect('/')
     return html(render(request,'register.html',form=form))
+
+@bp.route('/terms')
+async def terms(request):
+    return html(render(request,'terms.html'))
+
+@bp.route('/forgot-password',methods=['GET','POST'])
+async def forgotpassword(request):
+    form = UserForm(request.form)
+    return html(render(request,'forgot-password.html',form=form))

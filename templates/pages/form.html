@@ -21,7 +21,15 @@
 <div class='form-group row'>
 	{{ field.label(class_='col-sm-2 col-form-label') }}
 {% if field.name!='content' %}
+{% if field.type=='BooleanField' %}
+<div class="{{'col-sm-10 is-invalid' if field.errors else 'col-sm-10'}}">
+	{{ field() }}
+</div>
+{% elif field.type=='DateField' %}
+	{{ field(class_='col-sm-10 form-control is-invalid date-picker' if field.errors else 'col-sm-10 form-control date-picker') }}
+{% else %}
 	{{ field(class_='col-sm-10 form-control is-invalid' if field.errors else 'col-sm-10 form-control') }}
+    {% endif %}
 {% else %}
 <div id='contenteditor' class='col-sm-10 form-control'>{{ form.content.data|e }}</div>
 <input type='hidden' name='content' id='content'>
@@ -41,6 +49,8 @@
 {% endblock %}
 {% block endbody %}
 	<script src='{{ app.url_for('static', filename='/js/jquery.tokeninput.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/plugins/air-datepicker/dist/js/datepicker.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/plugins/air-datepicker/dist/js/i18n/datepicker.en.js')}}'></script>
     <script src="{{ app.url_for('static', filename='/js/ace/ace.js') }}" type="text/javascript" charset="utf-8"></script>
 	<script type='text/javascript'>
 		$(document).ready(function(){
