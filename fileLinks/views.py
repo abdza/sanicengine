@@ -23,9 +23,12 @@ async def form(request,slug=None):
     title = 'Create File Link'
     form = FileLinkForm(request.form)
     if request.method=='POST':
-        filelink = dbsession.query(FileLink).filter_by(slug=form.slug.data).first()
+        filelink = dbsession.query(FileLink).filter_by(slug=slug).first()
         if not filelink:
-            filelink = dbsession.query(FileLink).get(int(form.slug.data))
+            try:
+                filelink = dbsession.query(FileLink).get(int(slug))
+            except:
+                print("Not id")
         if filelink:
             title = 'Edit File'
         if form.validate():
