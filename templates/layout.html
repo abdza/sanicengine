@@ -2,26 +2,21 @@
 <html lang='en' dir='ltr'>
 	<head>
 		<meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
-    <link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap.min.css') }}'>
-    <link rel='stylesheet' href='{{ app.url_for('static',filename='/css/style.min.css') }}'>
-
-    <!-- Mobile Specific Metas -->
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
-	<!-- Google Font -->
-	<link href="https://fonts.googleapis.com/css?family=Work+Sans:300,400,500,600,700" rel="stylesheet">
-	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
-
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap.min.css') }}'>
+		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/style.min.css') }}'>
+		<!-- Mobile Specific Metas -->
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<!-- Google Font -->
+		<link href="https://fonts.googleapis.com/css?family=Work+Sans:300,400,500,600,700" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/custom.css') }}'>
 		{% block endhead %}
 		{% endblock %}
 	</head>
-	{% block body %}
-	<body>
-
-		{% block bodyheader %}
+{% block body %}
+<body>
+	{% block bodyheader %}
 	<div class="header clearfix">
 		<div class="header-right">
 			<div class="brand-logo">
@@ -29,107 +24,105 @@
 					<img src="vendors/images/logo.png" alt="" class="mobile-logo">
 				</a>
 			</div>
-            <div class="menu-icon">
+			<div class="menu-icon">
 				<span></span>
 				<span></span>
 				<span></span>
 				<span></span>
 			</div>
-            {% if request.session.user_id %}
-			<div class="user-info-dropdown">
-				<div class="dropdown">
-					<a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">
-						<span class="user-icon"><i class="fa fa-user-o"></i></span>
-                        <span class="user-name">{{ curuser.name }}</span>
-					</a>
-					<div class="dropdown-menu dropdown-menu-right">
-						<a class="dropdown-item" href="profile.php"><i class="fa fa-user-md" aria-hidden="true"></i> Profile</a>
-						<a class="dropdown-item" href="profile.php"><i class="fa fa-cog" aria-hidden="true"></i> Setting</a>
-						<a class="dropdown-item" href="faq.php"><i class="fa fa-question" aria-hidden="true"></i> Help</a>
-                        <a class="dropdown-item" href="{{ app.url_for('users.logout') }}"><i class="fa fa-sign-out" aria-hidden="true"></i> Log Out</a>
+			{% if request.session.user_id %}
+				<div class="user-info-dropdown">
+					<div class="dropdown">
+						<a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+							<span class="user-icon"><i class="fa fa-user-o"></i></span>
+							<span class="user-name">{{ curuser.name }}</span>
+						</a>
+						<div class="dropdown-menu dropdown-menu-right">
+							<a class="dropdown-item" href="profile.php"><i class="fa fa-user-md" aria-hidden="true"></i> Profile</a>
+							<a class="dropdown-item" href="profile.php"><i class="fa fa-cog" aria-hidden="true"></i> Setting</a>
+							<a class="dropdown-item" href="faq.php"><i class="fa fa-question" aria-hidden="true"></i> Help</a>
+							<a class="dropdown-item" href="{{ app.url_for('users.logout') }}"><i class="fa fa-sign-out" aria-hidden="true"></i> Log Out</a>
+						</div>
 					</div>
 				</div>
-			</div>
-            {% else %}
-            <div class='col-md-4 pull-right'>
-                <form method='post' class='row' action='{{ app.url_for('users.login') }}'>
-                    <div class='col-md-6'>
-                        <input type='hidden' name='targeturl' value='{{request.url}}'/>
-                    <input class='col-md-12' placeholder='Username' type='text' name='username' id='username'>
-                    <input class='col-md-12' placeholder='Password' type='password' name='password' id='password'>
-                    </div>
-                    <div class='col-md-6'>
-                    <input class='col-md-12' type='submit' value='Login'/>
-                    </div>
-                </form>
-            </div>
-            {% endif %}
+			{% else %}
+				<div class='col-md-4 pull-right'>
+					<form method='post' class='row' action='{{ app.url_for('users.login') }}'>
+						<div class='col-md-6'>
+							<input type='hidden' name='targeturl' value='{{request.url}}'/>
+							<input class='col-md-12' placeholder='Username' type='text' name='username' id='username'>
+							<input class='col-md-12' placeholder='Password' type='password' name='password' id='password'>
+						    </div>
+					    <div class='col-md-6'>
+						    <input class='col-md-12' type='submit' value='Login'/>
+					    </div>
+					</form>
+				</div>
+			{% endif %}
 		</div>
 	</div>
-    <div class="left-side-bar">
+	<div class="left-side-bar">
 		<div class="brand-logo">
 			<a href="index.php">
 				<img src="vendors/images/deskapp-logo.png" alt="">
 			</a>
 		</div>
         <div class="menu-block customscroll">
-            <div class="sidebar-menu">
+		<div class="sidebar-menu">
                 <ul id="accordion-menu">
-                    <li>
-                        <a href='{{ app.url_for('users.index') }}' class="dropdown-toggle no-arrow">
-                            <span class="fa fa-users"></span>
-                            <span class="mtext">Users</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='{{ app.url_for('users.module_roles') }}' class="dropdown-toggle no-arrow">
-                            <span class="fa fa-address-card-o"></span>
-                            <span class="mtext">Roles</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='{{ app.url_for('modules.index') }}' class="dropdown-toggle no-arrow">
-                            <span class="fa fa-book"></span>
-                            <span class="mtext">Modules</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='{{ app.url_for('pages.index') }}' class="dropdown-toggle no-arrow">
-                            <span class="fa fa-file-o"></span>
-                            <span class="mtext">Pages</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='{{ app.url_for('fileLinks.index') }}' class="dropdown-toggle no-arrow">
-                            <span class="fa fa-file"></span>
-                            <span class="mtext">Files</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href='{{ app.url_for('trackers.index') }}' class="dropdown-toggle no-arrow">
-                            <span class="fa fa-gears"></span>
-                            <span class="mtext">Trackers</span>
-                        </a>
-                    </li>
+			<li>
+				<a href='{{ app.url_for('users.index') }}' class="dropdown-toggle no-arrow">
+					<span class="fa fa-users"></span>
+					<span class="mtext">Users</span>
+				</a>
+			</li>
+			<li>
+				<a href='{{ app.url_for('users.module_roles') }}' class="dropdown-toggle no-arrow">
+					<span class="fa fa-address-card-o"></span>
+					<span class="mtext">Roles</span>
+				</a>
+			</li>
+			<li>
+				<a href='{{ app.url_for('modules.index') }}' class="dropdown-toggle no-arrow">
+					<span class="fa fa-book"></span>
+					<span class="mtext">Modules</span>
+				</a>
+			</li>
+			<li>
+				<a href='{{ app.url_for('pages.index') }}' class="dropdown-toggle no-arrow">
+					<span class="fa fa-file-o"></span>
+					<span class="mtext">Pages</span>
+				</a>
+			</li>
+			<li>
+				<a href='{{ app.url_for('fileLinks.index') }}' class="dropdown-toggle no-arrow">
+					<span class="fa fa-file"></span>
+					<span class="mtext">Files</span>
+				</a>
+			</li>
+			<li>
+				<a href='{{ app.url_for('trackers.index') }}' class="dropdown-toggle no-arrow">
+					<span class="fa fa-gears"></span>
+					<span class="mtext">Trackers</span>
+				</a>
+			</li>
                 </ul>
-            </div>
+		</div>
         </div>
-    </div>
-
-		{% endblock %}
-
-
-		<main role='main'>
-		{% block content %}
-		<h1>Sanic Engine</h1>
-		{% endblock %}
-		</main>
-		<script src='{{ app.url_for('static', filename='/js/jquery-3.3.1.min.js')}}'></script>
-		<script src='{{ app.url_for('static', filename='/js/popper.min.js')}}'></script>
-		<script src='{{ app.url_for('static', filename='/js/bootstrap.min.js')}}'></script>
-		{% block endbody %}
-		{% endblock %}
-		<script src='{{ app.url_for('static', filename='/js/custom.js')}}'></script>
-	</body>
 	{% endblock %}
+
+
+	<main role='main'>
+		{% block content %}
+			<h1>Sanic Engine</h1>
+		{% endblock %}
+	</main>
+	<script src='{{ app.url_for('static', filename='/js/jquery-3.3.1.min.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/js/popper.min.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/js/bootstrap.min.js')}}'></script>
+	{% block endbody %}
+	{% endblock %}
+	<script src='{{ app.url_for('static', filename='/js/custom.js')}}'></script>
+</body>
+{% endblock %}
 </html>

@@ -1,5 +1,5 @@
 from database import ModelBase, dbsession, reference_col
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship, backref
 
 class User(ModelBase):
@@ -8,6 +8,9 @@ class User(ModelBase):
     name = Column(String(250), nullable=False)
     username = Column(String(50))
     password = Column(String(300))
+    email = Column(String(300))
+    resethash = Column(String(300))
+    resetexpire = Column(DateTime)
 
     def getuser(self, userid):
         return dbsession.query(User).get(userid)
