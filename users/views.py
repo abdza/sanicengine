@@ -98,10 +98,11 @@ async def register(request):
         user=User()
         form.populate_obj(user)
         user.password = hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest()
+        user.username = user.email
         dbsession.add(user)
         dbsession.commit()
         return redirect('/')
-    return html(render(request,'register.html',form=form))
+    return html(render(request,'users/register.html',form=form))
 
 @bp.route('/terms')
 async def terms(request):
@@ -110,4 +111,4 @@ async def terms(request):
 @bp.route('/forgot-password',methods=['GET','POST'])
 async def forgotpassword(request):
     form = UserForm(request.form)
-    return html(render(request,'forgot-password.html',form=form))
+    return html(render(request,'users/forgot-password.html',form=form))
