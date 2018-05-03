@@ -10,6 +10,8 @@ import aiosmtplib
 import os
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from email.mime.text import MIMEText
+from email.message import EmailMessage
+from email.utils import make_msgid
 import settings
 
 app = Sanic()
@@ -42,16 +44,6 @@ async def register_bp(app, loop):
     app.blueprint(trackers.views.bp)
     app.blueprint(modules.views.bp)
 
-@app.route("/",methods=['GET','POST'])
-async def test(request):
-    form = users.forms.UserForm(request.form)
-    if request.method=='POST' and form.validate():
-        user=users.models.User()
-        form.populate_obj(user)
-        dbsession.add(user)
-        dbsession.commit()
-    return html(render(request,'test.html',name='hi',form=form))
-
 async def send_email(data):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(_send_email,args=[data])
@@ -75,10 +67,15 @@ async def _send_email(data):
     await server.login(user, password)
 
     async def send_a_message():
-        message = MIMEText(data['body'])
+        message = EmailMessage()
         message['From'] = os.environ.get('MAIL_SERVER_USER') if os.environ.get('MAIL_SERVER_USER') else settings.MAIL_USERNAME
         message['To'] = ','.join(data['email_to'])
         message['Subject'] = data['subject']
+        if 'body' in data:
+            message.set_content(data['body'])
+        if 'htmlbody' in data:
+            asparagus_cid = make_msgid()
+            message.add_alternative(data['htmlbody'].format(asparagus_cid=asparagus_cid[1:-1]), subtype='html')
         await server.send_message(message)
 
     await send_a_message()

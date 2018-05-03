@@ -4,6 +4,7 @@ from sanic.response import html, redirect, json as jsonresponse
 from template import render
 from .forms import UserForm, ModuleRoleForm
 from .models import User, ModuleRole
+from pages.models import Page
 from database import dbsession
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
@@ -105,6 +106,11 @@ async def register(request):
         return redirect('/')
     return html(render(request,'users/register.html',form=form))
 
+@bp.route('/resetpassword/<resethash>',methods=['GET','POST'])
+async def resetpassword(request,resethash=None):
+    user=dbsession.query(User).filter_by(resethash=resethash).first()
+    return html(render(request,'users/resetpassword.html',user=user))
+
 @bp.route('/forgot-password',methods=['GET','POST'])
 async def forgotpassword(request):
     if request.method=='POST':
@@ -115,4 +121,9 @@ async def forgotpassword(request):
             user.resetexpire = datetime.datetime.now() + datetime.timedelta(hours=1)
             dbsession.add(user)
             dbsession.commit()
+            resetemail = dbsession.query(Page).filter_by(slug='resetemail').first()
+            if resetemail:
+                await send_email({'email_to':[user.email],'subject':resetemail.title,'htmlbody':resetemail.render(request,user=user)})
+            else:
+                await send_email({'email_to':[user.email],'subject':'Reset password link','htmlbody':render(request,'users/reset_email.html',user=user)})
     return html(render(request,'users/forgot-password.html'))
