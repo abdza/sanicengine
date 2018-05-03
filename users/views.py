@@ -10,6 +10,7 @@ from sqlalchemy import or_
 from main import send_email
 import hashlib
 import json
+import datetime
 
 bp = Blueprint('users')
 
@@ -104,11 +105,14 @@ async def register(request):
         return redirect('/')
     return html(render(request,'users/register.html',form=form))
 
-@bp.route('/terms')
-async def terms(request):
-    return html(render(request,'terms.html'))
-
 @bp.route('/forgot-password',methods=['GET','POST'])
 async def forgotpassword(request):
-    form = UserForm(request.form)
-    return html(render(request,'users/forgot-password.html',form=form))
+    if request.method=='POST':
+        user=dbsession.query(User).filter_by(email=request.form.get('email')).first()
+        if user:
+            resethash = user.email + str(datetime.datetime.now())
+            user.resethash = hashlib.sha224(resethash.encode('utf-8')).hexdigest()
+            user.resetexpire = datetime.datetime.now() + datetime.timedelta(hours=1)
+            dbsession.add(user)
+            dbsession.commit()
+    return html(render(request,'users/forgot-password.html'))

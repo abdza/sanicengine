@@ -9,6 +9,10 @@ from sqlalchemy_paginator import Paginator
 
 bp = Blueprint('pages')
 
+@bp.route('/terms')
+async def terms(request):
+    return html(render(request,'terms.html'))
+
 @bp.route('/run/<slug>',methods=['GET','POST'])
 async def run(request, slug):
     page = dbsession.query(Page).filter_by(slug=slug).first()
@@ -74,6 +78,14 @@ async def form(request,slug=None):
 
     return html(render(request,'pages/form.html',title=title,page=page,
             form=form,enctype='multipart/form-data',submitcontinue=True))
+
+@bp.route('/')
+async def home(request):
+    home = dbsession.query(Page).filter_by(slug='home').first()
+    if home:
+        return html(home.render(request))
+    return html(render(request,'pages/home.html'))
+
 
 @bp.route('/pages')
 async def index(request):
