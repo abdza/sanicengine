@@ -117,6 +117,14 @@
 
 	{% block mainblock %}
 	<main role='main' class='container'>
+	{% if request.session.flashmessage %}
+		<div class="alert alert-warning alert-dismissible fade show" role="alert">
+			{{ request.session.pop('flashmessage',None) }}
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+	{% endif %}
 		{% block content %}
 			<h1>Sanic Engine</h1>
 		{% endblock %}

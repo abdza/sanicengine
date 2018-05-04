@@ -16,6 +16,7 @@ import settings
 
 app = Sanic()
 app.static('/static','./static')
+app.settings = settings
 
 session_interface = InMemorySessionInterface()
 
