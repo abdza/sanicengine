@@ -5,6 +5,7 @@ from .models import Page
 from .forms import PageForm
 from database import dbsession
 from template import render
+from decorators import authorized
 from sqlalchemy_paginator import Paginator
 
 bp = Blueprint('pages')
@@ -47,6 +48,7 @@ async def view(request, slug):
 @bp.route('/pages/create',methods=['POST','GET'])
 @bp.route('/pages/edit/',methods=['POST','GET'],name='edit')
 @bp.route('/pages/edit/<slug>',methods=['POST','GET'])
+@authorized()
 async def form(request,slug=None):
     title = 'Create Page'
     form = PageForm(request.form)
@@ -88,6 +90,7 @@ async def home(request):
 
 
 @bp.route('/pages')
+@authorized()
 async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 5)
