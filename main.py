@@ -27,11 +27,6 @@ async def add_session_to_request(request):
     # using the client's request
     await session_interface.open(request)
 
-@app.middleware('request')
-async def access_permission(request):
-    print("got to access permission")
-    print("session:" + str(request['session']))
-
 @app.middleware('response')
 async def save_session(request, response):
     # after each request save the session,
