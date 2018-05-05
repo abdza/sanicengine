@@ -37,6 +37,7 @@ async def run(request, slug):
         return redirect('/')
 
 @bp.route('/view/<slug>',methods=['GET','POST'])
+@authorized(object_type='page')
 async def view(request, slug):
     page = dbsession.query(Page).filter_by(slug=slug).first()
     if page:
@@ -95,4 +96,4 @@ async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 5)
     return html(render(request,
-        'generic/list.html',title='Pages',editlink=request.app.url_for('pages.edit'),addlink=request.app.url_for('pages.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Pages',editlink=request.app.url_for('pages.edit'),addlink=request.app.url_for('pages.form'),fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

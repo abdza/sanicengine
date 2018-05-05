@@ -18,6 +18,7 @@ class Page(ModelBase):
     require_login = Column(Boolean(),default=False)
     publish_date = Column(Date(),nullable=True)
     expire_date = Column(Date(),nullable=True)
+    allowed_roles = Column(String(300))
 
     def render(self,request,*args,**kwargs):
         return render_string(request,self.content,*args,**kwargs)

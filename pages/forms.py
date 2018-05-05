@@ -8,5 +8,6 @@ class PageForm(Form):
     published = BooleanField('Published')
     runable = BooleanField('Runable')
     require_login = BooleanField('Require Login')
+    allowed_roles = StringField('Allowed Roles')
     publish_date = DateField('Publish Date')
     expire_date = DateField('Expire Date')

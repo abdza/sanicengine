@@ -15,6 +15,10 @@ class User(ModelBase):
     def getuser(self, userid):
         return dbsession.query(User).get(userid)
 
+    def moduleroles(self,module):
+        mroles = dbsession.query(ModuleRole).filter(ModuleRole.user==self,ModuleRole.module==module).all()
+        return [ r.role for r in mroles ]
+
 class ModuleRole(ModelBase):
     __tablename__ = 'module_roles'
     id = Column(Integer, primary_key=True)
