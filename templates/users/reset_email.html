@@ -1,5 +1,5 @@
 <h1>You have applied to reset your password</h1>
 <h2>Dear {{ user.name }}</h2>
 <p>You have applied to reset your password. Please click on the link below to enter your new password.</p>
-<a href='{{ app.url_for('users.resetpassword',resethash=user.resethash) }}'>{{ app.url_for('users.resetpassword',resethash=user.resethash) }}</a>
+<a href='{{ app.config.SERVER_ROOT }}{{ app.url_for('users.resetpassword',resethash=user.resethash) }}'>{{ app.config.SERVER_ROOT }}{{ app.url_for('users.resetpassword',resethash=user.resethash) }}</a>
 <p>Your reset password link will expire in an hour.</p>

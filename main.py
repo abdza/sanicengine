@@ -16,7 +16,7 @@ import settings
 
 app = Sanic()
 app.static('/static','./static')
-app.settings = settings
+app.config.from_object(settings)
 
 session_interface = InMemorySessionInterface()
 
@@ -26,6 +26,11 @@ async def add_session_to_request(request):
     # before each request initialize a session
     # using the client's request
     await session_interface.open(request)
+
+@app.middleware('request')
+async def access_permission(request):
+    print("got to access permission")
+    print("session:" + str(request['session']))
 
 @app.middleware('response')
 async def save_session(request, response):
