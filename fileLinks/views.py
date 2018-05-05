@@ -5,16 +5,18 @@ from .models import FileLink
 from .forms import FileLinkForm
 from database import dbsession
 from template import render
+from decorators import authorized
 from sqlalchemy_paginator import Paginator
 import os
 
 bp = Blueprint('fileLinks')
 
 @bp.route('/files/download/<slug>')
+@authorized(object_type='filelink')
 async def download(request,slug):
     filelink = dbsession.query(FileLink).filter_by(slug=slug).first()
     if filelink:
-        return await file_stream(filelink.filename)
+        return await file_stream(filelink.filename,filename=os.path.basename(filelink.filename))
 
 @bp.route('/files/create',methods=['POST','GET'])
 @bp.route('/files/edit/',methods=['POST','GET'],name='edit')
@@ -35,11 +37,10 @@ async def form(request,slug=None):
             dst = None
             if not filelink:
                 filelink=FileLink()
-            if request.files.get('filename'):
+            if request.files.get('filename') and request.files.get('filename').name:
                 dfile = request.files.get('filename')
                 ext = dfile.type.split('/')[1]
                 dst = os.path.join('upload',dfile.name)
-
                 try:
                     # extract starting byte from Content-Range header string
                     range_str = request.headers['Content-Range']
@@ -51,6 +52,7 @@ async def form(request,slug=None):
                     with open(dst, 'wb') as f:
                         f.write(dfile.body)
                 filelink.filename = dst
+            del(form['filename'])
             form.populate_obj(filelink)
             if dst:
                 filelink.filename = dst
@@ -71,4 +73,4 @@ async def form(request,slug=None):
 async def index(request):
     filelinks = dbsession.query(FileLink)
     paginator = Paginator(filelinks, 5)
-    return html(render(request, 'generic/list.html',title='Files',editlink=request.app.url_for('fileLinks.edit'),addlink=request.app.url_for('fileLinks.form'),fields=[{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'Module','name':'module'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Files',editlink=request.app.url_for('fileLinks.edit'),addlink=request.app.url_for('fileLinks.form'),fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

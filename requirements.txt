@@ -2,7 +2,7 @@ uwsgi
 sanic
 Jinja2
 locust
-psycopg2
+psycopg2-binary
 sqlalchemy
 wtforms
 -e git://github.com/miki725/sqlalchemy-paginator.git#egg=sqlalchemy-paginator

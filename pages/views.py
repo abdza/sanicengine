@@ -15,6 +15,7 @@ async def terms(request):
     return html(render(request,'terms.html'))
 
 @bp.route('/run/<slug>',methods=['GET','POST'])
+@authorized(object_type='page')
 async def run(request, slug):
     page = dbsession.query(Page).filter_by(slug=slug).first()
     if page and page.runable:

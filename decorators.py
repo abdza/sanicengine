@@ -1,8 +1,6 @@
 from functools import wraps
 from sanic.response import json, redirect
 from database import dbsession
-from users.models import User
-from pages.models import Page
 
 def authorized(object_type=None):
     def decorator(f):
@@ -13,19 +11,26 @@ def authorized(object_type=None):
             is_authorized = False
             curuser = None
             if 'user_id' in request['session']:
+                from users.models import User
                 curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
-            if object_type=='page':
+            if object_type in ['page','filelink']:
                 if 'slug' in kwargs:
-                    page = dbsession.query(Page).filter(Page.slug==kwargs['slug']).first()
-                    if page:
-                        if not page.require_login:
+                    curobj = None
+                    if object_type=='page':
+                        from pages.models import Page
+                        curobj = dbsession.query(Page).filter(Page.slug==kwargs['slug']).first()
+                    elif object_type=='filelink':
+                        from fileLinks.models import FileLink
+                        curobj = dbsession.query(FileLink).filter(FileLink.slug==kwargs['slug']).first()
+                    if curobj:
+                        if not curobj.require_login:
                             is_authorized = True
                         else:
                             if curuser:
-                                mroles = curuser.moduleroles(page.module)
+                                mroles = curuser.moduleroles(curobj.module)
                                 if any(r in ['admin','Admin'] for r in mroles):
                                     is_authorized = True
-                                if page.allowed_roles and len(page.allowed_roles) and any(r in [ ar.strip() for ar in page.allowed_roles.split(',')] for r in mroles):
+                                if curobj.allowed_roles and len(curobj.allowed_roles) and any(r in [ ar.strip() for ar in curobj.allowed_roles.split(',')] for r in mroles):
                                     is_authorized = True
             else:
                 if curuser:
