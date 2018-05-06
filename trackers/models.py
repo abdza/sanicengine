@@ -24,6 +24,8 @@ class Tracker(ModelBase):
     filter_fields = Column(Text)
     excel_fields = Column(Text)
     pagelimit = Column(Integer,default=10)
+    require_login = Column(Boolean(),default=False)
+    allowed_roles = Column(String(300))
 
     def __repr__(self):
         return self.title

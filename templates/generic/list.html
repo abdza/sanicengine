@@ -28,7 +28,13 @@
 		{% if field.name=='user' %}
 		<td>{{ item['user'].name }}</td>
 		{% else %}
-		<td>{{ item[field.name] }}</td>
+		<td>
+			{% if maxlength and item[field.name] and item[field.name]|string|length < maxlength %}
+			{{ item[field.name] }}
+			{% else %}
+			{{ item[field.name]|string|replace(',',', ')|wordwrap(maxlength) }}
+			{% endif %}
+		</td>
 		{% endif %}
 		{% endfor %}
 	</tr>

@@ -1,5 +1,5 @@
 from database import ModelBase, dbsession, reference_col
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
 
 class User(ModelBase):
@@ -11,6 +11,7 @@ class User(ModelBase):
     email = Column(String(300))
     resethash = Column(String(300))
     resetexpire = Column(DateTime)
+    superuser = Column(Boolean(),default=False)
 
     def getuser(self, userid):
         return dbsession.query(User).get(userid)

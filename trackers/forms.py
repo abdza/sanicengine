@@ -10,6 +10,8 @@ class TrackerForm(Form):
     search_fields = StringField('Search Fields')
     filter_fields = StringField('Filter Fields')
     excel_fields = StringField('Excel Fields')
+    require_login = BooleanField('Require Login')
+    allowed_roles = StringField('Allowed Roles')
 
 class TrackerFieldForm(Form):
     name = StringField('Name')
