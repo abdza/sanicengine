@@ -2,7 +2,7 @@ from functools import wraps
 from sanic.response import json, redirect
 from database import dbsession
 
-def authorized(object_type=None):
+def authorized(object_type=None,require_superuser=False):
     def decorator(f):
         @wraps(f)
         async def decorated_function(request, *args, **kwargs):
@@ -22,6 +22,9 @@ def authorized(object_type=None):
                     elif object_type=='filelink':
                         from fileLinks.models import FileLink
                         curobj = dbsession.query(FileLink).filter(FileLink.slug==kwargs['slug']).first()
+                    elif object_type=='tracker':
+                        from trackers.models import Tracker
+                        curobj = dbsession.query(Tracker).filter(Tracker.slug==kwargs['slug']).first()
                     if curobj:
                         if not curobj.require_login:
                             is_authorized = True
@@ -35,6 +38,8 @@ def authorized(object_type=None):
             else:
                 if curuser:
                     is_authorized = True
+            if curuser and require_superuser:
+                is_authorized = bool(curuser.superuser)
             if is_authorized:
                 # the user is authorized.
                 # run the handler method and return the response
