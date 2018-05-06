@@ -11,3 +11,4 @@ cryptography
 openpyxl
 aiosmtplib
 apscheduler
+sqlalchemy_mptt
