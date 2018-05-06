@@ -2,7 +2,7 @@
 from sanic import Sanic
 from sanic.response import json, html, redirect
 from sanic_session import InMemorySessionInterface
-import users, pages, fileLinks, trackers, modules
+import users, pages, fileLinks, trackers, modules, trees
 from template import render
 from database import dbsession, ModelBase, dbengine
 import asyncio
@@ -44,6 +44,7 @@ async def register_bp(app, loop):
     app.blueprint(fileLinks.views.bp)
     app.blueprint(trackers.views.bp)
     app.blueprint(modules.views.bp)
+    app.blueprint(trees.views.bp)
 
 async def send_email(data):
     scheduler = AsyncIOScheduler()
