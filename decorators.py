@@ -13,7 +13,7 @@ def authorized(object_type=None,require_superuser=False):
             if 'user_id' in request['session']:
                 from users.models import User
                 curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
-            if object_type in ['page','filelink']:
+            if object_type in ['page','filelink','tracker']:
                 if 'slug' in kwargs:
                     curobj = None
                     if object_type=='page':
