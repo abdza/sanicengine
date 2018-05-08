@@ -117,5 +117,16 @@
 			// data.node.data.dbid = data.id;
 		});
 	});
+	$('#treediv').on('paste.jstree',function(e,data){
+		var parentnode = $('#treediv').jstree(true).get_node(data.parent);
+		$.ajax({
+			'url': "{{ app.url_for('trees.pastenode') }}/" + parentnode.data.dbid + "/" + data.mode,
+			'data': { node: data.node },
+			'method':'POST',
+			'dataType':'json'
+		}).done(function(data){
+			// data.node.data.dbid = data.id;
+		});
+	});
 	</script>
 {% endblock %}

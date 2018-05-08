@@ -63,6 +63,20 @@ async def renamenode(request, node_id):
         dbsession.commit()
     return jsonresponse([{ 'id':nnode.id }])
 
+@bp.route('/trees/pastenode')
+@bp.route('/trees/pastenode/<node_id>/<paste_mode>',methods=['POST'])
+@authorized(object_type='tree')
+async def pastenode(request, node_id, paste_mode):
+    parentnode = dbsession.query(TreeNode).get(node_id)
+    if request.method=='POST':
+        currentnode = dbsession.query(TreeNode).get(request.form['node[0][data][dbid]'][0])
+        if currentnode:
+            if paste_mode=='move_node':
+                currentnode.parent_id = node_id
+                dbsession.add(currentnode)
+                dbsession.commit()
+    return jsonresponse([{ 'status':'done' }])
+
 @bp.route('/trees/deletenode')
 @bp.route('/trees/deletenode/<node_id>',methods=['POST'])
 @authorized(object_type='tree')
