@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
-from sanic.response import html, redirect
+from sanic.response import html, redirect, json as jsonresponse
 from .models import Tree, TreeNode
 from .forms import TreeForm, TreeNodeForm
 from database import dbsession
@@ -20,6 +20,58 @@ async def view(request, slug):
         print("No tree to view")
         session['flashmessage'] = 'No tree to view'
         return redirect('/')
+
+@bp.route('/trees/nodejson/<slug>',methods=['GET'])
+@bp.route('/trees/nodejson/<slug>/<node_id>',methods=['GET'])
+@authorized(object_type='tree')
+async def nodejson(request, slug, node_id=None):
+    tree = dbsession.query(Tree).filter_by(slug=slug).first()
+    if node_id:
+        curnode = dbsession.query(TreeNode).get(node_id)
+        if curnode:
+            print('children:' + str(curnode.children))
+        return jsonresponse([ { 'text': cnode.title, 'state':{ 'opened':False }, 'children':True if cnode.children else False, 'data':{ 'dbid':cnode.id } } for cnode in curnode.children ])
+    else:
+        return jsonresponse([{ 'text':tree.rootnode.title , 'state':{ 'opened':False }, 'children':True, 'data':{ 'dbid':tree.rootnode.id } }])
+
+@bp.route('/trees/addnode')
+@bp.route('/trees/addnode/<parent_id>',methods=['GET','POST'])
+@authorized(object_type='tree')
+async def addnode(request, parent_id):
+    parentnode = dbsession.query(TreeNode).get(parent_id)
+    form = TreeNodeForm(request.form)
+    if request.method=='POST':
+        treenode = TreeNode()
+        form.populate_obj(treenode)
+        treenode.parent_id = int(request.form.get('parent_id'))
+        dbsession.add(treenode)
+        try:
+            dbsession.commit()
+        except BaseException as exp:
+            dbsession.rollback()
+        return jsonresponse([{ 'id':treenode.id , 'title':treenode.title }])
+    return html(render(request,'trees/nodeform.html',form=form,parentnode=parentnode))
+
+@bp.route('/trees/renamenode')
+@bp.route('/trees/renamenode/<node_id>',methods=['POST'])
+@authorized(object_type='tree')
+async def renamenode(request, node_id):
+    nnode = dbsession.query(TreeNode).get(node_id)
+    if request.method=='POST':
+        nnode.title = request.form.get('title')
+        dbsession.add(nnode)
+        dbsession.commit()
+    return jsonresponse([{ 'id':nnode.id }])
+
+@bp.route('/trees/deletenode')
+@bp.route('/trees/deletenode/<node_id>',methods=['POST'])
+@authorized(object_type='tree')
+async def deletenode(request, node_id):
+    nnode = dbsession.query(TreeNode).get(node_id)
+    if request.method=='POST':
+        dbsession.delete(nnode)
+        dbsession.commit()
+    return jsonresponse([{ 'status':'done' }])
 
 @bp.route('/trees/create',methods=['POST','GET'])
 @bp.route('/trees/edit/',methods=['POST','GET'],name='edit')
@@ -76,4 +128,4 @@ async def index(request):
     trees = dbsession.query(Tree)
     paginator = Paginator(trees, 5)
     return html(render(request,
-        'generic/list.html',title='Trees',editlink=request.app.url_for('trees.edit'),addlink=request.app.url_for('trees.form'),fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))
+        'trees/list.html',title='Trees',editlink=request.app.url_for('trees.edit'),addlink=request.app.url_for('trees.form'),fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))

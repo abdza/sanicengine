@@ -20,6 +20,10 @@ class Tree(ModelBase):
     publish_date = Column(Date(),nullable=True)
     expire_date = Column(Date(),nullable=True)
 
+    @property
+    def rootnode(self):
+        return dbsession.query(TreeNode).filter(TreeNode.tree==self,TreeNode.parent_id==None).first()
+
 class TreeNode(ModelBase, BaseNestedSets):
     __tablename__ = 'tree_nodes'
     id = Column(Integer, primary_key=True)
