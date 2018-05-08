@@ -1,4 +1,121 @@
 {% extends "layout.html" %}
+{% block endhead %}
+	<link rel='stylesheet' href='{{ app.url_for('static',filename='/js/jstree/themes/default/jstreestyle.min.css') }}'>
+{% endblock %}
 {% block content %}
+<div class="modal fade" id="nodeform" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="nodeformtitle">Add Node</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id='nodeformsubmit'>Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 <h1>Tree</h1>
+<h2>{{ tree.title }}</h2>
+<div id='treediv'>
+</div>
+{% endblock %}
+{% block endbody %}
+	<script src='{{ app.url_for('static', filename='/js/jstree/jstree.min.js')}}'></script>
+	<script>
+	$("#treediv").jstree({
+		"core" : {
+			// so that create works
+			"check_callback" : true,
+			"data" : {
+				"url": function (node) {
+					if(node.data){
+						console.log('try ' + node.data.dbid + ' for ' + node.text);
+					}
+					else{
+						console.log('try ' + node.id + ' for ' + node.text);
+					}
+					var nodeId = "";
+					var url = ""
+					if (node == -1) {
+						url = "{{ app.url_for('trees.nodejson',slug=tree.slug) }}";
+					}
+					else {
+						nodeId = node.id;
+						if(node.data){
+							nodeId = node.data.dbid;
+						}
+						url = "{{ app.url_for('trees.nodejson',slug=tree.slug) }}/" + nodeId;
+					}
+					return url;
+				},
+				"data": function (node) {
+					if(node.data){
+						return { 'id' : node.data.dbid };
+					}
+					else{ 
+						return { 'id' : node.id };
+					}
+				}
+			}
+		},
+		"plugins" : [ "contextmenu" ],
+	});
+	$('#nodeformsubmit').on('click',function(){
+		var parentnode = $('#treediv').jstree(true).get_node($('#nodeform').data('parent_id'));
+		var curnode = $('#treediv').jstree(true).get_node($('#nodeform').data('current_id'));
+		curnode.data = { 'dbid':'10' };
+		var formdata = $('#nodeform form').serialize();
+		$.ajax({
+			'url': "{{ app.url_for('trees.addnode') }}/" + parentnode.data.dbid,
+			'dataType':'json',
+			'method':'POST',
+			'data':formdata,
+		}).done(function(data){
+			$('#treediv').jstree(true).rename_node(curnode,data[0].title);
+			curnode.data.dbid=data[0].id;
+			$('#nodeform').modal('hide');
+		});
+	});
+	$('#treediv').on('create_node.jstree',function(e,data){
+		var parentnode = $('#treediv').jstree(true).get_node(data.parent);
+		$('#nodeform').data('parent_id',data.parent);
+		$('#nodeform').data('current_id',data.node.id);
+		$.ajax({
+			'url': "{{ app.url_for('trees.addnode') }}/" + parentnode.data.dbid,
+			'dataType':'html'
+		}).done(function(data){
+			// data.node.data.dbid = data.id;
+			$('#nodeform .modal-body').html(data);
+			$('#nodeform #nodeformtitle').html('Add New Node');
+			$('#nodeform').modal('show');
+		});
+	});
+	$('#treediv').on('rename_node.jstree',function(e,data){
+		$.ajax({
+			'url': "{{ app.url_for('trees.renamenode') }}/" + data.node.data.dbid,
+			'method':'POST',
+			'data': { title: data.text },
+			'dataType':'json'
+		}).done(function(data){
+			// data.node.data.dbid = data.id;
+		});
+	});
+	$('#treediv').on('delete_node.jstree',function(e,data){
+		$.ajax({
+			'url': "{{ app.url_for('trees.deletenode') }}/" + data.node.data.dbid,
+			'method':'POST',
+			'dataType':'json'
+		}).done(function(data){
+			// data.node.data.dbid = data.id;
+		});
+	});
+	</script>
 {% endblock %}
