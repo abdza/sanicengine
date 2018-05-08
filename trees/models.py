@@ -37,3 +37,20 @@ class TreeNode(ModelBase, BaseNestedSets):
 
     tree_id = reference_col('trees')
     tree = relationship('Tree',backref='nodes')
+
+    def copy(self,parent_id,appendslug):
+        newcopy = TreeNode(
+                title = self.title,
+                slug = appendslug + "_" + self.slug,
+                require_login = self.require_login,
+                allowed_roles = self.allowed_roles,
+                published = self.published,
+                publish_date = self.publish_date,
+                expire_date = self.expire_date,
+                tree = self.tree,
+                parent_id = parent_id)
+
+        dbsession.add(newcopy)
+        dbsession.flush()
+        for child in self.children:
+            child.copy(newcopy.id,appendslug)
