@@ -75,6 +75,9 @@ async def pastenode(request, node_id, paste_mode):
                 currentnode.parent_id = node_id
                 dbsession.add(currentnode)
                 dbsession.commit()
+            else:
+                currentnode.copy(node_id,parentnode.slug)
+                dbsession.commit()
     return jsonresponse([{ 'status':'done' }])
 
 @bp.route('/trees/deletenode')
