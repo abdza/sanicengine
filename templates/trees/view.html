@@ -1,6 +1,8 @@
 {% extends "layout.html" %}
 {% block endhead %}
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/js/jstree/themes/default/jstreestyle.min.css') }}'>
+	<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.css') }}'>
+	<link rel='stylesheet' href='{{ app.url_for('static',filename='/js/jspanel/jquery.jspanel.min.css') }}'>
 {% endblock %}
 {% block content %}
 <div class="modal fade" id="nodeform" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -26,9 +28,13 @@
 <h2>{{ tree.title }}</h2>
 <div id='treediv'>
 </div>
+<div id='infopanel'></div>
 {% endblock %}
 {% block endbody %}
 	<script src='{{ app.url_for('static', filename='/js/jstree/jstree.min.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery.ui.touch-punch.min.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/js/jspanel/jquery.jspanel.min.js')}}'></script>
 	<script>
 	$("#treediv").jstree({
 		"core" : {
@@ -36,12 +42,6 @@
 			"check_callback" : true,
 			"data" : {
 				"url": function (node) {
-					if(node.data){
-						console.log('try ' + node.data.dbid + ' for ' + node.text);
-					}
-					else{
-						console.log('try ' + node.id + ' for ' + node.text);
-					}
 					var nodeId = "";
 					var url = ""
 					if (node == -1) {
@@ -127,6 +127,51 @@
 		}).done(function(data){
 			// data.node.data.dbid = data.id;
 		});
+	});
+
+	$('#treediv').on('select_node.jstree',function(e,data){
+		$.ajax({
+			'url': "{{ app.url_for('trees.nodeview') }}/" + data.node.data.dbid,
+			'dataType':'html'
+		}).done(function(data){
+			$('#panelcontent').html(data);
+		});
+	});
+
+	var dpanel = $.jsPanel({
+		container: ".container",
+		draggable: {
+			handle: 'div.jsPanel-hdr, div.jsPanel-ftr',
+			opacity: 0.8
+		},
+		position: {
+			my: "right-top",
+			at: "right-top",
+			offsetY: "100px",
+			offsetX: "400px"
+		},
+		contentSize: {
+			width:  600,
+			height: 350
+		},
+		content: "<div id='panelcontent'></div>",
+		contentAjax: {
+			url: "{{ app.url_for('trees.nodeview') }}",
+			done: function (data, textStatus, jqXHR, panel) {
+				// the keyword "this" inside the function refers to the panel
+				// alert('littleman hi' + jqXHR.responseText);
+				$('#panelcontent').html(jqXHR.responseText);
+			},
+			fail: function (jqXHR, textStatus, errorThrown, panel) {
+				//the keyword "this" inside the function refers to the panel
+			}
+		},
+		headerTitle: "Node Details",
+		theme: "rebeccapurple",
+		callback: function (panel) {
+			// do whatever you like
+			// the keyword "this" inside the callback function refers to the panel
+		}
 	});
 	</script>
 {% endblock %}

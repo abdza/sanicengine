@@ -21,6 +21,15 @@ async def view(request, slug):
         session['flashmessage'] = 'No tree to view'
         return redirect('/')
 
+@bp.route('/trees/nodeview/')
+@bp.route('/trees/nodeview/<node_id>')
+async def nodeview(request,node_id=None):
+    node = None
+    if node_id:
+        node = dbsession.query(TreeNode).get(node_id)
+    print("viewing: " + str(node))
+    return html(render(request,'trees/nodeview.html',node=node))
+
 @bp.route('/trees/nodejson/<slug>',methods=['GET'])
 @bp.route('/trees/nodejson/<slug>/<node_id>',methods=['GET'])
 @authorized(object_type='tree')
