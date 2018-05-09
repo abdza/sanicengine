@@ -1,0 +1,23 @@
+{% if node %}
+<h1>{{ node.title }}</h1>
+<div class='panel panel-default'>
+	<div class='panel-body'>
+<dl class="dl-horizontal" style='padding: 10px;'>	
+	<dt>Slug</dt>
+	<dd>{{node.slug}}</dd>
+	<dt>Require Login</dt>
+	<dd>{{node.require_login}}</dd>
+	<dt>Allowed Roles</dt>
+	<dd>{{node.allowed_roles}}</dd>
+	<dt>Published</dt>
+	<dd>{{node.published}}</dd>
+	<dt>Publish Date</dt>
+	<dd>{{node.publish_date}}</dd>
+	<dt>Expire Date</dt>
+	<dd>{{node.expire_date}}</dd>
+</dl>
+	</div>
+</div>
+{% else %}
+<h1>No node selected</h1>
+{% endif %}
