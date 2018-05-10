@@ -54,3 +54,14 @@ class TreeNode(ModelBase, BaseNestedSets):
         dbsession.flush()
         for child in self.children:
             child.copy(newcopy.id,appendslug)
+
+class TreeNodeUser(ModelBase):
+    __tablename__ = 'tree_node_users'
+    id = Column(Integer, primary_key=True)
+    role = Column(String(100))
+
+    node_id = reference_col('tree_nodes')
+    node = relationship('TreeNode', backref='users')
+
+    user_id = reference_col('users')
+    user = relationship('User', backref='treeroles')

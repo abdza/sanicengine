@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse
-from .models import Tree, TreeNode
-from .forms import TreeForm, TreeNodeForm
+from .models import Tree, TreeNode, TreeNodeUser
+from .forms import TreeForm, TreeNodeForm, TreeNodeUserForm
 from database import dbsession
 from template import render
 from decorators import authorized
@@ -27,7 +27,6 @@ async def nodeview(request,node_id=None):
     node = None
     if node_id:
         node = dbsession.query(TreeNode).get(node_id)
-    print("viewing: " + str(node))
     return html(render(request,'trees/nodeview.html',node=node))
 
 @bp.route('/trees/nodejson/<slug>',methods=['GET'])
@@ -37,8 +36,6 @@ async def nodejson(request, slug, node_id=None):
     tree = dbsession.query(Tree).filter_by(slug=slug).first()
     if node_id:
         curnode = dbsession.query(TreeNode).get(node_id)
-        if curnode:
-            print('children:' + str(curnode.children))
         return jsonresponse([ { 'text': cnode.title, 'state':{ 'opened':False }, 'children':True if cnode.children else False, 'data':{ 'dbid':cnode.id } } for cnode in curnode.children ])
     else:
         return jsonresponse([{ 'text':tree.rootnode.title , 'state':{ 'opened':False }, 'children':True, 'data':{ 'dbid':tree.rootnode.id } }])
@@ -62,6 +59,35 @@ async def editnode(request, node_id):
         return jsonresponse([{ 'id':treenode.id , 'title':treenode.title }])
     else:
         form = TreeNodeForm(obj=curnode)
+
+    return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode))
+
+@bp.route('/trees/nodeuserform')
+@bp.route('/trees/nodeuserform/<node_id>',methods=['GET','POST'])
+@bp.route('/trees/nodeuserform/<node_id>/<nodeuser_id>',methods=['GET','POST'])
+@authorized(object_type='tree')
+async def nodeuserform(request, node_id=None, nodeuser_id=None):
+    nodeuser = None
+    if nodeuser_id:
+        nodeuser = dbsession.query(TreeNodeUser).get(nodeuser_id)
+    else:
+        nodeuser = TreeNodeUser()
+    curnode = dbsession.query(TreeNode).get(node_id)
+    parentnode = curnode.parent
+    if request.method=='POST':
+        form = TreeNodeUserForm(request.form)
+        treenode = dbsession.query(TreeNode).get(request.form.get('id'))
+        nodeuser.node = treenode
+        nodeuser.user_id = int(request.form.get('user'))
+        nodeuser.role = request.form.get('role')
+        dbsession.add(nodeuser)
+        try:
+            dbsession.commit()
+        except BaseException as exp:
+            dbsession.rollback()
+        return jsonresponse([{ 'id':treenode.id , 'title':treenode.title }])
+    else:
+        form = TreeNodeUserForm(obj=nodeuser)
 
     return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode))
 
