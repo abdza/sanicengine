@@ -43,6 +43,28 @@ async def nodejson(request, slug, node_id=None):
     else:
         return jsonresponse([{ 'text':tree.rootnode.title , 'state':{ 'opened':False }, 'children':True, 'data':{ 'dbid':tree.rootnode.id } }])
 
+@bp.route('/trees/editnode')
+@bp.route('/trees/editnode/<node_id>',methods=['GET','POST'])
+@authorized(object_type='tree')
+async def editnode(request, node_id):
+    curnode = dbsession.query(TreeNode).get(node_id)
+    parentnode = curnode.parent
+    if request.method=='POST':
+        form = TreeNodeForm(request.form)
+        treenode = dbsession.query(TreeNode).get(request.form.get('id'))
+        form.populate_obj(treenode)
+        treenode.parent_id = int(request.form.get('parent_id'))
+        dbsession.add(treenode)
+        try:
+            dbsession.commit()
+        except BaseException as exp:
+            dbsession.rollback()
+        return jsonresponse([{ 'id':treenode.id , 'title':treenode.title }])
+    else:
+        form = TreeNodeForm(obj=curnode)
+
+    return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode))
+
 @bp.route('/trees/addnode')
 @bp.route('/trees/addnode/<parent_id>',methods=['GET','POST'])
 @authorized(object_type='tree')
