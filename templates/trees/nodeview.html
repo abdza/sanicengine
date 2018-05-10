@@ -15,8 +15,15 @@
 			<dd>{{node.publish_date}}</dd>
 			<dt>Expire Date</dt>
 			<dd>{{node.expire_date}}</dd>
+			{% if node.users %}
+			<dt>Users</dt>
+			{% for user in node.users %}
+			<dd><a href='#' onclick='userform({{user.id}}); return false;'>{{ user.role }} : {{ user.user.name }}</a></dd>
+			{% endfor %}
+			{% endif %}
 		</dl>
 		<button class='btn btn-primary' id='editnode' onclick='editnode();'>Edit</button>
+		<button class='btn btn-primary' id='adduser' onclick='userform();'>Add User</button>
 	</div>
 </div>
 {% else %}

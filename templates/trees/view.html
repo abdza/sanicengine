@@ -68,6 +68,7 @@
 		},
 		"plugins" : [ "contextmenu" ],
 	});
+
 	$('#nodeformsubmit').on('click',function(){
 		var curnode = $('#treediv').jstree(true).get_node($('#nodeform').data('current_id'));
 		curnode.data = { 'dbid':'10' };
@@ -81,7 +82,7 @@
 			$('#treediv').jstree(true).rename_node(curnode,data[0].title);
 			curnode.data.dbid=data[0].id;
 			var dbid = data[0].id;
-			$('#nodeform').data('current_id',data[0].id);
+			$('#panelcontent').data('node_id',data[0].id);
 			$.ajax({
 				'url': "{{ app.url_for('trees.nodeview') }}/" + data[0].id,
 				'dataType':'html'
@@ -106,6 +107,23 @@
 		});
 	}
 
+	function userform(user_id=null){
+		var targeturl = "{{ app.url_for('trees.nodeuserform') }}/" + $('#panelcontent').data('node_id');
+		if(user_id){
+			targeturl += "/" + user_id;
+		}
+		$('#nodeform').data('targeturl',targeturl);
+		$.ajax({
+			'url': targeturl,
+			'dataType':'html'
+		}).done(function(data){
+			// data.node.data.dbid = data.id;
+			$('#nodeform .modal-body').html(data);
+			$('#nodeform #nodeformtitle').html('Add User');
+			$('#nodeform').modal('show');
+		});
+	}
+
 	$('#treediv').on('create_node.jstree',function(e,data){
 		var parentnode = $('#treediv').jstree(true).get_node(data.parent);
 		$('#nodeform').data('parent_id',data.parent);
@@ -122,14 +140,16 @@
 		});
 	});
 	$('#treediv').on('rename_node.jstree',function(e,data){
-		$.ajax({
-			'url': "{{ app.url_for('trees.renamenode') }}/" + data.node.data.dbid,
-			'method':'POST',
-			'data': { title: data.text },
-			'dataType':'json'
-		}).done(function(data){
-			// data.node.data.dbid = data.id;
-		});
+		if(data.old!=data.text){
+			$.ajax({
+				'url': "{{ app.url_for('trees.renamenode') }}/" + data.node.data.dbid,
+				'method':'POST',
+				'data': { title: data.text },
+				'dataType':'json'
+			}).done(function(data){
+				// data.node.data.dbid = data.id;
+			});
+		}
 	});
 	$('#treediv').on('delete_node.jstree',function(e,data){
 		$.ajax({
@@ -176,6 +196,7 @@
 			offsetY: "100px",
 			offsetX: "400px"
 		},
+		contentOverflow: 'scroll',
 		contentSize: {
 			width:  600,
 			height: 350

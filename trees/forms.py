@@ -18,3 +18,7 @@ class TreeNodeForm(Form):
     allowed_roles = StringField('Allowed Roles')
     publish_date = DateField('Publish Date')
     expire_date = DateField('Expire Date')
+
+class TreeNodeUserForm(Form):
+    user = StringField('User')
+    role = StringField('Role')
