@@ -62,6 +62,22 @@ async def editnode(request, node_id):
 
     return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode))
 
+@bp.route('/trees/deletenodeuser')
+@bp.route('/trees/deletenodeuser/<node_id>/<nodeuser_id>',methods=['GET','POST'])
+@authorized(object_type='tree')
+async def deletenodeuser(request, node_id=None, nodeuser_id=None):
+    nodeuser = None
+    treenode = dbsession.query(TreeNode).get(node_id)
+    if nodeuser_id:
+        nodeuser = dbsession.query(TreeNodeUser).get(nodeuser_id)
+        if request.method=='POST':
+            dbsession.delete(nodeuser)
+            try:
+                dbsession.commit()
+            except BaseException as exp:
+                dbsession.rollback()
+            return jsonresponse([{ 'id':treenode.id , 'title':treenode.title }])
+
 @bp.route('/trees/nodeuserform')
 @bp.route('/trees/nodeuserform/<node_id>',methods=['GET','POST'])
 @bp.route('/trees/nodeuserform/<node_id>/<nodeuser_id>',methods=['GET','POST'])

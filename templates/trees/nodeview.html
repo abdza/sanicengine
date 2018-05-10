@@ -18,7 +18,10 @@
 			{% if node.users %}
 			<dt>Users</dt>
 			{% for user in node.users %}
-			<dd><a href='#' onclick='userform({{user.id}}); return false;'>{{ user.role }} : {{ user.user.name }}</a></dd>
+			<dd>
+			<a href='#' onclick='userform({{user.id}}); return false;'>{{ user.role }} : {{ user.user.name }}</a>
+			<button onclick="if(confirm('Confirm delete user {{user.user.name}} with role {{user.role}}?')){ deleteuser({{user.node.id}},{{user.id}}); };" class='btn btn-danger btn-sm'>Delete</button>
+			</dd>
 			{% endfor %}
 			{% endif %}
 		</dl>

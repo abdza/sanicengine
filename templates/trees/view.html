@@ -124,6 +124,21 @@
 		});
 	}
 
+	function deleteuser(node_id,nodeuser_id){
+		$.ajax({
+			'url': "{{ app.url_for('trees.deletenodeuser') }}/" + node_id + "/" + nodeuser_id,
+			'dataType':'json',
+			'method':'post',
+		}).done(function(data){
+			$.ajax({
+				'url': "{{ app.url_for('trees.nodeview') }}/" + node_id,
+				'dataType':'html'
+			}).done(function(inpaneldata){
+				$('#panelcontent').html(inpaneldata);
+			});
+		});
+	}
+
 	$('#treediv').on('create_node.jstree',function(e,data){
 		var parentnode = $('#treediv').jstree(true).get_node(data.parent);
 		$('#nodeform').data('parent_id',data.parent);
