@@ -2,6 +2,9 @@
 {% if parentnode %}
 <input type='hidden' id='parent_id' name='parent_id' value='{{parentnode.id}}'>
 {% endif %}
+{% if node %}
+<input type='hidden' id='id' name='id' value='{{node.id}}'>
+{% endif %}
 {% for field in form %}
 <div class='form-group row'>
 	{{ field.label(class_='col-sm-2 col-form-label') }}
