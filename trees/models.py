@@ -34,6 +34,9 @@ class TreeNode(ModelBase, BaseNestedSets):
     published = Column(Boolean(),default=False)
     publish_date = Column(Date(),nullable=True)
     expire_date = Column(Date(),nullable=True)
+    node_category = Column(String(100))
+    node_type = Column(String(100))
+    datastr = Column(Text)
 
     tree_id = reference_col('trees')
     tree = relationship('Tree',backref='nodes')

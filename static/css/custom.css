@@ -1,3 +1,6 @@
+body {
+	background: #fff;
+}
 main {
 	margin-top: 70px;
 	padding: 20px;
@@ -60,4 +63,12 @@ main {
 
 .navbar-dark span {
 	color: #fff;
+}
+
+hr {
+    height: 1px;
+    background-color:rgba(240,240,240,0.25);
+    margin-top: 4px;
+    margin-bottom: 5px;
+    width: 100%;
 }
