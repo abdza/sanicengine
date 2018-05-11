@@ -2,27 +2,31 @@
 <h1>{{ node.title }}</h1>
 <div class='panel panel-default'>
 	<div class='panel-body' style='padding: 10px;'>
-		<dl class="dl-horizontal">	
-			<dt>Slug</dt>
-			<dd>{{node.slug}}</dd>
-			<dt>Require Login</dt>
-			<dd>{{node.require_login}}</dd>
-			<dt>Allowed Roles</dt>
-			<dd>{{node.allowed_roles}}</dd>
-			<dt>Published</dt>
-			<dd>{{node.published}}</dd>
-			<dt>Publish Date</dt>
-			<dd>{{node.publish_date}}</dd>
-			<dt>Expire Date</dt>
-			<dd>{{node.expire_date}}</dd>
+		<dl class="row">	
+			<dt class='col-4'>Slug</dt>
+			<dd class='col-8'>{{node.slug}}</dd>
+			<dt class='col-4'>Require Login</dt>
+			<dd class='col-8'>{{node.require_login}}</dd>
+			<dt class='col-4'>Allowed Roles</dt>
+			<dd class='col-8'>{{node.allowed_roles}}</dd>
+			<dt class='col-4'>Published</dt>
+			<dd class='col-8'>{{node.published}}</dd>
+			<dt class='col-4'>Publish Date</dt>
+			<dd class='col-8'>{{node.publish_date}}</dd>
+			<dt class='col-4'>Expire Date</dt>
+			<dd class='col-8'>{{node.expire_date}}</dd>
 			{% if node.users %}
-			<dt>Users</dt>
+			<dt class='col-4'>Users</dt>
+			<dd class='col-8'>
+			<ol class='list-group list-group-flush'>
 			{% for user in node.users %}
-			<dd>
+			<li class='list-group-item'>
 			<a href='#' onclick='userform({{user.id}}); return false;'>{{ user.role }} : {{ user.user.name }}</a>
 			<button onclick="if(confirm('Confirm delete user {{user.user.name}} with role {{user.role}}?')){ deleteuser({{user.node.id}},{{user.id}}); };" class='btn btn-danger btn-sm'>Delete</button>
-			</dd>
+			</li>
 			{% endfor %}
+			</ol>
+			</dd>
 			{% endif %}
 		</dl>
 		<button class='btn btn-primary' id='editnode' onclick='editnode();'>Edit</button>
