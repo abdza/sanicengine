@@ -5,16 +5,28 @@
 		<dl class="row">	
 			<dt class='col-4'>Slug</dt>
 			<dd class='col-8'>{{node.slug}}</dd>
+			<hr>
+			<dt class='col-4'>Category</dt>
+			<dd class='col-8'>{{node.node_category}}</dd>
+			<hr>
+			<dt class='col-4'>Type</dt>
+			<dd class='col-8'>{{node.node_type}}</dd>
+			<hr>
 			<dt class='col-4'>Require Login</dt>
 			<dd class='col-8'>{{node.require_login}}</dd>
+			<hr>
 			<dt class='col-4'>Allowed Roles</dt>
 			<dd class='col-8'>{{node.allowed_roles}}</dd>
+			<hr>
 			<dt class='col-4'>Published</dt>
 			<dd class='col-8'>{{node.published}}</dd>
+			<hr>
 			<dt class='col-4'>Publish Date</dt>
 			<dd class='col-8'>{{node.publish_date}}</dd>
+			<hr>
 			<dt class='col-4'>Expire Date</dt>
 			<dd class='col-8'>{{node.expire_date}}</dd>
+			<hr>
 			{% if node.users %}
 			<dt class='col-4'>Users</dt>
 			<dd class='col-8'>
