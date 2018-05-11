@@ -1,8 +1,4 @@
-{% extends "layout.html" %}
-{% block endhead %}
-	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input.css') }}'>
-	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input-facebook.css') }}'>
-{% endblock %}
+{% extends "formbase.html" %}
 {% block content %}
 <h1>
 	{% if title %}
@@ -38,7 +34,6 @@
 </form>
 {% endblock %}
 {% block endbody %}
-	<script src='{{ app.url_for('static', filename='/js/jquery.tokeninput.js')}}'></script>
 	<script type='text/javascript'>
 		$(document).ready(function(){
 			{% if 'user' in form %}
