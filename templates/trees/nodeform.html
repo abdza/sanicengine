@@ -14,6 +14,9 @@
 </div>
 {% elif field.type=='DateField' %}
 	{{ field(class_='col-sm-10 form-control is-invalid date-picker' if field.errors else 'col-sm-10 form-control date-picker') }}
+{% elif field.name=='datastr' %}
+<div id='datastreditor' class='col-sm-10 form-control' style='height: 100px;'>{{ form.datastr.data|e }}</div>
+<input type='hidden' name='datastr' id='datastr'>
 {% else %}
 	{{ field(class_='col-sm-10 form-control is-invalid' if field.errors else 'col-sm-10 form-control') }}
 {% endif %}
@@ -25,3 +28,32 @@
 </div>
 {% endfor %}
 </form>
+<script>
+	initfields();
+{% for field in form %}
+	{% if field.name == 'user' %}
+
+		$('#{{field.name}}').tokenInput('{{ app.url_for('users.userjson') }}',{ tokenLimit: 1 {% if nodeuser.user %}, prePopulate:[{id:{{nodeuser.user.id}},name:"{{nodeuser.user.name}}"}]{% endif %}});
+
+	{% elif field.name == 'datastr' %}
+
+function IsJsonString(str) {
+    try {
+        JSON.parse(str);
+    } catch (e) {
+        return false;
+    }
+    return true;
+}
+var editor = ace.edit("datastreditor");
+editor.setTheme("ace/theme/xcode");
+editor.session.setMode("ace/mode/json");
+editor.getSession().on('change', function() {
+	if(IsJsonString(editor.getValue())){
+		$('#datastr').val(editor.getValue());
+	}
+});
+
+	{% endif %}
+{% endfor %}
+</script>

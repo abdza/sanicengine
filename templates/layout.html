@@ -24,7 +24,7 @@
 	<div class="header clearfix">
 		<div class="header-right">
 			<div class="brand-logo">
-				<a href="index.php">
+				<a href="{{ app.url_for('pages.home') }}">
 					<img src="{{ app.url_for('static',filename='images/logo.png') }}" alt="" class="mobile-logo">
 				</a>
 			</div>
@@ -102,12 +102,13 @@
 				</li>
 				<li>
 					<a href='{{ app.url_for('trees.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-file-o"></span>
+						<span class="fa fa-code-fork"></span>
 						<span class="mtext">Trees</span>
 					</a>
 				</li>
 				<li>
 					<a href='{{ app.url_for('fileLinks.index') }}' class="dropdown-toggle no-arrow">
+						<span class="fa fa-upload"></span>
 						<span class="mtext">Files</span>
 					</a>
 				</li>
