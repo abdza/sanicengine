@@ -8,5 +8,6 @@ class FileLink(ModelBase):
     slug = Column(String(100),unique=True)
     module = Column(String(100),default='pages')
     filename = Column(String(200))
+    filepath = Column(String(200))
     require_login = Column(Boolean(),default=False)
     allowed_roles = Column(String(300))
