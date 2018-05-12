@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "formbase.html" %}
 {% block endhead %}
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/js/jstree/themes/default/jstreestyle.min.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.css') }}'>
@@ -209,12 +209,12 @@
 			my: "right-top",
 			at: "right-top",
 			offsetY: "100px",
-			offsetX: "400px"
+			offsetX: "100px"
 		},
 		contentOverflow: 'scroll',
 		contentSize: {
 			width:  600,
-			height: 350
+			height: 550
 		},
 		content: "<div id='panelcontent'></div>",
 		contentAjax: {

@@ -7,6 +7,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy_mptt.mixins import BaseNestedSets
 from template import render_string
+import json
 
 class Tree(ModelBase):
     __tablename__ = 'trees'
@@ -28,7 +29,7 @@ class TreeNode(ModelBase, BaseNestedSets):
     __tablename__ = 'tree_nodes'
     id = Column(Integer, primary_key=True)
     title = Column(String(200))
-    slug = Column(String(100),unique=True)
+    slug = Column(String(100))
     require_login = Column(Boolean(),default=False)
     allowed_roles = Column(String(300))
     published = Column(Boolean(),default=False)
@@ -58,6 +59,18 @@ class TreeNode(ModelBase, BaseNestedSets):
         for child in self.children:
             child.copy(newcopy.id,appendslug)
 
+    def data(self,key=None,default=None):
+        dat = json.loads(self.datastr)
+        if key:
+            if key in dat:
+                return dat[key]
+            elif default:
+                return default
+            else:
+                return None
+        else:
+            return dat
+
 class TreeNodeUser(ModelBase):
     __tablename__ = 'tree_node_users'
     id = Column(Integer, primary_key=True)
@@ -67,4 +80,8 @@ class TreeNodeUser(ModelBase):
     node = relationship('TreeNode', backref='users')
 
     user_id = reference_col('users')
-    user = relationship('User', backref='treeroles')
+    user = relationship('User', backref='treeroles', order_by='User.name')
+
+    __mapper_args__ = {
+        "order_by":[role,]
+    }
