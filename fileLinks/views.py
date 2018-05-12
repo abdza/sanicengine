@@ -8,6 +8,7 @@ from template import render
 from decorators import authorized
 from sqlalchemy_paginator import Paginator
 import os
+import time
 
 bp = Blueprint('fileLinks')
 
@@ -16,7 +17,7 @@ bp = Blueprint('fileLinks')
 async def download(request,slug):
     filelink = dbsession.query(FileLink).filter_by(slug=slug).first()
     if filelink:
-        return await file_stream(filelink.filename,filename=os.path.basename(filelink.filename))
+        return await file_stream(filelink.filepath,filename=filelink.filename)
 
 @bp.route('/files/create',methods=['POST','GET'])
 @bp.route('/files/edit/',methods=['POST','GET'],name='edit')
@@ -40,7 +41,9 @@ async def form(request,slug=None):
             if request.files.get('filename') and request.files.get('filename').name:
                 dfile = request.files.get('filename')
                 ext = dfile.type.split('/')[1]
-                dst = os.path.join('upload',dfile.name)
+                if not os.path.exists(os.path.join('upload',request.form.get('module'))):
+                    os.makedirs(os.path.join('upload',request.form.get('module')))
+                dst = os.path.join('upload',request.form.get('module'),str(int(time.time())) + dfile.name)
                 try:
                     # extract starting byte from Content-Range header string
                     range_str = request.headers['Content-Range']
@@ -51,11 +54,12 @@ async def form(request,slug=None):
                 except KeyError:
                     with open(dst, 'wb') as f:
                         f.write(dfile.body)
-                filelink.filename = dst
+                filelink.filename = dfile.name
+                filelink.filepath = dst
             del(form['filename'])
             form.populate_obj(filelink)
             if dst:
-                filelink.filename = dst
+                filelink.filepath = dst
             dbsession.add(filelink)
             dbsession.commit()
             return redirect('/files')
