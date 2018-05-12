@@ -51,6 +51,9 @@ class TreeNode(ModelBase, BaseNestedSets):
                 published = self.published,
                 publish_date = self.publish_date,
                 expire_date = self.expire_date,
+                node_category = self.node_category,
+                node_type = self.node_type,
+                datastr = self.datastr,
                 tree = self.tree,
                 parent_id = parent_id)
 
