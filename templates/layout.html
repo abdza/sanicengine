@@ -8,7 +8,7 @@
 		{% endblock %}
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap.min.css') }}'>
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/style.min.css') }}'>
-		<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/timedropper/timedropper.min.css') }}'>
+		{% block formcss %}{% endblock %}
 		<!-- Mobile Specific Metas -->
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 		<!-- Google Font -->
@@ -24,7 +24,7 @@
 	<div class="header clearfix">
 		<div class="header-right">
 			<div class="brand-logo">
-				<a href="index.php">
+				<a href="{{ app.url_for('pages.home') }}">
 					<img src="{{ app.url_for('static',filename='images/logo.png') }}" alt="" class="mobile-logo">
 				</a>
 			</div>
@@ -52,14 +52,14 @@
 			{% else %}
 				<div class='col-md-4 pull-right'>
 					<form method='post' class='row' action='{{ app.url_for('users.login') }}'>
-						<div class='col-md-6'>
-							<input type='hidden' name='targeturl' value='{{request.url}}'/>
-							<input class='col-md-12' placeholder='Username' type='text' name='username' id='username'>
-							<input class='col-md-12' placeholder='Password' type='password' name='password' id='password'>
-						    </div>
-					    <div class='col-md-6'>
-						    <input class='col-md-12' type='submit' value='Login'/>
-					    </div>
+					<div class='col-md-6'>
+						<input type='hidden' name='targeturl' value='{{request.url}}'/>
+						<input class='col-md-12' placeholder='Username' type='text' name='username' id='username'>
+						<input class='col-md-12' placeholder='Password' type='password' name='password' id='password'>
+					</div>
+					<div class='col-md-6'>
+						<input class='col-md-12' type='submit' value='Login'/>
+					</div>
 					</form>
 				</div>
 			{% endif %}
@@ -102,13 +102,13 @@
 				</li>
 				<li>
 					<a href='{{ app.url_for('trees.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-file-o"></span>
+						<span class="fa fa-code-fork"></span>
 						<span class="mtext">Trees</span>
 					</a>
 				</li>
 				<li>
 					<a href='{{ app.url_for('fileLinks.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-file"></span>
+						<span class="fa fa-upload"></span>
 						<span class="mtext">Files</span>
 					</a>
 				</li>
@@ -126,27 +126,25 @@
 
 
 	{% block mainblock %}
-	<main role='main' class='container'>
-	{% if request.session.flashmessage %}
-		<div class="alert alert-warning alert-dismissible fade show" role="alert">
-			{{ request.session.pop('flashmessage',None) }}
-			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-				<span aria-hidden="true">&times;</span>
-			</button>
-		</div>
-	{% endif %}
+		<main role='main' class='container'>
+		{% if request.session.flashmessage %}
+			<div class="alert alert-warning alert-dismissible fade show" role="alert">
+				{{ request.session.pop('flashmessage',None) }}
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+		{% endif %}
 		{% block content %}
 			<h1>Sanic Engine</h1>
 		{% endblock %}
-	</main>
+		</main>
 	{% endblock %}
 	{% block standardjs %}
 	<script src='{{ app.url_for('static', filename='/js/jquery-3.3.1.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/js/popper.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/js/bootstrap.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/plugins/air-datepicker/dist/js/datepicker.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/plugins/air-datepicker/dist/js/i18n/datepicker.en.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/plugins/timedropper/timedropper.min.js')}}'></script>
+	{% block formjs %}{% endblock %}
 	{% endblock %}
 	{% block endbody %}
 	{% endblock %}

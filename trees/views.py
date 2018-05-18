@@ -50,7 +50,8 @@ async def editnode(request, node_id):
         form = TreeNodeForm(request.form)
         treenode = dbsession.query(TreeNode).get(request.form.get('id'))
         form.populate_obj(treenode)
-        treenode.parent_id = int(request.form.get('parent_id'))
+        if 'parent_id' in request.form:
+            treenode.parent_id = int(request.form.get('parent_id'))
         dbsession.add(treenode)
         try:
             dbsession.commit()
@@ -105,7 +106,7 @@ async def nodeuserform(request, node_id=None, nodeuser_id=None):
     else:
         form = TreeNodeUserForm(obj=nodeuser)
 
-    return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode))
+    return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode,nodeuser=nodeuser))
 
 @bp.route('/trees/addnode')
 @bp.route('/trees/addnode/<parent_id>',methods=['GET','POST'])
@@ -128,13 +129,14 @@ async def addnode(request, parent_id):
 @bp.route('/trees/renamenode')
 @bp.route('/trees/renamenode/<node_id>',methods=['POST'])
 @authorized(object_type='tree')
-async def renamenode(request, node_id):
-    nnode = dbsession.query(TreeNode).get(node_id)
-    if request.method=='POST':
-        nnode.title = request.form.get('title')
-        dbsession.add(nnode)
-        dbsession.commit()
-    return jsonresponse([{ 'id':nnode.id }])
+async def renamenode(request, node_id=None):
+    if node_id:
+        nnode = dbsession.query(TreeNode).get(node_id)
+        if request.method=='POST' and request.form:
+            nnode.title = request.form.get('title')
+            dbsession.add(nnode)
+            dbsession.commit()
+    return jsonresponse([{ 'id':nnode.id if nnode else False }])
 
 @bp.route('/trees/pastenode')
 @bp.route('/trees/pastenode/<node_id>/<paste_mode>',methods=['POST'])
