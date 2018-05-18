@@ -1,7 +1,5 @@
-{% extends "layout.html" %}
+{% extends "formbase.html" %}
 {% block endhead %}
-	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input.css') }}'>
-	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input-facebook.css') }}'>
     <style type="text/css" media="screen">
     #contenteditor { 
         height: 500px;
@@ -48,8 +46,6 @@
 </form>
 {% endblock %}
 {% block endbody %}
-	<script src='{{ app.url_for('static', filename='/js/jquery.tokeninput.js')}}'></script>
-    <script src="{{ app.url_for('static', filename='/js/ace/ace.js') }}" type="text/javascript" charset="utf-8"></script>
 	<script type='text/javascript'>
 		$(document).ready(function(){
             var editor = ace.edit("contenteditor");

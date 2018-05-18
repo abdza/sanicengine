@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "formbase.html" %}
 {% from 'trackers/macros.html' import transitionform %}
 {% block content %}
 {% if record %}
@@ -17,34 +17,11 @@
 {% block endbody %}
 {% set ns = namespace(gotdate = false,gottoken = false) %}
 {% for field in transition.edit_fields_list() %}
-{% if field.field_type=='date' %}
-{% if not ns.gotdate %}
-{% set ns.gotdate = true %}
-<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap-datepicker.css') }}'>
-<script src='{{ app.url_for('static', filename='/js/bootstrap-datepicker.min.js')}}'></script>
-{% endif %}
-<script>
-$('#{{field.name}}').datepicker({
-	format:'yyyy-mm-dd',
-	todayBtn:true,
-	zIndexOffset: 1000,
-	orientation:'bottom',
-	autoclose:true,
-	container:'#div_{{field.name}}',
-});
-</script>
-{% endif %}
-{% if field.field_type in ['object','user'] %}
-{% if not ns.gottoken %}
-{% set ns.gottoken = true %}
-	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input.css') }}'>
-	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input-facebook.css') }}'>
-	<script src='{{ app.url_for('static', filename='/js/jquery.tokeninput.js')}}'></script>
-{% endif %}
-<script> 
-$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',slug=tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
-</script> 
-{% endif %}
+	{% if field.field_type in ['object','user'] %}
+		<script> 
+		$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',slug=tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
+		</script> 
+	{% endif %}
 {% endfor %}
 {% if transition.edit_fields and transition.edit_fields|length == 0 %}
 <script>

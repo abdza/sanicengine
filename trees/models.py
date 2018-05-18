@@ -7,6 +7,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy_mptt.mixins import BaseNestedSets
 from template import render_string
+import json
 
 class Tree(ModelBase):
     __tablename__ = 'trees'
@@ -28,7 +29,7 @@ class TreeNode(ModelBase, BaseNestedSets):
     __tablename__ = 'tree_nodes'
     id = Column(Integer, primary_key=True)
     title = Column(String(200))
-    slug = Column(String(100),unique=True)
+    slug = Column(String(100))
     require_login = Column(Boolean(),default=False)
     allowed_roles = Column(String(300))
     published = Column(Boolean(),default=False)
@@ -50,6 +51,9 @@ class TreeNode(ModelBase, BaseNestedSets):
                 published = self.published,
                 publish_date = self.publish_date,
                 expire_date = self.expire_date,
+                node_category = self.node_category,
+                node_type = self.node_type,
+                datastr = self.datastr,
                 tree = self.tree,
                 parent_id = parent_id)
 
@@ -57,6 +61,47 @@ class TreeNode(ModelBase, BaseNestedSets):
         dbsession.flush()
         for child in self.children:
             child.copy(newcopy.id,appendslug)
+
+    def data(self,key=None,default=None):
+        dat = json.loads(self.datastr)
+        if key:
+            if key in dat:
+                return dat[key]
+            elif default:
+                return default
+            else:
+                return None
+        else:
+            return dat
+
+    def treedump(self):
+        return { 'title':self.title,'slug':self.slug,'require_login':self.require_login,'allowed_roles':self.allowed_roles,'published':self.published,'publish_date':self.publish_date.strftime('%Y-%m-%d') if self.publish_date else '','expire_date':self.expire_date.strftime('%Y-%m-%d') if self.expire_date else '','node_category':self.node_category,'node_type':self.node_type,'datastr':self.datastr,'tree':self.tree.slug,'users': [ user.treedump() for user in self.users ],'children':[ child.treedump() for child in self.children ] }
+
+    @staticmethod
+    def treeload(tree,nodearray,parentnode=None):
+        newnode = TreeNode(parent=parentnode,tree=tree,title=nodearray['title'],slug=nodearray['slug'],require_login=nodearray['require_login'],allowed_roles=nodearray['allowed_roles'],published=nodearray['published'],publish_date=nodearray['publish_date'] if nodearray['publish_date'] else None,expire_date=nodearray['expire_date'] if nodearray['expire_date'] else None,node_category=nodearray['node_category'],node_type=nodearray['node_type'],datastr=nodearray['datastr'])
+        dbsession.add(newnode)
+        from users.models import User
+        for cuser in nodearray['users']:
+            newuser = TreeNodeUser(node=newnode,role=cuser['role'],user=dbsession.query(User).filter_by(username=cuser['user']).first())
+            dbsession.add(newuser)
+
+        dbsession.flush()
+        for cnode in nodearray['children']:
+            TreeNode.treeload(tree,cnode,newnode)
+
+    title = Column(String(200))
+    slug = Column(String(100))
+    require_login = Column(Boolean(),default=False)
+    allowed_roles = Column(String(300))
+    published = Column(Boolean(),default=False)
+    publish_date = Column(Date(),nullable=True)
+    expire_date = Column(Date(),nullable=True)
+    node_category = Column(String(100))
+    node_type = Column(String(100))
+    datastr = Column(Text)
+
+
 
 class TreeNodeUser(ModelBase):
     __tablename__ = 'tree_node_users'
@@ -67,4 +112,11 @@ class TreeNodeUser(ModelBase):
     node = relationship('TreeNode', backref='users')
 
     user_id = reference_col('users')
-    user = relationship('User', backref='treeroles')
+    user = relationship('User', backref='treeroles', order_by='User.name')
+
+    __mapper_args__ = {
+        "order_by":[role,]
+    }
+
+    def treedump(self):
+        return { 'user':self.user.username,'role':self.role }

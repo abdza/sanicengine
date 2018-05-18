@@ -27,14 +27,24 @@
 			<dt class='col-4'>Expire Date</dt>
 			<dd class='col-8'>{{node.expire_date}}</dd>
 			<hr>
+			{% if node.datastr %}
+			<dt class='col-4'>Data</dt>
+			<dd class='col-8'>
+			<ul class='list-group list-group-flush'>
+				{% for key,dat in node.data().items() %}
+				<li class='list-group-item row'><span class='col-1'>{{ key }}</span> : <span class='col-3'>{{ dat }}</span></li>
+				{% endfor %}
+			</ul>
+			</dd>
+			{% endif %}
 			{% if node.users %}
 			<dt class='col-4'>Users</dt>
 			<dd class='col-8'>
 			<ol class='list-group list-group-flush'>
 			{% for user in node.users %}
-			<li class='list-group-item'>
-			<a href='#' onclick='userform({{user.id}}); return false;'>{{ user.role }} : {{ user.user.name }}</a>
-			<button onclick="if(confirm('Confirm delete user {{user.user.name}} with role {{user.role}}?')){ deleteuser({{user.node.id}},{{user.id}}); };" class='btn btn-danger btn-sm'>Delete</button>
+			<li class='list-group-item row'>
+			<a href='#' class='col-1' onclick='userform({{user.id}}); return false;'>{{ user.role }} : {{ user.user.name }}</a>
+			<button onclick="if(confirm('Confirm delete user {{user.user.name}} with role {{user.role}}?')){ deleteuser({{user.node.id}},{{user.id}}); };" class='btn btn-danger btn-sm col-3'>Delete</button>
 			</li>
 			{% endfor %}
 			</ol>
