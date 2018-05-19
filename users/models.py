@@ -13,11 +13,17 @@ class User(ModelBase):
     resetexpire = Column(DateTime)
     superuser = Column(Boolean(),default=False)
 
+    def __str__(self):
+        return self.name
+
     def getuser(self, userid):
         return dbsession.query(User).get(userid)
 
-    def moduleroles(self,module):
-        mroles = dbsession.query(ModuleRole).filter(ModuleRole.user==self,ModuleRole.module==module).all()
+    def moduleroles(self,module=None):
+        if module:
+            mroles = dbsession.query(ModuleRole).filter(ModuleRole.user==self,ModuleRole.module==module).all()
+        else:
+            mroles = dbsession.query(ModuleRole).filter(ModuleRole.user==self).all()
         return [ r.role for r in mroles ]
 
 class ModuleRole(ModelBase):
