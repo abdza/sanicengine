@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, Column, ForeignKey
 try:
     import settings
 except ImportError:
-    print "Error importing settings. Please copy settings.sample.py to settings.py and modify the content for your use"
+    print("Error importing settings. Please copy settings.sample.py to settings.py and modify the content for your use")
     exit()
 
 ModelBase = declarative_base()
