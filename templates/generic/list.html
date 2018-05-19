@@ -6,7 +6,7 @@
 	</h1>
 {% endif %}
 {% if addlink %}
-<a href='{{ addlink }}' class='btn btn-primary'>{% if addtitle %}{{addtitle}}{% else %}Add{% endif %}</a>
+<a href='{{ app.url_for(addlink) }}' class='btn btn-primary'>{% if addtitle %}{{addtitle}}{% else %}Add{% endif %}</a>
 {% endif %}
 <table class='table'>
 	<tr>
@@ -22,7 +22,7 @@
 	<tr>
 		<td>
 			{% if editlink %}
-			<a href="{{editlink}}/{{item.id}}">{{ loop.index }}</a>
+			<a href="{{ app.url_for(editlink) }}/{{item.id}}">{{ loop.index }}</a>
 			{% else %}
 			{{ loop.index }}
 			{% endif %}
