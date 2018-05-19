@@ -47,41 +47,50 @@ async def view(request, slug):
         print("No page to view")
         return redirect('/')
 
+@bp.route('/pages/delete/<id>',methods=['POST'])
+@authorized(require_superuser=True)
+async def delete(request,id):
+    page = dbsession.query(Page).get(int(id))
+    if page:
+        dbsession.delete(page)
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+    return redirect(request.app.url_for('pages.index'))
+
 @bp.route('/pages/create',methods=['POST','GET'])
 @bp.route('/pages/edit/',methods=['POST','GET'],name='edit')
-@bp.route('/pages/edit/<slug>',methods=['POST','GET'])
+@bp.route('/pages/edit/<id>',methods=['POST','GET'])
 @authorized(object_type='page')
-async def form(request,slug=None):
+async def form(request,id=None):
     title = 'Create Page'
     form = PageForm(request.form)
+    submitcontinue = False
     page=None
-    if request.method=='POST':
-        page = dbsession.query(Page).filter_by(slug=form.slug.data).first()
-        if not page and slug:
-            page = dbsession.query(Page).get(int(slug))
-        if page:
-            title = 'Edit Page'
-        if form.validate():
-            if not page:
-                page=Page()
-            form.populate_obj(page)
-            dbsession.add(page)
+    if id:
+        page = dbsession.query(Page).get(id)
+    if request.method=='POST' and form.validate():
+        if not page:
+            page=Page()
+        form.populate_obj(page)
+        dbsession.add(page)
+        try:
             dbsession.commit()
-            if request.form['submit'][0]=='Submit':
-                return redirect('/pages')
-            else:
-                return redirect('/pages/edit/' + page.slug)
+        except Exception as inst:
+            dbsession.rollback()
+        if request.form['submit'][0]=='Submit':
+            return redirect('/pages')
+        else:
+            return redirect('/pages/edit/' + str(page.id))
     else:
-        if slug is not None:
-            page = dbsession.query(Page).filter_by(slug=slug).first()
-            if not page:
-                page = dbsession.query(Page).get(int(slug))
-            if page:
-                form = PageForm(obj=page)
-                title = 'Edit Page'
+        if page:
+            form = PageForm(obj=page)
+            title = 'Edit Page'
+            submitcontinue = True
 
     return html(render(request,'pages/form.html',title=title,page=page,
-            form=form,enctype='multipart/form-data',submitcontinue=True))
+            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
 
 @bp.route('/')
 async def home(request):
@@ -97,4 +106,4 @@ async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 5)
     return html(render(request,
-        'generic/list.html',title='Pages',editlink=request.app.url_for('pages.edit'),addlink=request.app.url_for('pages.form'),fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Pages',deletelink='pages.delete',editlink='pages.edit',addlink='pages.form',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

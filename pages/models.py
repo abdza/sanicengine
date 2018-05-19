@@ -20,5 +20,8 @@ class Page(ModelBase):
     publish_date = Column(Date(),nullable=True)
     expire_date = Column(Date(),nullable=True)
 
+    def __str__(self):
+        return 'Page:' + self.title
+
     def render(self,request,*args,**kwargs):
         return render_string(request,self.content,*args,**kwargs)
