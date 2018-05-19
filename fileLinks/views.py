@@ -21,19 +21,17 @@ async def download(request,slug):
 
 @bp.route('/files/create',methods=['POST','GET'])
 @bp.route('/files/edit/',methods=['POST','GET'],name='edit')
-@bp.route('/files/edit/<slug>',methods=['POST','GET'])
-async def form(request,slug=None):
+@bp.route('/files/edit/<id>',methods=['POST','GET'])
+@authorized(object_type='filelink',require_admin=True)
+async def form(request,id=None):
     title = 'Create File Link'
     form = FileLinkForm(request.form)
+    filelink = None
+    if id:
+        filelink = dbsession.query(FileLink).get(int(id))
+    if filelink:
+        title = 'Edit File'
     if request.method=='POST':
-        filelink = dbsession.query(FileLink).filter_by(slug=slug).first()
-        if not filelink:
-            try:
-                filelink = dbsession.query(FileLink).get(int(slug))
-            except:
-                print("Not id")
-        if filelink:
-            title = 'Edit File'
         if form.validate():
             dst = None
             if not filelink:
@@ -64,17 +62,13 @@ async def form(request,slug=None):
             dbsession.commit()
             return redirect('/files')
     else:
-        if slug is not None:
-            filelink = dbsession.query(FileLink).filter_by(slug=slug).first()
-            if not filelink:
-                filelink = dbsession.query(FileLink).get(int(slug))
-            if filelink:
-                form = FileLinkForm(obj=filelink)
-                title = 'Edit File'
+        if filelink:
+            form = FileLinkForm(obj=filelink)
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
 @bp.route('/files')
+@authorized(object_type='filelink',require_admin=True)
 async def index(request):
     filelinks = dbsession.query(FileLink)
     paginator = Paginator(filelinks, 5)
-    return html(render(request, 'generic/list.html',title='Files',editlink=request.app.url_for('fileLinks.edit'),addlink=request.app.url_for('fileLinks.form'),fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Files',editlink='fileLinks.edit',addlink='fileLinks.form',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

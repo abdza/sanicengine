@@ -37,4 +37,4 @@ class ModuleRole(ModelBase):
     module = Column(String(200))
 
     def __str__(self):
-        return str(self.user) + '-' + str(self.module) + '-' + str(self.role)
+        return 'Role:' + str(self.user) + ' as ' + str(self.role) + ' in ' + str(self.module) + ' module' 
