@@ -2,7 +2,7 @@ from functools import wraps
 from sanic.response import json, redirect
 from database import dbsession
 
-def authorized(object_type=None,require_superuser=False):
+def authorized(object_type=None,require_admin=False,require_superuser=False):
     def decorator(f):
         @wraps(f)
         async def decorated_function(request, *args, **kwargs):
@@ -32,8 +32,15 @@ def authorized(object_type=None,require_superuser=False):
                             mroles = curuser.moduleroles(curobj.module)
                             if any(r in ['admin','Admin'] for r in mroles):
                                 is_authorized = True
-                            if curobj.allowed_roles and len(curobj.allowed_roles) and any(r in [ ar.strip() for ar in curobj.allowed_roles.split(',')] for r in mroles):
+                            if not require_admin and curobj.allowed_roles and len(curobj.allowed_roles) and any(r in [ ar.strip() for ar in curobj.allowed_roles.split(',')] for r in mroles):
                                 is_authorized = True
+            elif require_admin:
+                if curuser:
+                    mroles = curuser.moduleroles()
+                    if any(r in ['admin','Admin'] for r in mroles):
+                        is_authorized = True
+                    else:
+                        is_authorized = bool(curuser.superuser)
             else:
                 if curuser:
                     is_authorized = True

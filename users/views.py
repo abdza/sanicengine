@@ -6,6 +6,7 @@ from .forms import UserForm, ModuleRoleForm
 from .models import User, ModuleRole
 from pages.models import Page
 from database import dbsession
+from decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
 from main import send_email
@@ -33,6 +34,19 @@ async def logout(request):
     if 'user_id' in request['session']:
         del(request['session']['user_id'])
     return redirect('/')
+
+@bp.route('/module_roles/delete/<id>',methods=['POST'])
+@authorized(require_superuser=True)
+async def module_role_delete(request,id):
+    module_role = dbsession.query(ModuleRole).get(int(id))
+    if module_role:
+        dbsession.delete(module_role)
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+    return redirect(request.app.url_for('users.module_roles'))
+
 
 @bp.route('/module_roles/create',methods=['POST','GET'])
 @bp.route('/module_roles/edit/',methods=['POST','GET'],name='module_role_edit')
@@ -72,7 +86,7 @@ async def module_role_form(request,module_role_id=None):
 async def module_roles(request):
     module_roles = dbsession.query(ModuleRole)
     paginator = Paginator(module_roles, 5)
-    return html(render(request, 'generic/list.html',title='Module Roles',editlink=request.app.url_for('users.module_role_edit'),addlink=request.app.url_for('users.module_role_form'),fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Module Roles',deletelink='users.module_role_delete',editlink=request.app.url_for('users.module_role_edit'),addlink=request.app.url_for('users.module_role_form'),fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/users/json/')
 async def userjson(request):
@@ -81,11 +95,6 @@ async def userjson(request):
         searchval = request.args['q'][0]
     users = dbsession.query(User).filter(or_(User.name.ilike("%" + searchval + "%"),User.username.ilike("%" + searchval + "%"))).all()
     return jsonresponse([ {'id':user.id,'name':user.name} for user in users ])
-
-@bp.route('/test')
-async def test(request):
-    await send_email({"email_to":["abdullah.zainul@gmail.com"],"subject":"done","body":"this"})
-    return html('try')
 
 @bp.route('/users')
 async def index(request):

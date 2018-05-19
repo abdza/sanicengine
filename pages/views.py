@@ -92,7 +92,7 @@ async def home(request):
 
 
 @bp.route('/pages')
-@authorized(object_type='page')
+@authorized(object_type='page',require_admin=True)
 async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 5)
