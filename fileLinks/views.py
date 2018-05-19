@@ -19,6 +19,20 @@ async def download(request,slug):
     if filelink:
         return await file_stream(filelink.filepath,filename=filelink.filename)
 
+@bp.route('/files/delete/<id>',methods=['POST'])
+@authorized(require_admin=True)
+async def delete(request,id):
+    filelink = dbsession.query(FileLink).get(int(id))
+    if filelink:
+        if os.path.exists(filelink.filepath):
+            os.remove(filelink.filepath)
+        dbsession.delete(filelink)
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+    return redirect(request.app.url_for('fileLinks.index'))
+
 @bp.route('/files/create',methods=['POST','GET'])
 @bp.route('/files/edit/',methods=['POST','GET'],name='edit')
 @bp.route('/files/edit/<id>',methods=['POST','GET'])
@@ -71,4 +85,4 @@ async def form(request,id=None):
 async def index(request):
     filelinks = dbsession.query(FileLink)
     paginator = Paginator(filelinks, 5)
-    return html(render(request, 'generic/list.html',title='Files',editlink='fileLinks.edit',addlink='fileLinks.form',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Files',deletelink='fileLinks.delete',editlink='fileLinks.edit',addlink='fileLinks.form',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
