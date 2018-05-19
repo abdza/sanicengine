@@ -48,7 +48,7 @@ async def view(request, slug):
         return redirect('/')
 
 @bp.route('/pages/delete/<id>',methods=['POST'])
-@authorized(require_superuser=True)
+@authorized(require_admin=True)
 async def delete(request,id):
     page = dbsession.query(Page).get(int(id))
     if page:
