@@ -8,6 +8,7 @@ from fileLinks.models import FileLink
 from trees.models import Tree, TreeNode, TreeNodeUser
 from .forms import ModuleForm
 from database import dbsession
+from decorators import authorized
 from template import render
 from sqlalchemy_paginator import Paginator
 import os
@@ -18,6 +19,7 @@ bp = Blueprint('modules')
 modulepath = 'custom_module'
 
 @bp.route('/modules/import/<slug>')
+@authorized(require_superuser=True)
 async def importmodule(request,slug=None):
     if(os.path.exists(os.path.join(modulepath,slug))):
 
@@ -156,6 +158,7 @@ async def importmodule(request,slug=None):
     return redirect(request.app.url_for('modules.index'))
 
 @bp.route('/modules/export/<slug>')
+@authorized(require_superuser=True)
 async def export(request,slug=None):
     if slug:
         if not os.path.exists(os.path.join(modulepath,slug)):
@@ -229,6 +232,7 @@ async def export(request,slug=None):
     return redirect(request.app.url_for('modules.index'))
 
 @bp.route('/modules/updatelist')
+@authorized(require_superuser=True)
 async def updatelist(request):
     modules = []
     pagemodule = dbsession.execute("select distinct module from pages")
@@ -264,6 +268,7 @@ async def updatelist(request):
     return redirect(request.app.url_for('modules.index'))
 
 @bp.route('/modules')
+@authorized(require_superuser=True)
 async def index(request):
     modules = dbsession.query(Module)
     paginator = Paginator(modules, 5)

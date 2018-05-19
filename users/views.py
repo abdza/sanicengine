@@ -51,6 +51,7 @@ async def module_role_delete(request,id):
 @bp.route('/module_roles/create',methods=['POST','GET'])
 @bp.route('/module_roles/edit/',methods=['POST','GET'],name='module_role_edit')
 @bp.route('/module_roles/edit/<module_role_id>',methods=['POST','GET'])
+@authorized(require_admin=True)
 async def module_role_form(request,module_role_id=None):
     title = 'Create ModuleRole'
     form = ModuleRoleForm(request.form)
@@ -83,10 +84,11 @@ async def module_role_form(request,module_role_id=None):
     return html(render(request,'generic/form.html',title=title,form=form,userdata=userdata,enctype='multipart/form-data'))
 
 @bp.route('/module_roles')
+@authorized(require_admin=True)
 async def module_roles(request):
     module_roles = dbsession.query(ModuleRole)
     paginator = Paginator(module_roles, 5)
-    return html(render(request, 'generic/list.html',title='Module Roles',deletelink='users.module_role_delete',editlink=request.app.url_for('users.module_role_edit'),addlink=request.app.url_for('users.module_role_form'),fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Module Roles',deletelink='users.module_role_delete',editlink='users.module_role_edit',addlink='users.module_role_form',fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/users/json/')
 async def userjson(request):
@@ -97,6 +99,7 @@ async def userjson(request):
     return jsonresponse([ {'id':user.id,'name':user.name} for user in users ])
 
 @bp.route('/users')
+@authorized(require_admin=True)
 async def index(request):
     users = dbsession.query(User)
     paginator = Paginator(users, 5)

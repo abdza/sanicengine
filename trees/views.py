@@ -23,6 +23,7 @@ async def view(request, slug):
 
 @bp.route('/trees/nodeview/')
 @bp.route('/trees/nodeview/<node_id>')
+@authorized(object_type='tree',require_admin=True)
 async def nodeview(request,node_id=None):
     node = None
     if node_id:
@@ -31,7 +32,7 @@ async def nodeview(request,node_id=None):
 
 @bp.route('/trees/nodejson/<slug>',methods=['GET'])
 @bp.route('/trees/nodejson/<slug>/<node_id>',methods=['GET'])
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def nodejson(request, slug, node_id=None):
     tree = dbsession.query(Tree).filter_by(slug=slug).first()
     if node_id:
@@ -42,7 +43,7 @@ async def nodejson(request, slug, node_id=None):
 
 @bp.route('/trees/editnode')
 @bp.route('/trees/editnode/<node_id>',methods=['GET','POST'])
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def editnode(request, node_id):
     curnode = dbsession.query(TreeNode).get(node_id)
     parentnode = curnode.parent
@@ -65,7 +66,7 @@ async def editnode(request, node_id):
 
 @bp.route('/trees/deletenodeuser')
 @bp.route('/trees/deletenodeuser/<node_id>/<nodeuser_id>',methods=['GET','POST'])
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def deletenodeuser(request, node_id=None, nodeuser_id=None):
     nodeuser = None
     treenode = dbsession.query(TreeNode).get(node_id)
@@ -82,7 +83,7 @@ async def deletenodeuser(request, node_id=None, nodeuser_id=None):
 @bp.route('/trees/nodeuserform')
 @bp.route('/trees/nodeuserform/<node_id>',methods=['GET','POST'])
 @bp.route('/trees/nodeuserform/<node_id>/<nodeuser_id>',methods=['GET','POST'])
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def nodeuserform(request, node_id=None, nodeuser_id=None):
     nodeuser = None
     if nodeuser_id:
@@ -110,7 +111,7 @@ async def nodeuserform(request, node_id=None, nodeuser_id=None):
 
 @bp.route('/trees/addnode')
 @bp.route('/trees/addnode/<parent_id>',methods=['GET','POST'])
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def addnode(request, parent_id):
     parentnode = dbsession.query(TreeNode).get(parent_id)
     form = TreeNodeForm(request.form)
@@ -128,7 +129,7 @@ async def addnode(request, parent_id):
 
 @bp.route('/trees/renamenode')
 @bp.route('/trees/renamenode/<node_id>',methods=['POST'])
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def renamenode(request, node_id=None):
     if node_id:
         nnode = dbsession.query(TreeNode).get(node_id)
@@ -140,7 +141,7 @@ async def renamenode(request, node_id=None):
 
 @bp.route('/trees/pastenode')
 @bp.route('/trees/pastenode/<node_id>/<paste_mode>',methods=['POST'])
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def pastenode(request, node_id, paste_mode):
     parentnode = dbsession.query(TreeNode).get(node_id)
     if request.method=='POST':
@@ -157,7 +158,7 @@ async def pastenode(request, node_id, paste_mode):
 
 @bp.route('/trees/deletenode')
 @bp.route('/trees/deletenode/<node_id>',methods=['POST'])
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def deletenode(request, node_id):
     nnode = dbsession.query(TreeNode).get(node_id)
     if request.method=='POST':
@@ -165,59 +166,51 @@ async def deletenode(request, node_id):
         dbsession.commit()
     return jsonresponse([{ 'status':'done' }])
 
-@bp.route('/trees/create',methods=['POST','GET'])
+@bp.route('/trees/create',methods=['POST','GET'],name='create')
 @bp.route('/trees/edit/',methods=['POST','GET'],name='edit')
-@bp.route('/trees/edit/<slug>',methods=['POST','GET'])
-@authorized(object_type='tree')
-async def form(request,slug=None):
+@bp.route('/trees/edit/<id>',methods=['POST','GET'])
+@authorized(object_type='tree',require_admin=True)
+async def form(request,id=None):
     title = 'Create Tree'
     form = TreeForm(request.form)
     tree=None
-    if request.method=='POST':
-        tree = dbsession.query(Tree).filter_by(slug=form.slug.data).first()
-        if not tree and slug:
-            tree = dbsession.query(Tree).get(int(slug))
-        if tree:
-            title = 'Edit Tree'
-        if form.validate():
-            newtree = False
-            rootnode = None
-            if not tree:
-                newtree = True
-                tree=Tree()
-            form.populate_obj(tree)
-            dbsession.add(tree)
+    if id:
+        tree = dbsession.query(Tree).get(int(id))
+        title = 'Edit Tree'
+    if request.method=='POST' and form.validate():
+        newtree = False
+        rootnode = None
+        if not tree:
+            newtree = True
+            tree=Tree()
+        form.populate_obj(tree)
+        dbsession.add(tree)
+        dbsession.commit()
+        if newtree:
+            rootnode=TreeNode(tree=tree)
+            rootnode.title = tree.title
+            rootnode.slug = tree.slug
+            rootnode.require_login = tree.require_login
+            rootnode.allowed_roles = tree.allowed_roles
+            rootnode.published = tree.published
+            rootnode.publish_date = tree.publish_date
+            rootnode.expire_date = tree.expire_date
+            dbsession.add(rootnode)
             dbsession.commit()
-            if newtree:
-                rootnode=TreeNode(tree=tree)
-                rootnode.title = tree.title
-                rootnode.slug = tree.slug
-                rootnode.require_login = tree.require_login
-                rootnode.allowed_roles = tree.allowed_roles
-                rootnode.published = tree.published
-                rootnode.publish_date = tree.publish_date
-                rootnode.expire_date = tree.expire_date
-                dbsession.add(rootnode)
-                dbsession.commit()
-            if request.form['submit'][0]=='Submit':
-                return redirect('/trees')
-            else:
-                return redirect('/trees/edit/' + tree.slug)
+        if request.form['submit'][0]=='Submit':
+            return redirect('/trees')
+        else:
+            return redirect('/trees/edit/' + tree.slug)
     else:
-        if slug is not None:
-            tree = dbsession.query(Tree).filter_by(slug=slug).first()
-            if not tree:
-                tree = dbsession.query(Tree).get(int(slug))
-            if tree:
-                form = TreeForm(obj=tree)
-                title = 'Edit Tree'
+        if tree:
+            form = TreeForm(obj=tree)
 
     return html(render(request,'generic/form.html',title=title,tree=tree, form=form,enctype='multipart/form-data'))
 
 @bp.route('/trees')
-@authorized(object_type='tree')
+@authorized(object_type='tree',require_admin=True)
 async def index(request):
     trees = dbsession.query(Tree)
     paginator = Paginator(trees, 5)
     return html(render(request,
-        'trees/list.html',title='Trees',editlink=request.app.url_for('trees.edit'),addlink=request.app.url_for('trees.form'),fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))
+        'trees/list.html',title='Trees',editlink='trees.edit',addlink='trees.create',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))
