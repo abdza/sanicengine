@@ -23,7 +23,7 @@ class Tree(ModelBase):
     expire_date = Column(Date(),nullable=True)
 
     __table_args__ = (
-        UniqueConstraint(module, slug, name='modul_slug_uidx'),
+        UniqueConstraint(module, slug, name='tree_module_slug_uidx'),
     )
 
     def __str__(self):

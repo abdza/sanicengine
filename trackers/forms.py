@@ -2,9 +2,9 @@ from wtforms import Form, StringField, TextAreaField, BooleanField, DateField, S
 from .models import TrackerStatus
 
 class TrackerForm(Form):
-    title = StringField('Title')
-    slug = StringField('Slug')
     module = StringField('Module')
+    slug = StringField('Slug')
+    title = StringField('Title')
     pagelimit = IntegerField('Page Limit')
     list_fields = StringField('List Fields')
     search_fields = StringField('Search Fields')

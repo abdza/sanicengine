@@ -7,6 +7,7 @@ from database import dbsession
 from template import render
 from decorators import authorized
 from sqlalchemy_paginator import Paginator
+from sqlalchemy.exc import IntegrityError
 import os
 import time
 
@@ -72,9 +73,23 @@ async def form(request,id=None):
             form.populate_obj(filelink)
             if dst:
                 filelink.filepath = dst
+            success = False
             dbsession.add(filelink)
-            dbsession.commit()
-            return redirect('/files')
+            try:
+                dbsession.commit()
+                success=True
+            except IntegrityError as inst:
+                form.slug.errors.append('File with slug ' + form.slug.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
+                dbsession.rollback()
+                if os.path.exists(dst):
+                    os.remove(dst)
+            except Exception as inst:
+                dbsession.rollback()
+                if os.path.exists(dst):
+                    os.remove(dst)
+
+            if success:
+                return redirect('/files')
     else:
         if filelink:
             form = FileLinkForm(obj=filelink)
@@ -85,4 +100,4 @@ async def form(request,id=None):
 async def index(request):
     filelinks = dbsession.query(FileLink)
     paginator = Paginator(filelinks, 5)
-    return html(render(request, 'generic/list.html',title='Files',deletelink='fileLinks.delete',editlink='fileLinks.edit',addlink='fileLinks.form',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Files',deletelink='fileLinks.delete',editlink='fileLinks.edit',addlink='fileLinks.form',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

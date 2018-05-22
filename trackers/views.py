@@ -10,6 +10,7 @@ from template import render
 from decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 import os
 import datetime
 import json
@@ -505,11 +506,17 @@ async def form(request,id=None):
                 dbsession.add(idfield)
                 newtransition = TrackerTransition(name='new',tracker=tracker,roles=[adminrole],next_status=newstatus)
                 dbsession.add(newtransition)
+            success = False
             try:
                 dbsession.commit()
+                success = True
+            except IntegrityError as inst:
+                form.slug.errors.append('Tracker with slug ' + form.slug.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
+                dbsession.rollback()
             except Exception as inst:
                 dbsession.rollback()
-            return redirect('/trackers/view/' + str(tracker.id))
+            if success:
+                return redirect('/trackers/view/' + str(tracker.id))
     else:
         if id:
             tracker = dbsession.query(Tracker).get(int(id))
@@ -543,7 +550,7 @@ async def index(request):
     trackers = dbsession.query(Tracker)
     paginator = Paginator(trackers, 5)
     return html(render(request,
-    'generic/list.html',title='Trackers',editlink='trackers.view',addlink='trackers.create',maxlength=100,fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'List Fields','name':'list_fields'},{'label':'Require Login','name':'require_login'},{'label':'Allowed Roles','name':'allowed_roles'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    'generic/list.html',title='Trackers',editlink='trackers.view',addlink='trackers.create',maxlength=100,fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'List Fields','name':'list_fields'},{'label':'Require Login','name':'require_login'},{'label':'Allowed Roles','name':'allowed_roles'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/trackers/<slug>/delete',methods=['POST'])
 @authorized(require_admin=True)
