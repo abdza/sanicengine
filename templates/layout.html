@@ -69,7 +69,7 @@
 	{% block leftsidebar %}
 	<div class="left-side-bar">
 		<div class="brand-logo">
-			<a href="index.php">
+			<a href="{{ app.url_for('pages.home') }}">
 				<img src="{{ app.url_for('static',filename='images/sanic-engine-logo.png')}}" alt="">
 			</a>
 		</div>

@@ -2,9 +2,9 @@ from wtforms import Form, StringField, TextAreaField, BooleanField, DateField
 from wtforms.validators import Optional
 
 class TreeForm(Form):
-    title = StringField('Title')
-    slug = StringField('Slug')
     module = StringField('Module')
+    slug = StringField('Slug')
+    title = StringField('Title')
     published = BooleanField('Published')
     require_login = BooleanField('Require Login')
     allowed_roles = StringField('Allowed Roles')
