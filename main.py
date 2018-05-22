@@ -13,6 +13,7 @@ from email.mime.text import MIMEText
 from email.message import EmailMessage
 from email.utils import make_msgid
 import settings
+import hashlib
 
 app = Sanic()
 app.static('/static','./static')
@@ -60,7 +61,8 @@ async def default_data(app, loop):
         if super_user:
             super_user.superuser=True
         else:
-            super_user = users.models.User(name='Admin Dude',username='admin',password='admin123',email='admin@sanicengine.com',superuser=True)
+            super_user = users.models.User(name='Admin Dude',username='admin',email='admin@sanicengine.com',superuser=True)
+            super_user.password = hashlib.sha224('admin123'.encode('utf-8')).hexdigest()
 
         dbsession.add(super_user)
 

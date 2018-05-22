@@ -217,18 +217,16 @@ async def form(request,id=None):
         try:
             dbsession.commit()
             success = True
+        except IntegrityError as inst:
+            form.slug.errors.append('Tree with slug ' + form.slug.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
+            dbsession.rollback()
         except Exception as inst:
             dbsession.rollback()
-        if newtree:
+        if success and newtree:
             tree.create_rootnode()
             try:
                 dbsession.commit()
-            except IntegrityError as inst:
-                print("Integrity error")
-                form.slug.errors.append('Slug ' + form.slug.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
-                dbsession.rollback()
             except Exception as inst:
-                print("Other error:" + str(inst))
                 dbsession.rollback()
         if success:
             if request.form['submit'][0]=='Submit':

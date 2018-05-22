@@ -3,7 +3,7 @@
 import datetime as dt
 
 from database import ModelBase, dbsession, reference_col
-from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolean, DateTime, Date, Table, MetaData, select
+from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolean, DateTime, Date, Table, MetaData, select, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
 from template import render_string
@@ -17,8 +17,8 @@ class Tracker(ModelBase):
     __tablename__ = 'trackers'
     id = Column(Integer, primary_key=True)
     title = Column(String(200))
-    slug = Column(String(100),unique=True)
-    module = Column(String(100),default='pages')
+    slug = Column(String(100))
+    module = Column(String(100),default='portal')
     list_fields = Column(Text)
     search_fields = Column(Text)
     filter_fields = Column(Text)
@@ -26,6 +26,10 @@ class Tracker(ModelBase):
     pagelimit = Column(Integer,default=10)
     require_login = Column(Boolean(),default=False)
     allowed_roles = Column(String(300))
+
+    __table_args__ = (
+        UniqueConstraint(module, slug, name='tracker_module_slug_uidx'),
+    )
 
     def __repr__(self):
         return self.title

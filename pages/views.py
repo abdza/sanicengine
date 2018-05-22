@@ -7,6 +7,7 @@ from database import dbsession
 from template import render
 from decorators import authorized
 from sqlalchemy_paginator import Paginator
+from sqlalchemy.exc import IntegrityError
 
 bp = Blueprint('pages')
 
@@ -75,14 +76,20 @@ async def form(request,id=None):
             page=Page()
         form.populate_obj(page)
         dbsession.add(page)
+        success = False
         try:
             dbsession.commit()
+            success = True
+        except IntegrityError as inst:
+            form.slug.errors.append('Page with slug ' + form.slug.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
+            dbsession.rollback()
         except Exception as inst:
             dbsession.rollback()
-        if request.form['submit'][0]=='Submit':
-            return redirect('/pages')
-        else:
-            return redirect('/pages/edit/' + str(page.id))
+        if success:
+            if request.form['submit'][0]=='Submit':
+                return redirect('/pages')
+            else:
+                return redirect('/pages/edit/' + str(page.id))
     else:
         if page:
             form = PageForm(obj=page)
@@ -106,4 +113,4 @@ async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 5)
     return html(render(request,
-        'generic/list.html',title='Pages',deletelink='pages.delete',editlink='pages.edit',addlink='pages.form',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Pages',deletelink='pages.delete',editlink='pages.edit',addlink='pages.form',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

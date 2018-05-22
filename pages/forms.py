@@ -2,9 +2,9 @@ from wtforms import Form, StringField, TextAreaField, BooleanField, DateField
 from wtforms.validators import Optional
 
 class PageForm(Form):
-    title = StringField('Title')
-    slug = StringField('Slug')
     module = StringField('Module')
+    slug = StringField('Slug')
+    title = StringField('Title')
     content = TextAreaField('Content')
     published = BooleanField('Published')
     runable = BooleanField('Runable')

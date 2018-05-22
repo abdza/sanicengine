@@ -1,5 +1,5 @@
 from database import ModelBase, dbsession
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, UniqueConstraint
 
 class FileLink(ModelBase):
     __tablename__ = 'file_links'
@@ -11,6 +11,10 @@ class FileLink(ModelBase):
     filepath = Column(String(200))
     require_login = Column(Boolean(),default=False)
     allowed_roles = Column(String(300))
+
+    __table_args__ = (
+        UniqueConstraint(module, slug, name='file_module_slug_uidx'),
+    )
 
     def __str__(self):
         return 'File: ' + self.title
