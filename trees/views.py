@@ -7,6 +7,7 @@ from database import dbsession
 from template import render
 from decorators import authorized
 from sqlalchemy_paginator import Paginator
+from sqlalchemy.exc import IntegrityError
 
 bp = Blueprint('trees')
 
@@ -15,6 +16,15 @@ bp = Blueprint('trees')
 async def view(request, slug):
     tree = dbsession.query(Tree).filter_by(slug=slug).first()
     if tree:
+        print("root node:" + str(tree.rootnode))
+        if not tree.rootnode:
+            print("No rootnode. Will create")
+            tree.create_rootnode()
+            try:
+                dbsession.commit()
+            except Exception as inst:
+                print("exception creating rootnode:" + str(inst))
+                dbsession.rollback()
         return html(render(request,'trees/view.html',tree=tree))
     else:
         print("No tree to view")
@@ -166,6 +176,23 @@ async def deletenode(request, node_id):
         dbsession.commit()
     return jsonresponse([{ 'status':'done' }])
 
+@bp.route('/trees/delete/<id>',methods=['POST'])
+@authorized(object_type='tree',require_admin=True)
+async def delete(request,id):
+    if id==1:
+        session['flashmessage'] = 'Cannot delete the first tree. That is a system critical tree'
+        return redirect(request.app.url_for('trees.index'))
+    tree = dbsession.query(Tree).get(int(id))
+    if tree:
+        if tree.rootnode:
+            dbsession.delete(tree.rootnode)
+        dbsession.delete(tree)
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+    return redirect(request.app.url_for('trees.index'))
+
 @bp.route('/trees/create',methods=['POST','GET'],name='create')
 @bp.route('/trees/edit/',methods=['POST','GET'],name='edit')
 @bp.route('/trees/edit/<id>',methods=['POST','GET'])
@@ -180,27 +207,34 @@ async def form(request,id=None):
     if request.method=='POST' and form.validate():
         newtree = False
         rootnode = None
+        newtree = False
         if not tree:
-            newtree = True
             tree=Tree()
+            newtree = True
         form.populate_obj(tree)
         dbsession.add(tree)
-        dbsession.commit()
-        if newtree:
-            rootnode=TreeNode(tree=tree)
-            rootnode.title = tree.title
-            rootnode.slug = tree.slug
-            rootnode.require_login = tree.require_login
-            rootnode.allowed_roles = tree.allowed_roles
-            rootnode.published = tree.published
-            rootnode.publish_date = tree.publish_date
-            rootnode.expire_date = tree.expire_date
-            dbsession.add(rootnode)
+        success = False
+        try:
             dbsession.commit()
-        if request.form['submit'][0]=='Submit':
-            return redirect('/trees')
-        else:
-            return redirect('/trees/edit/' + tree.slug)
+            success = True
+        except Exception as inst:
+            dbsession.rollback()
+        if newtree:
+            tree.create_rootnode()
+            try:
+                dbsession.commit()
+            except IntegrityError as inst:
+                print("Integrity error")
+                form.slug.errors.append('Slug ' + form.slug.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
+                dbsession.rollback()
+            except Exception as inst:
+                print("Other error:" + str(inst))
+                dbsession.rollback()
+        if success:
+            if request.form['submit'][0]=='Submit':
+                return redirect('/trees')
+            else:
+                return redirect('/trees/edit/' + tree.slug)
     else:
         if tree:
             form = TreeForm(obj=tree)
@@ -213,4 +247,4 @@ async def index(request):
     trees = dbsession.query(Tree)
     paginator = Paginator(trees, 5)
     return html(render(request,
-        'trees/list.html',title='Trees',editlink='trees.edit',addlink='trees.create',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'},{'label':'Slug','name':'slug'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))
+        'trees/list.html',title='Trees',deletelink='trees.delete',editlink='trees.edit',addlink='trees.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))

@@ -3,7 +3,7 @@
 import datetime as dt
 
 from database import ModelBase, dbsession, reference_col
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy_mptt.mixins import BaseNestedSets
 from template import render_string
@@ -11,6 +11,7 @@ import json
 
 class Tree(ModelBase):
     __tablename__ = 'trees'
+
     id = Column(Integer, primary_key=True)
     title = Column(String(200))
     slug = Column(String(100),unique=True)
@@ -21,9 +22,27 @@ class Tree(ModelBase):
     publish_date = Column(Date(),nullable=True)
     expire_date = Column(Date(),nullable=True)
 
+    __table_args__ = (
+        UniqueConstraint(module, slug, name='modul_slug_uidx'),
+    )
+
+    def __str__(self):
+        return 'Tree: ' + self.title
+
     @property
     def rootnode(self):
         return dbsession.query(TreeNode).filter(TreeNode.tree==self,TreeNode.parent_id==None).first()
+
+    def create_rootnode(self):
+        rootnode=TreeNode(tree=self)
+        rootnode.title = self.title
+        rootnode.slug = self.slug
+        rootnode.require_login = self.require_login
+        rootnode.allowed_roles = self.allowed_roles
+        rootnode.published = self.published
+        rootnode.publish_date = self.publish_date
+        rootnode.expire_date = self.expire_date
+        dbsession.add(rootnode)
 
 class TreeNode(ModelBase, BaseNestedSets):
     __tablename__ = 'tree_nodes'

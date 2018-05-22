@@ -46,6 +46,26 @@ async def register_bp(app, loop):
     app.blueprint(modules.views.bp)
     app.blueprint(trees.views.bp)
 
+@app.listener('before_server_start')
+async def default_data(app, loop):
+    site_tree = dbsession.query(trees.models.Tree).filter_by(slug='site',module='portal').first()
+    if not site_tree:
+        site_tree = trees.models.Tree(title='Site Tree',slug='site',module='portal',published=True,require_login=False)
+        dbsession.add(site_tree)
+        site_tree.create_rootnode()
+
+    super_user = dbsession.query(users.models.User).filter_by(superuser=True).first()
+    if not super_user:
+        super_user = dbsession.query(users.models.User).filter_by(username='admin').first()
+        if super_user:
+            super_user.superuser=True
+        else:
+            super_user = users.models.User(name='Admin Dude',username='admin',password='admin123',email='admin@sanicengine.com',superuser=True)
+
+        dbsession.add(super_user)
+
+    dbsession.commit()
+
 async def send_email(data):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(_send_email,args=[data])
