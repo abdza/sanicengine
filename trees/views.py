@@ -28,7 +28,7 @@ async def view(request, slug):
         return html(render(request,'trees/view.html',tree=tree))
     else:
         print("No tree to view")
-        session['flashmessage'] = 'No tree to view'
+        request['session']['flashmessage'] = 'No tree to view'
         return redirect('/')
 
 @bp.route('/trees/nodeview/')
@@ -40,11 +40,11 @@ async def nodeview(request,node_id=None):
         node = dbsession.query(TreeNode).get(node_id)
     return html(render(request,'trees/nodeview.html',node=node))
 
-@bp.route('/trees/nodejson/<slug>',methods=['GET'])
-@bp.route('/trees/nodejson/<slug>/<node_id>',methods=['GET'])
+@bp.route('/trees/nodejson/<module>/<slug>',methods=['GET'])
+@bp.route('/trees/nodejson/<module>/<slug>/<node_id>',methods=['GET'])
 @authorized(object_type='tree',require_admin=True)
-async def nodejson(request, slug, node_id=None):
-    tree = dbsession.query(Tree).filter_by(slug=slug).first()
+async def nodejson(request, module, slug, node_id=None):
+    tree = dbsession.query(Tree).filter_by(module=module,slug=slug).first()
     if node_id:
         curnode = dbsession.query(TreeNode).get(node_id)
         return jsonresponse([ { 'text': cnode.title, 'state':{ 'opened':False }, 'children':True if cnode.children else False, 'data':{ 'dbid':cnode.id } } for cnode in curnode.children ])
@@ -180,7 +180,7 @@ async def deletenode(request, node_id):
 @authorized(object_type='tree',require_admin=True)
 async def delete(request,id):
     if id==1:
-        session['flashmessage'] = 'Cannot delete the first tree. That is a system critical tree'
+        request['session']['flashmessage'] = 'Cannot delete the first tree. That is a system critical tree'
         return redirect(request.app.url_for('trees.index'))
     tree = dbsession.query(Tree).get(int(id))
     if tree:

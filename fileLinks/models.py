@@ -5,7 +5,7 @@ class FileLink(ModelBase):
     __tablename__ = 'file_links'
     id = Column(Integer, primary_key=True)
     title = Column(String(200))
-    slug = Column(String(100),unique=True)
+    slug = Column(String(100))
     module = Column(String(100),default='pages')
     filename = Column(String(200))
     filepath = Column(String(200))

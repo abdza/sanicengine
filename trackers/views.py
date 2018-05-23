@@ -31,9 +31,13 @@ def slugify(slug):
     slug = re.sub('[^0-9a-zA-Z]+', '_', slug.lower())
     return slug
 
-@bp.route('/trackers/<slug>/update/run',methods=['GET'])
-async def runupdate(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+@bp.route('/trackers/runupdate/<module>',methods=['GET'])
+@bp.route('/trackers/runupdate/<module>/<slug>',methods=['GET'])
+async def runupdate(request,module,slug=None):
+    if slug==None:
+        slug=module
+        module='portal'
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     updates = dbsession.query(TrackerDataUpdate).filter_by(status='new').all()
     for update in updates:
         update.status = 'in queue'
@@ -49,28 +53,35 @@ async def runupdate(request,slug=None):
         print("Nothing to wait for")
     return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
 
-@bp.route('/trackers/<slug>/update/<update_id>/delete',methods=['POST'])
+@bp.route('/trackers/deleteupdate/<update_id>',methods=['POST'])
 @authorized(object_type='dataupdate')
-async def deleteupdate(request,slug=None,update_id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def deleteupdate(request,update_id=None):
     if update_id:
         update = dbsession.query(TrackerDataUpdate).get(int(update_id))
+        trackerid = update.tracker.id
         if(update):
             if update.filename and os.path.exists(update.filename):
                 os.remove(update.filename)
-            if os.path.exists(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id))):
-                os.rmdir(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id)))
+            if os.path.exists(os.path.join(uploadfolder,update.tracker.slug,'dataupdate',str(update.id))):
+                os.rmdir(os.path.join(uploadfolder,update.tracker.slug,'dataupdate',str(update.id)))
             dbsession.delete(update)
             try:
                 dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
-    return redirect('/trackers/view/' + str(tracker.id) + '#dataupdates')
+        return redirect('/trackers/view/' + str(trackerid) + '#dataupdates')
+    else:
+        request['session']['flashmessage']='Need to specify id of update to delete'
+        return redirect(request.app.url_for('trackers.index'))
 
-@bp.route('/trackers/<slug>/data_update',methods=['GET','POST'])
+@bp.route('/trackers/dataupdate/<module>',methods=['GET','POST'])
+@bp.route('/trackers/dataupdate/<module>/<slug>',methods=['GET','POST'])
 @authorized(object_type='dataupdate')
-async def data_update(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def data_update(request,module,slug=None):
+    if slug==None:
+        slug=module
+        module='portal'
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     columns = []
     dataupdate = None
     if request.method=='POST':
@@ -121,10 +132,14 @@ async def data_update(request,slug=None):
                         columns.append({'field_val':cell.column,'field_name':cell.value})
     return html(render(request,'/trackers/data_update.html',tracker=tracker,columns=columns,dataupdate=dataupdate))
 
-@bp.route('/trackers/<slug>/create_from_excel',methods=['POST','GET'])
+@bp.route('/trackers/create_from_excel/<module>',methods=['POST','GET'])
+@bp.route('/trackers/create_from_excel/<module>/<slug>',methods=['POST','GET'])
 @authorized(require_admin=True)
-async def create_from_excel(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def create_from_excel(request,module,slug=None):
+    if slug==None:
+        slug=module
+        module='portal'
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     fields = []
     field_types = []
     if request.method=='POST':
@@ -175,12 +190,12 @@ async def create_from_excel(request,slug=None):
         field_types = [('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')]
     return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types))
 
-@bp.route('/trackers/<slug>/addstatus',methods=['POST','GET'])
-@bp.route('/trackers/<slug>/editstatus/',methods=['POST','GET'],name='editstatus')
-@bp.route('/trackers/<slug>/editstatus/<id>',methods=['POST','GET'],name='editstatus')
+@bp.route('/trackers/<module>/<slug>/addstatus',methods=['POST','GET'])
+@bp.route('/trackers/<module>/<slug>/editstatus/',methods=['POST','GET'],name='editstatus')
+@bp.route('/trackers/<module>/<slug>/editstatus/<id>',methods=['POST','GET'],name='editstatus')
 @authorized(require_admin=True)
-async def statusform(request,slug=None,id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def statusform(request,module,slug,id=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     title = 'Create Tracker Status'
     form = TrackerStatusForm(request.form)
     trackerstatus = None
@@ -190,7 +205,7 @@ async def statusform(request,slug=None,id=None):
         title = 'Edit Tracker Status'
     tokeninput = {
             'display_fields': {
-                'url': request.app.url_for('trackers.trackerfieldsjson',slug=slug),
+                'url': request.app.url_for('trackers.trackerfieldsjson',module=module,slug=slug),
                 },
             }
     if request.method=='POST':
@@ -215,44 +230,53 @@ async def statusform(request,slug=None,id=None):
             title = 'Edit Tracker Status'
             tokeninput = {
                     'display_fields': {
-                        'url': request.app.url_for('trackers.trackerfieldsjson',slug=trackerstatus.tracker.slug),
+                        'url': request.app.url_for('trackers.trackerfieldsjson',module=trackerstatus.tracker.module,slug=trackerstatus.tracker.slug),
                         'prePopulate':[ {'id':field.id,'name':field.name} for field in trackerstatus.tracker.fields_from_list(trackerstatus.display_fields) ]
                         },
                     }
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',tokeninput=tokeninput))
 
-@bp.route('/trackers/<slug>/status/<status_id>/delete',methods=['POST'])
+@bp.route('/trackers/deletestatus/<status_id>',methods=['POST'])
 @authorized(require_admin=True)
-async def deletestatus(request,slug=None,status_id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def deletestatus(request,status_id=None):
     if status_id:
         trackerstatus = dbsession.query(TrackerStatus).get(int(status_id))
+        trackerid = trackerstatus.tracker.id
         if(trackerstatus):
             dbsession.delete(trackerstatus)
             try:
                 dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
-    return redirect('/trackers/view/' + str(trackerstatus.tracker.id) + '#statuses')
+        return redirect('/trackers/view/' + str(trackerid) + '#statuses')
+    else:
+        request['session']['flashmessage']='Need to specify id of status to delete'
+        redirect(request.app.url_for('trackers.index'))
 
-@bp.route('/trackers/<slug>/roles/json')
-async def rolesjson(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+@bp.route('/trackers/<module>/<slug>/roles/json')
+async def rolesjson(request,module,slug=None):
+    if slug==None:
+        slug=module
+        module='portal'
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     trackerroles = dbsession.query(TrackerRole).filter(TrackerRole.tracker==tracker,TrackerRole.name.ilike('%' + request.args['q'][0] + '%')).all() 
     return jsonresponse([ {'id':role.id,'name':role.name} for role in trackerroles ])
 
-@bp.route('/trackers/<slug>/fields/json')
-async def trackerfieldsjson(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+@bp.route('/trackers/<module>/<slug>/fields/json')
+async def trackerfieldsjson(request,module,slug=None):
+    if slug==None:
+        slug=module
+        module='portal'
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     trackerfields = dbsession.query(TrackerField).filter(TrackerField.tracker==tracker,TrackerField.name.ilike('%' + request.args['q'][0] + '%')).all() 
     return jsonresponse([ {'id':field.id,'name':field.name} for field in trackerfields ])
 
-@bp.route('/trackers/<slug>/addtransition',methods=['POST','GET'])
-@bp.route('/trackers/<slug>/edittransition/',methods=['POST','GET'],name='edittransition')
-@bp.route('/trackers/<slug>/edittransition/<id>',methods=['POST','GET'],name='edittransition')
+@bp.route('/trackers/<module>/<slug>/addtransition',methods=['POST','GET'])
+@bp.route('/trackers/<module>/<slug>/edittransition/',methods=['POST','GET'],name='edittransition')
+@bp.route('/trackers/<module>/<slug>/edittransition/<id>',methods=['POST','GET'],name='edittransition')
 @authorized(require_admin=True)
-async def transitionform(request,slug=None,id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def transitionform(request,module,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     title = 'Create Tracker Transition'
     form = TrackerTransitionForm(request.form)
     dstatuses = [('','None'),] + [(str(g.id),g.name) for g in dbsession.query(TrackerStatus).filter(TrackerStatus.tracker==tracker).all()]
@@ -261,13 +285,13 @@ async def transitionform(request,slug=None,id=None):
     trackertransition = None
     tokeninput = {
             'display_fields': {
-                'url': request.app.url_for('trackers.trackerfieldsjson',slug=slug),
+                'url': request.app.url_for('trackers.trackerfieldsjson',module=module,slug=slug),
                 },
             'edit_fields': {
-                'url': request.app.url_for('trackers.trackerfieldsjson',slug=slug),
+                'url': request.app.url_for('trackers.trackerfieldsjson',module=module,slug=slug),
                 },
             'roles': {
-                'url': request.app.url_for('trackers.rolesjson',slug=slug),
+                'url': request.app.url_for('trackers.rolesjson',module=module,slug=slug),
                 },
             }
     if id:
@@ -325,26 +349,29 @@ async def transitionform(request,slug=None,id=None):
             tokeninput['roles']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.roles ]
     return html(render(request,'generic/form.html',title=title,form=form,tracker=tracker,enctype='multipart/form-data',tokeninput=tokeninput))
 
-@bp.route('/trackers/<slug>/transition/<transition_id>/delete',methods=['POST'])
+@bp.route('/trackers/deletetransition/<transition_id>',methods=['POST'])
 @authorized(require_admin=True)
-async def deletetransition(request,slug=None,transition_id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def deletetransition(request,transition_id=None):
     if transition_id:
         trackertransition = dbsession.query(TrackerTransition).get(int(transition_id))
+        trackerid=trackertransition.tracker.id
         if(trackertransition):
             dbsession.delete(trackertransition)
             try:
                 dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
-    return redirect('/trackers/view/' + str(trackertransition.tracker.id) + '#transitions')
+        return redirect('/trackers/view/' + str(trackerid) + '#transitions')
+    else:
+        request['session']['flashmessage']='You need to specify id of transition to delete'
+        return redirect(request.app.url_for('trackers.index'))
 
-@bp.route('/trackers/<slug>/addrole',methods=['POST','GET'])
-@bp.route('/trackers/<slug>/editrole/',methods=['POST','GET'],name='editrole')
-@bp.route('/trackers/<slug>/editrole/<id>',methods=['POST','GET'],name='editrole')
+@bp.route('/trackers/<module>/<slug>/addrole',methods=['POST','GET'])
+@bp.route('/trackers/<module>/<slug>/editrole/',methods=['POST','GET'],name='editrole')
+@bp.route('/trackers/<module>/<slug>/editrole/<id>',methods=['POST','GET'],name='editrole')
 @authorized(require_admin=True)
-async def roleform(request,slug=None,id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def roleform(request,module,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     title = 'Create Tracker Role'
     form = TrackerRoleForm(request.form)
     trackerrole = None
@@ -372,26 +399,29 @@ async def roleform(request,slug=None,id=None):
             title = 'Edit Tracker Role'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
-@bp.route('/trackers/<slug>/role/<role_id>/delete',methods=['POST'])
+@bp.route('/trackers/deleterole/<role_id>',methods=['POST'])
 @authorized(require_admin=True)
-async def deleterole(request,slug=None,role_id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def deleterole(request,role_id=None):
     if role_id:
         trackerrole = dbsession.query(TrackerRole).get(int(role_id))
+        trackerid = trackerrole.tracker.id
         if(trackerrole):
             dbsession.delete(trackerrole)
             try:
                 dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
-    return redirect('/trackers/view/' + str(trackerrole.tracker.id) + '#roles')
+        return redirect('/trackers/view/' + str(trackerid) + '#roles')
+    else:
+        request['session']['flashmessage']='You need to specify id of role to delete'
+        return redirect(request.app.url_for('trackers.index'))
 
-@bp.route('/trackers/<slug>/addfield',methods=['POST','GET'])
-@bp.route('/trackers/<slug>/editfield/',methods=['POST','GET'],name='editfield')
-@bp.route('/trackers/<slug>/editfield/<id>',methods=['POST','GET'],name='editfield')
+@bp.route('/trackers/<module>/<slug>/addfield',methods=['POST','GET'])
+@bp.route('/trackers/<module>/<slug>/editfield/',methods=['POST','GET'],name='editfield')
+@bp.route('/trackers/<module>/<slug>/editfield/<id>',methods=['POST','GET'],name='editfield')
 @authorized(require_admin=True)
-async def fieldform(request,slug=None,id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def fieldform(request,module,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     title = 'Create Tracker Field'
     form = TrackerFieldForm(request.form)
     trackerfield = None
@@ -419,23 +449,26 @@ async def fieldform(request,slug=None,id=None):
             title = 'Edit Tracker Field'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
-@bp.route('/trackers/<slug>/field/<field_id>/delete',methods=['POST'])
+@bp.route('/trackers/deletefield/<field_id>',methods=['POST'])
 @authorized(require_admin=True)
-async def deletefield(request,slug=None,field_id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def deletefield(request,field_id=None):
     if field_id:
         trackerfield = dbsession.query(TrackerField).get(int(field_id))
+        trackerid = trackerfield.tracker.id
         if(trackerfield):
             dbsession.delete(trackerfield)
             try:
                 dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
-    return redirect('/trackers/view/' + str(trackerfield.tracker.id) + '#fields')
+        return redirect('/trackers/view/' + str(trackerid) + '#fields')
+    else:
+        request['session']['flashmessage']='You need to specify the field to delete'
+        return redirect(request.app.url_for('trackers.index'))
 
-@bp.route('/trackers/<slug>/field/<field_id>/json')
-async def fieldjson(request,slug=None,field_id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+@bp.route('/trackers/<module>/<slug>/field/<field_id>/json')
+async def fieldjson(request,module,slug=None,field_id=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     if field_id:
         trackerfield = dbsession.query(TrackerField).get(int(field_id))
         if(trackerfield):
@@ -552,10 +585,10 @@ async def index(request):
     return html(render(request,
     'generic/list.html',title='Trackers',editlink='trackers.view',addlink='trackers.create',maxlength=100,fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'List Fields','name':'list_fields'},{'label':'Require Login','name':'require_login'},{'label':'Allowed Roles','name':'allowed_roles'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
-@bp.route('/trackers/<slug>/delete',methods=['POST'])
+@bp.route('/trackers/delete/<module>/<slug>',methods=['POST'])
 @authorized(require_admin=True)
-async def delete(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def delete(request,module,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     for update in tracker.dataupdates:
         if update.filename and os.path.exists(update.filename):
             os.remove(update.filename)
@@ -589,20 +622,26 @@ async def delete(request,slug=None):
         dbsession.rollback()
     return redirect('/trackers/')
 
-@bp.route('/system/<slug>/')
+@bp.route('/system/<module>/<slug>/')
 @authorized(object_type='tracker')
-async def viewlist(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def viewlist(request,module,slug=None):
+    if slug==None:
+        slug=module
+        module='portal'
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     page = dbsession.query(Page).filter_by(slug=tracker.slug + '_list').first()
     if page:
         return html(page.render(request,tracker=tracker))
     else:
         return html(render(request,'trackers/viewlist.html',tracker=tracker))
 
-@bp.route('/system/<slug>/excel')
+@bp.route('/system/<module>/<slug>/excel')
 @authorized(object_type='tracker')
-async def listexcel(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def listexcel(request,module,slug=None):
+    if slug==None:
+        slug=module
+        module='portal'
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     curuser = None
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
@@ -628,10 +667,10 @@ async def listexcel(request,slug=None):
     virtual_wb = save_virtual_workbook(wb)
     return raw(virtual_wb, content_type='application/vnd.ms-excel')
 
-@bp.route('/system/<slug>/addrecord',methods=['POST','GET'])
+@bp.route('/system/<module>/<slug>/addrecord',methods=['POST','GET'])
 @authorized(object_type='tracker')
-async def addrecord(request,slug=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def addrecord(request,module,slug=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
     if request.method=='POST':
         data = tracker.addrecord(request.form,request)
@@ -651,10 +690,10 @@ async def addrecord(request,slug=None):
     else:
         return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition))
 
-@bp.route('/system/<slug>/edit/<transition_id>/<record_id>',methods=['POST','GET'])
+@bp.route('/system/<module>/<slug>/edit/<transition_id>/<record_id>',methods=['POST','GET'])
 @authorized(object_type='tracker')
-async def editrecord(request,slug=None,transition_id=None,record_id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def editrecord(request,module,slug=None,transition_id=None,record_id=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     transition = None
     record = None
     curuser = None
@@ -682,10 +721,10 @@ async def editrecord(request,slug=None,transition_id=None,record_id=None):
     else:
         return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=transition,record=record))
 
-@bp.route('/system/<slug>/<id>',methods=['POST','GET'])
+@bp.route('/system/<module>/<slug>/<id>',methods=['POST','GET'])
 @authorized(object_type='tracker')
-async def viewrecord(request,slug=None,id=None):
-    tracker = dbsession.query(Tracker).filter_by(slug=slug).first()
+async def viewrecord(request,module,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     curuser = None
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()

@@ -15,10 +15,19 @@ bp = Blueprint('pages')
 async def terms(request):
     return html(render(request,'terms.html'))
 
-@bp.route('/run/<slug>',methods=['GET','POST'])
+@bp.route('/run/<module>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'])
 @authorized(object_type='page')
-async def run(request, slug):
-    page = dbsession.query(Page).filter_by(slug=slug).first()
+async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=None, arg5=None):
+    if slug==None:
+        slug = module
+        module = 'portal'
+    page = dbsession.query(Page).filter_by(module=module,slug=slug).first()
     if page and page.runable:
         redirecturl=None
         results=None
@@ -38,14 +47,24 @@ async def run(request, slug):
         print("No page to view")
         return redirect('/')
 
-@bp.route('/view/<slug>',methods=['GET','POST'])
+@bp.route('/view/<module>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'])
 @authorized(object_type='page')
-async def view(request, slug):
-    page = dbsession.query(Page).filter_by(slug=slug).first()
+async def view(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=None, arg5=None):
+    if slug==None:
+        slug = module
+        module = 'portal'
+    page = dbsession.query(Page).filter_by(module=module,slug=slug).first()
     if page:
-        return html(page.render(request))
+        return html(page.render(request,arg1=arg1,arg2=arg2,arg3=arg3,arg4=arg4,arg5=arg5))
     else:
         print("No page to view")
+        request['session']['flashmessage'] = 'Sorry but page was not found'
         return redirect('/')
 
 @bp.route('/pages/delete/<id>',methods=['POST'])

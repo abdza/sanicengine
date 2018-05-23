@@ -45,14 +45,14 @@
 					var nodeId = "";
 					var url = ""
 					if (node == -1) {
-						url = "{{ app.url_for('trees.nodejson',slug=tree.slug) }}";
+						url = "{{ app.url_for('trees.nodejson',module=tree.module,slug=tree.slug) }}";
 					}
 					else {
 						nodeId = node.id;
 						if(node.data){
 							nodeId = node.data.dbid;
 						}
-						url = "{{ app.url_for('trees.nodejson',slug=tree.slug) }}/" + nodeId;
+						url = "{{ app.url_for('trees.nodejson',module=tree.module,slug=tree.slug) }}/" + nodeId;
 					}
 					return url;
 				},

@@ -67,7 +67,7 @@
 	</tr>
 	{% for record in tracker.records(curuser=curuser,request=request,offset=(request.args['plo'][0] if 'plo' in request.args else 0),limit=(request.args['pll'][0] if 'pll' in request.args else tracker.pagelimit if tracker.pagelimit else 10)) %}
 	<tr>
-		<td><a href='{{ app.url_for('trackers.viewrecord',id=record.id,slug=tracker.slug) }}'>{{loop.index + (curindex*(tracker.pagelimit if tracker.pagelimit else 10)) }}</a></td>
+		<td><a href='{{ app.url_for('trackers.viewrecord',id=record.id,module=tracker.module,slug=tracker.slug) }}'>{{loop.index + (curindex*(tracker.pagelimit if tracker.pagelimit else 10)) }}</a></td>
 		{% if list_fields %}
 		{% for field in list_fields %}
 		<td>
@@ -137,7 +137,7 @@
 
 {% macro transitionbuttons(tracker,record, curuser) -%}
 {% for transition in tracker.activetransitions(record,curuser,request) %}
-<a href='{{ app.url_for('trackers.editrecord',record_id=record['id'],transition_id=transition.id,slug=tracker.slug) }}' class='btn btn-primary'>
+<a href='{{ app.url_for('trackers.editrecord',record_id=record['id'],transition_id=transition.id,module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>
 {{ transition.name }}
 </a>
 {% endfor %}

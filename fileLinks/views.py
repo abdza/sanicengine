@@ -13,10 +13,14 @@ import time
 
 bp = Blueprint('fileLinks')
 
-@bp.route('/files/download/<slug>')
+@bp.route('/files/download/<module>')
+@bp.route('/files/download/<module>/<slug>')
 @authorized(object_type='filelink')
-async def download(request,slug):
-    filelink = dbsession.query(FileLink).filter_by(slug=slug).first()
+async def download(request,module,slug=None):
+    if slug==None:
+        slug=module
+        module='portal'
+    filelink = dbsession.query(FileLink).filter_by(module=module,slug=slug).first()
     if filelink:
         return await file_stream(filelink.filepath,filename=filelink.filename)
 
