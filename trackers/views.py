@@ -558,19 +558,19 @@ async def form(request,id=None):
                 title = 'Edit Tracker'
                 tokeninput = {
                         'list_fields': {
-                            'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
+                            'url': request.app.url_for('trackers.trackerfieldsjson',module=tracker.slug,slug=tracker.slug),
                             'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.list_fields_list() ]
                             },
                         'search_fields': {
-                            'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
+                            'url': request.app.url_for('trackers.trackerfieldsjson',module=tracker.module,slug=tracker.slug),
                             'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.search_fields) ]
                             },
                         'filter_fields': {
-                            'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
+                            'url': request.app.url_for('trackers.trackerfieldsjson',module=tracker.module,slug=tracker.slug),
                             'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.filter_fields) ]
                             },
                         'excel_fields': {
-                            'url': request.app.url_for('trackers.trackerfieldsjson',slug=tracker.slug),
+                            'url': request.app.url_for('trackers.trackerfieldsjson',module=tracker.module,slug=tracker.slug),
                             'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.excel_fields) ]
                             },
                         }

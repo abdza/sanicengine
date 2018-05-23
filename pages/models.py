@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """User models."""
-import datetime as dt
+import datetime
 
 from database import ModelBase, dbsession
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, UniqueConstraint
@@ -29,3 +29,16 @@ class Page(ModelBase):
 
     def render(self,request,*args,**kwargs):
         return render_string(request,self.content,*args,**kwargs)
+
+    @property
+    def is_published(self):
+        if not self.published:
+            return False
+        else:
+            toret = True
+            curdate = datetime.date.today()
+            if self.publish_date and self.publish_date>curdate:
+                toret = False
+            if self.expire_date and self.expire_date<curdate:
+                toret = False
+            return toret

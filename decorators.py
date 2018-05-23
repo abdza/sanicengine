@@ -13,31 +13,37 @@ def authorized(object_type=None,require_admin=False,require_superuser=False):
             if 'user_id' in request['session']:
                 from users.models import User
                 curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
-            if object_type in ['page','filelink','tracker'] and 'slug' in kwargs:
+
+            if object_type in ['page','filelink','tracker'] and ('slug' in kwargs or 'module' in kwargs):
                 curobj = None
                 if object_type=='page':
                     from pages.models import Page
-                    if kwargs['slug']==None:
+                    if not 'slug' in kwargs:
                         kwargs['slug']=kwargs['module']
                         kwargs['module']='portal'
                     curobj = dbsession.query(Page).filter(Page.module==kwargs['module'],Page.slug==kwargs['slug']).first()
                 elif object_type=='filelink':
                     from fileLinks.models import FileLink
-                    if kwargs['slug']==None:
+                    if not 'slug' in kwargs:
                         kwargs['slug']=kwargs['module']
                         kwargs['module']='portal'
                     curobj = dbsession.query(FileLink).filter(FileLink.module==kwargs['module'],FileLink.slug==kwargs['slug']).first()
                 elif object_type=='tracker':
                     from trackers.models import Tracker
-                    curobj = dbsession.query(Tracker).filter(Tracker.slug==kwargs['slug']).first()
+                    if not 'slug' in kwargs:
+                        kwargs['slug']=kwargs['module']
+                        kwargs['module']='portal'
+                    curobj = dbsession.query(Tracker).filter(Tracker.module==kwargs['module'],Tracker.slug==kwargs['slug']).first()
                 if curobj:
-                    if not curobj.require_login:
-                        is_authorized = True
-                    else:
-                        if curuser:
-                            mroles = curuser.moduleroles(curobj.module)
-                            if any(r in ['admin','Admin'] for r in mroles):
-                                is_authorized = True
+                    mroles = []
+                    if curuser:
+                        mroles = curuser.moduleroles(curobj.module)
+                        if any(r in ['admin','Admin'] for r in mroles):
+                            is_authorized = True
+                    if not is_authorized and curobj.is_published:
+                        if not curobj.require_login:
+                            is_authorized = True
+                        else:
                             if not require_admin and curobj.allowed_roles and len(curobj.allowed_roles) and any(r in [ ar.strip() for ar in curobj.allowed_roles.split(',')] for r in mroles):
                                 is_authorized = True
             elif require_admin:
