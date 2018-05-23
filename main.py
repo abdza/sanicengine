@@ -14,6 +14,7 @@ from email.message import EmailMessage
 from email.utils import make_msgid
 import settings
 import hashlib
+import base64
 
 app = Sanic()
 app.static('/static','./static')
@@ -27,6 +28,23 @@ async def add_session_to_request(request):
     # before each request initialize a session
     # using the client's request
     await session_interface.open(request)
+
+@app.middleware('request')
+async def user_from_request(request):
+    if 'authorization' in request.headers:
+        if request.headers['authorization'][0:6]=='Basic ':
+            authtoken = []
+            try:
+                authtoken = base64.standard_b64decode(request.headers['authorization'][6:]).decode('utf-8').split(':')
+            except Exception as inst:
+                print("Exception authenticating: " + str(inst))
+            if len(authtoken)==2:
+                curuser = dbsession.query(users.models.User).filter_by(username=authtoken[0]).first()
+                if curuser:
+                    if curuser.password == curuser.hashpassword(authtoken[1]):
+                        request['session']['user_id']=curuser.id
+        else:
+            print('token:' + request.headers['authorization'])
 
 @app.middleware('response')
 async def save_session(request, response):

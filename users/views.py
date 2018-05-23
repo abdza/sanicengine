@@ -21,7 +21,7 @@ async def login(request):
     if request.method=='POST':
         curuser = dbsession.query(User).filter(User.username==request.form.get('username')).first()
         if curuser:
-            if curuser.password == hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest():
+            if curuser.password == curuser.hashpassword(request.form.get('password')):
                 request['session']['user_id']=curuser.id
                 if 'targeturl' in request.form:
                     return redirect(request.form['targeturl'][0])
@@ -111,7 +111,7 @@ async def register(request):
     if request.method=='POST' and form.validate():
         user=User()
         form.populate_obj(user)
-        user.password = hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest()
+        user.password = user.hashpassword(request.form.get('password'))
         user.username = user.email
         dbsession.add(user)
         dbsession.commit()

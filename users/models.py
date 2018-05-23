@@ -1,6 +1,7 @@
 from database import ModelBase, dbsession, reference_col
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
+import hashlib
 
 class User(ModelBase):
     __tablename__ = 'users'
@@ -18,6 +19,9 @@ class User(ModelBase):
 
     def getuser(self, userid):
         return dbsession.query(User).get(userid)
+
+    def hashpassword(self,passinput):
+        return hashlib.sha224(passinput.encode('utf-8')).hexdigest()
 
     def moduleroles(self,module=None):
         if module:
