@@ -17,10 +17,10 @@
     <h3>Details</h3>
     <a href='{{ app.url_for('trackers.edit') }}/{{ tracker.id }}' class='btn btn-primary'>Edit</a>
     <a href='{{ app.url_for('trackers.updatedb',id=tracker.id) }}' class='btn btn-primary'>Update DB</a>
-    <a href='{{ app.url_for('trackers.viewlist',slug=tracker.slug) }}' class='btn btn-primary'>View Tracker</a>
-    <a href='{{ app.url_for('trackers.create_from_excel',slug=tracker.slug) }}' class='btn btn-primary'>From Excel</a>
-    <a href='{{ app.url_for('trackers.runupdate',slug=tracker.slug) }}' class='btn btn-primary'>Run Update</a>
-    <form style='display: inline;' method='post' action='{{ app.url_for('trackers.delete', slug=tracker.slug) }}' onsubmit='return confirm("Delete tracker {{ tracker.title }}");'><input type='submit' class="btn btn-primary" value='Delete' ></form>
+    <a href='{{ app.url_for('trackers.viewlist',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>View Tracker</a>
+    <a href='{{ app.url_for('trackers.create_from_excel',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>From Excel</a>
+    <a href='{{ app.url_for('trackers.runupdate',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Run Update</a>
+    <form style='display: inline;' method='post' action='{{ app.url_for('trackers.delete', module=tracker.module,slug=tracker.slug) }}' onsubmit='return confirm("Delete tracker {{ tracker.title }}");'><input type='submit' class="btn btn-primary" value='Delete' ></form>
 	<dl>
 		<dt>Title</dt>
 		<dd>{{tracker.title}}</dd>
@@ -44,62 +44,62 @@
   </div>
   <div id="fields" class="tab-pane fade">
     <h3>Fields</h3>
-    <a href='{{ app.url_for('trackers.fieldform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.fieldform',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Label</th><th>Type</th><th>Action</th></tr>
 	    {% for field in tracker.fields %}
 	    <tr>
-		    <td><a href="{{ app.url_for('trackers.editfield',slug=tracker.slug) }}/{{field.id}}">{{field.name}}</a></td>
+		    <td><a href="{{ app.url_for('trackers.editfield',module=tracker.module,slug=tracker.slug) }}/{{field.id}}">{{field.name}}</a></td>
 		    <td>{{field.label}}</td>
 		    <td>{{field.field_type}}</td>
-		    <td><form action='{{ app.url_for('trackers.deletefield',slug=tracker.slug,field_id=field.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete field {{field.label}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deletefield',module=tracker.module,slug=tracker.slug,field_id=field.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete field {{field.label}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
   </div>
   <div id="statuses" class="tab-pane fade">
     <h3>Statuses</h3>
-    <a href='{{ app.url_for('trackers.statusform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.statusform',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Display Fields</th><th>Action</th></tr>
 	    {% for status in tracker.statuses %}
 	    <tr>
-		    <td><a href="{{ app.url_for('trackers.editstatus',slug=tracker.slug) }}/{{status.id}}">{{status.name}}</a></td>
+		    <td><a href="{{ app.url_for('trackers.editstatus',module=tracker.module,slug=tracker.slug) }}/{{status.id}}">{{status.name}}</a></td>
 		    <td>{{status.display_fields}}</td>
-		    <td><form action='{{ app.url_for('trackers.deletestatus',slug=tracker.slug,status_id=status.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete status {{status.name}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deletestatus',module=tracker.module,slug=tracker.slug,status_id=status.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete status {{status.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
   </div>
   <div id="roles" class="tab-pane fade">
     <h3>Roles</h3>
-    <a href='{{ app.url_for('trackers.roleform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.roleform',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Role Type</th><th>Compare</th><th>Action</th></tr>
 	    {% for role in tracker.roles %}
 	    <tr>
-		    <td><a href="{{ app.url_for('trackers.editrole',slug=tracker.slug) }}/{{role.id}}">{{role.name}}</a></td>
+		    <td><a href="{{ app.url_for('trackers.editrole',module=tracker.module,slug=tracker.slug) }}/{{role.id}}">{{role.name}}</a></td>
 		    <td>{{role.role_type}}</td>
 		    <td>{{role.compare}}</td>
-		    <td><form action='{{ app.url_for('trackers.deleterole',slug=tracker.slug,role_id=role.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete role {{role.name}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deleterole',module=tracker.module,slug=tracker.slug,role_id=role.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete role {{role.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
   </div>
   <div id="transitions" class="tab-pane fade">
     <h3>Transitions</h3>
-    <a href='{{ app.url_for('trackers.transitionform',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.transitionform',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Roles</th><th>Prev Status</th><th>Next Status</th><th>Display Fields</th><th>Edit Fields</th><th>Action</th></tr>
 	    {% for transition in tracker.transitions %}
 	    <tr>
-		    <td><a href="{{ app.url_for('trackers.edittransition',slug=tracker.slug) }}/{{transition.id}}">{{transition.name}}</a></td>
+		    <td><a href="{{ app.url_for('trackers.edittransition',module=tracker.module,slug=tracker.slug) }}/{{transition.id}}">{{transition.name}}</a></td>
 		    <td>{{transition.roles|join(',')}}</td>
 		    <td>{{transition.prev_status}}</td>
 		    <td>{{transition.next_status}}</td>
 		    <td>{{transition.display_fields}}</td>
 		    <td>{{transition.edit_fields}}</td>
-		    <td><form action='{{ app.url_for('trackers.deletetransition',slug=tracker.slug,transition_id=transition.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete transition {{transition.name}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deletetransition',module=tracker.module,slug=tracker.slug,transition_id=transition.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete transition {{transition.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -111,7 +111,7 @@
 	    <tr><th>Title</th><th>Slug</th><th>Action</th></tr>
 	    {% for page in tracker.pages %}
 	    <tr>
-		    <td><a href="{{ app.url_for('pages.edit',slug=page.slug) }}/{{page.id}}">{{page.title}}</a></td>
+		    <td><a href="{{ app.url_for('pages.edit',module=page.module,slug=page.slug) }}/{{page.id}}">{{page.title}}</a></td>
 		    <td>{{page.slug}}</td>
 	    </tr>
 	    {% endfor %}
@@ -119,7 +119,7 @@
   </div>
   <div id="dataupdates" class="tab-pane fade">
     <h3>Data Updates</h3>
-    <a href='{{ app.url_for('trackers.data_update',slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.data_update',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Created Date</th><th>File Name</th><th>Status</th><th>Action</th></tr>
 	    {% for dataupdate in curupdatepage.object_list %}
@@ -127,7 +127,7 @@
 		    <td>{{dataupdate.created_date}}</td>
 		    <td>{{dataupdate.filename}}</td>
 		    <td>{{dataupdate.status}}</td>
-		    <td><form action='{{ app.url_for('trackers.deleteupdate',slug=tracker.slug,update_id=dataupdate.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete data update {{dataupdate.created_date}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deleteupdate',module=tracker.module,slug=tracker.slug,update_id=dataupdate.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete data update {{dataupdate.created_date}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>

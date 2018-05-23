@@ -17,10 +17,16 @@ def authorized(object_type=None,require_admin=False,require_superuser=False):
                 curobj = None
                 if object_type=='page':
                     from pages.models import Page
-                    curobj = dbsession.query(Page).filter(Page.slug==kwargs['slug']).first()
+                    if kwargs['slug']==None:
+                        kwargs['slug']=kwargs['module']
+                        kwargs['module']='portal'
+                    curobj = dbsession.query(Page).filter(Page.module==kwargs['module'],Page.slug==kwargs['slug']).first()
                 elif object_type=='filelink':
                     from fileLinks.models import FileLink
-                    curobj = dbsession.query(FileLink).filter(FileLink.slug==kwargs['slug']).first()
+                    if kwargs['slug']==None:
+                        kwargs['slug']=kwargs['module']
+                        kwargs['module']='portal'
+                    curobj = dbsession.query(FileLink).filter(FileLink.module==kwargs['module'],FileLink.slug==kwargs['slug']).first()
                 elif object_type=='tracker':
                     from trackers.models import Tracker
                     curobj = dbsession.query(Tracker).filter(Tracker.slug==kwargs['slug']).first()

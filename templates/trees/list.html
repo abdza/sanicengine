@@ -30,7 +30,7 @@
 		{% for field in fields %}
 		{% if field.name=='title' %}
 		<td>
-			<a href='{{ app.url_for('trees.view',slug=item['slug']) }}'>
+			<a href='{{ app.url_for('trees.view',module=['module'],slug=item['slug']) }}'>
 			{{ item['title'] }}
 			</a>
 		</td>
