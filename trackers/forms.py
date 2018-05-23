@@ -1,4 +1,5 @@
 from wtforms import Form, StringField, TextAreaField, BooleanField, DateField, SelectField, IntegerField
+from wtforms.validators import Optional
 from .models import TrackerStatus
 
 class TrackerForm(Form):
@@ -11,7 +12,10 @@ class TrackerForm(Form):
     filter_fields = StringField('Filter Fields')
     excel_fields = StringField('Excel Fields')
     require_login = BooleanField('Require Login')
+    published = BooleanField('Published')
     allowed_roles = StringField('Allowed Roles')
+    publish_date = DateField('Publish Date',validators=(Optional(),))
+    expire_date = DateField('Expire Date',validators=(Optional(),))
 
 class TrackerFieldForm(Form):
     name = StringField('Name')
