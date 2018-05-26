@@ -16,17 +16,21 @@ bp = Blueprint('fileLinks')
 @bp.route('/files/download/<module>')
 @bp.route('/files/download/<module>/<slug>')
 @authorized(object_type='filelink')
-async def download(request,module,slug=None):
-    if slug==None:
-        slug=module
-        module='portal'
-    filelink = dbsession.query(FileLink).filter_by(module=module,slug=slug).first()
+async def download(request, module, slug=None):
+    if slug == None:
+        if 'slug' in request.args:
+            slug = request.args['slug']
+        else:
+            slug = module
+            module = 'portal'
+    filelink = dbsession.query(FileLink).filter_by(
+        module=module, slug=slug).first()
     if filelink:
-        return await file_stream(filelink.filepath,filename=filelink.filename)
+        return await file_stream(filelink.filepath, filename=filelink.filename)
 
-@bp.route('/files/delete/<id>',methods=['POST'])
+@bp.route('/files/delete/<id>', methods=['POST'])
 @authorized(require_admin=True)
-async def delete(request,id):
+async def delete(request, id):
     filelink = dbsession.query(FileLink).get(int(id))
     if filelink:
         if os.path.exists(filelink.filepath):
@@ -97,11 +101,12 @@ async def form(request,id=None):
     else:
         if filelink:
             form = FileLinkForm(obj=filelink)
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+    return html(render(request, 'generic/form.html', title=title, form=form, enctype='multipart/form-data'))
+
 
 @bp.route('/files')
-@authorized(object_type='filelink',require_admin=True)
+@authorized(object_type='filelink', require_admin=True)
 async def index(request):
     filelinks = dbsession.query(FileLink)
     paginator = Paginator(filelinks, 5)
-    return html(render(request, 'generic/list.html',title='Files',deletelink='fileLinks.delete',editlink='fileLinks.edit',addlink='fileLinks.form',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.form', fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
