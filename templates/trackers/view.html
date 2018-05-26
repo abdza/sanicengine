@@ -50,7 +50,7 @@
   </div>
   <div id="fields" class="tab-pane fade">
     <h3>Fields</h3>
-    <a href='{{ app.url_for('trackers.fieldform',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.createfield',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Label</th><th>Type</th><th>Action</th></tr>
 	    {% for field in tracker.fields %}
@@ -65,7 +65,7 @@
   </div>
   <div id="statuses" class="tab-pane fade">
     <h3>Statuses</h3>
-    <a href='{{ app.url_for('trackers.statusform',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.createstatus',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Display Fields</th><th>Action</th></tr>
 	    {% for status in tracker.statuses %}
@@ -79,7 +79,7 @@
   </div>
   <div id="roles" class="tab-pane fade">
     <h3>Roles</h3>
-    <a href='{{ app.url_for('trackers.roleform',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.createrole',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Role Type</th><th>Compare</th><th>Action</th></tr>
 	    {% for role in tracker.roles %}
@@ -94,7 +94,7 @@
   </div>
   <div id="transitions" class="tab-pane fade">
     <h3>Transitions</h3>
-    <a href='{{ app.url_for('trackers.transitionform',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('trackers.createtransition',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Name</th><th>Roles</th><th>Prev Status</th><th>Next Status</th><th>Display Fields</th><th>Edit Fields</th><th>Action</th></tr>
 	    {% for transition in tracker.transitions %}
@@ -112,7 +112,7 @@
   </div>
   <div id="pages" class="tab-pane fade">
     <h3>Pages</h3>
-    <a href='{{ app.url_for('pages.form') }}' class='btn btn-primary'>Add</a>
+    <a href='{{ app.url_for('pages.create') }}' class='btn btn-primary'>Add</a>
     <table class='table'>
 	    <tr><th>Title</th><th>Slug</th><th>Action</th></tr>
 	    {% for page in tracker.pages %}

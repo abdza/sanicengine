@@ -274,11 +274,11 @@ class Tracker(ModelBase):
                     if pname in request.args:
                         params.update({pname:request.args[pname][0]})
             params.update({'plo':offset})
-            url=request.app.url_for('trackers.viewlist',**params)
+            url=request.app.url_for('trackers.viewlist',module=self.module,**params)
             params.update({'plo':prevoffset})
-            prevlink = (request.app.url_for('trackers.viewlist',**params)) if prevoffset else None
+            prevlink = (request.app.url_for('trackers.viewlist',module=self.module,**params)) if prevoffset else None
             params.update({'plo':nextoffset})
-            nextlink = (request.app.url_for('trackers.viewlist',**params)) if nextoffset else None
+            nextlink = (request.app.url_for('trackers.viewlist',module=self.module,**params)) if nextoffset else None
             thislink = { 'url':url,'nextlink':nextlink,'prevlink':prevlink }
             if curoffset==x*(self.pagelimit if self.pagelimit else 10):
                 curindex = x

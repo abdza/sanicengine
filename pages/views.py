@@ -15,13 +15,13 @@ bp = Blueprint('pages')
 async def terms(request):
     return html(render(request,'terms.html'))
 
-@bp.route('/run/<module>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>/<arg1>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'])
 @bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>',methods=['GET','POST'])
+@bp.route('/run/<module>',methods=['GET','POST'])
 @authorized(object_type='page')
 async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=None, arg5=None):
     if slug==None:
@@ -47,13 +47,13 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         print("No page to view")
         return redirect('/')
 
-@bp.route('/view/<module>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>/<arg1>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'])
 @bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>',methods=['GET','POST'])
+@bp.route('/view/<module>',methods=['GET','POST'])
 @authorized(object_type='page')
 async def view(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=None, arg5=None):
     if slug==None:
@@ -79,9 +79,9 @@ async def delete(request,id):
             dbsession.rollback()
     return redirect(request.app.url_for('pages.index'))
 
-@bp.route('/pages/create',methods=['POST','GET'])
-@bp.route('/pages/edit/',methods=['POST','GET'],name='edit')
 @bp.route('/pages/edit/<id>',methods=['POST','GET'])
+@bp.route('/pages/edit/',methods=['POST','GET'],name='edit')
+@bp.route('/pages/create',methods=['POST','GET'],name='create')
 @authorized(object_type='page')
 async def form(request,id=None):
     title = 'Create Page'
@@ -132,4 +132,4 @@ async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 5)
     return html(render(request,
-        'generic/list.html',title='Pages',deletelink='pages.delete',editlink='pages.edit',addlink='pages.form',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Pages',deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

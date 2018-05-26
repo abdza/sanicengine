@@ -13,8 +13,8 @@ import time
 
 bp = Blueprint('fileLinks')
 
-@bp.route('/files/download/<module>')
 @bp.route('/files/download/<module>/<slug>')
+@bp.route('/files/download/<module>')
 @authorized(object_type='filelink')
 async def download(request, module, slug=None):
     if slug == None:
@@ -42,9 +42,9 @@ async def delete(request, id):
             dbsession.rollback()
     return redirect(request.app.url_for('fileLinks.index'))
 
-@bp.route('/files/create',methods=['POST','GET'])
-@bp.route('/files/edit/',methods=['POST','GET'],name='edit')
 @bp.route('/files/edit/<id>',methods=['POST','GET'])
+@bp.route('/files/edit/',methods=['POST','GET'],name='edit')
+@bp.route('/files/create',methods=['POST','GET'],name='create')
 @authorized(object_type='filelink',require_admin=True)
 async def form(request,id=None):
     title = 'Create File Link'
@@ -109,4 +109,4 @@ async def form(request,id=None):
 async def index(request):
     filelinks = dbsession.query(FileLink)
     paginator = Paginator(filelinks, 5)
-    return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.form', fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.create', fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
