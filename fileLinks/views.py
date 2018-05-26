@@ -13,20 +13,28 @@ import time
 
 bp = Blueprint('fileLinks')
 
+
 @bp.route('/files/download/<module>')
 @bp.route('/files/download/<module>/<slug>')
 @authorized(object_type='filelink')
-async def download(request,module,slug=None):
-    if slug==None:
-        slug=module
-        module='portal'
-    filelink = dbsession.query(FileLink).filter_by(module=module,slug=slug).first()
+async def download(request, module, slug=None):
+    print('WTWWRWRRER:LKRJN')
+    print("test " + str(request.args))
+    if slug == None:
+        if 'slug' in request.args:
+            slug = request.args['slug']
+        else:
+            slug = module
+            module = 'portal'
+    filelink = dbsession.query(FileLink).filter_by(
+        module=module, slug=slug).first()
     if filelink:
-        return await file_stream(filelink.filepath,filename=filelink.filename)
+        return await file_stream(filelink.filepath, filename=filelink.filename)
 
-@bp.route('/files/delete/<id>',methods=['POST'])
+
+@bp.route('/files/delete/<id>', methods=['POST'])
 @authorized(require_admin=True)
-async def delete(request,id):
+async def delete(request, id):
     filelink = dbsession.query(FileLink).get(int(id))
     if filelink:
         if os.path.exists(filelink.filepath):
@@ -38,11 +46,12 @@ async def delete(request,id):
             dbsession.rollback()
     return redirect(request.app.url_for('fileLinks.index'))
 
-@bp.route('/files/create',methods=['POST','GET'])
-@bp.route('/files/edit/',methods=['POST','GET'],name='edit')
-@bp.route('/files/edit/<id>',methods=['POST','GET'])
-@authorized(object_type='filelink',require_admin=True)
-async def form(request,id=None):
+
+@bp.route('/files/create', methods=['POST', 'GET'])
+@bp.route('/files/edit/', methods=['POST', 'GET'], name='edit')
+@bp.route('/files/edit/<id>', methods=['POST', 'GET'])
+@authorized(object_type='filelink', require_admin=True)
+async def form(request, id=None):
     title = 'Create File Link'
     form = FileLinkForm(request.form)
     filelink = None
@@ -50,17 +59,19 @@ async def form(request,id=None):
         filelink = dbsession.query(FileLink).get(int(id))
     if filelink:
         title = 'Edit File'
-    if request.method=='POST':
+    if request.method == 'POST':
         if form.validate():
             dst = None
             if not filelink:
-                filelink=FileLink()
+                filelink = FileLink()
             if request.files.get('filename') and request.files.get('filename').name:
                 dfile = request.files.get('filename')
                 ext = dfile.type.split('/')[1]
-                if not os.path.exists(os.path.join('upload',request.form.get('module'))):
-                    os.makedirs(os.path.join('upload',request.form.get('module')))
-                dst = os.path.join('upload',request.form.get('module'),str(int(time.time())) + dfile.name)
+                if not os.path.exists(os.path.join('upload', request.form.get('module'))):
+                    os.makedirs(os.path.join(
+                        'upload', request.form.get('module')))
+                dst = os.path.join('upload', request.form.get(
+                    'module'), str(int(time.time())) + dfile.name)
                 try:
                     # extract starting byte from Content-Range header string
                     range_str = request.headers['Content-Range']
@@ -81,9 +92,10 @@ async def form(request,id=None):
             dbsession.add(filelink)
             try:
                 dbsession.commit()
-                success=True
+                success = True
             except IntegrityError as inst:
-                form.slug.errors.append('File with slug ' + form.slug.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
+                form.slug.errors.append('File with slug ' + form.slug.data +
+                                        ' already exist in module ' + form.module.data + '. It needs to be unique')
                 dbsession.rollback()
                 if os.path.exists(dst):
                     os.remove(dst)
@@ -97,11 +109,12 @@ async def form(request,id=None):
     else:
         if filelink:
             form = FileLinkForm(obj=filelink)
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+    return html(render(request, 'generic/form.html', title=title, form=form, enctype='multipart/form-data'))
+
 
 @bp.route('/files')
-@authorized(object_type='filelink',require_admin=True)
+@authorized(object_type='filelink', require_admin=True)
 async def index(request):
     filelinks = dbsession.query(FileLink)
     paginator = Paginator(filelinks, 5)
-    return html(render(request, 'generic/list.html',title='Files',deletelink='fileLinks.delete',editlink='fileLinks.edit',addlink='fileLinks.form',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'File','name':'filename'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.form', fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
