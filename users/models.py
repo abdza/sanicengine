@@ -30,6 +30,18 @@ class User(ModelBase):
             mroles = dbsession.query(ModuleRole).filter(ModuleRole.user==self).all()
         return [ r.role for r in mroles ]
 
+    @property
+    def isadmin(self):
+        if self.superuser:
+            return True
+        for crole in self.roles:
+            if crole.role.lower()=='admin':
+                return True
+
+        for trole in self.treeroles:
+            if trole.role.lower()=='admin':
+                return True
+
 class ModuleRole(ModelBase):
     __tablename__ = 'module_roles'
     id = Column(Integer, primary_key=True)

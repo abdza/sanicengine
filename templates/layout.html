@@ -1,3 +1,4 @@
+{% from 'macros.html' import sidemenu,adminmenu with context %}
 <!doctype html>
 <html lang='en' dir='ltr'>
 	<head>
@@ -75,49 +76,11 @@
 		</div>
 		<div class="menu-block customscroll">
 			<div class="sidebar-menu">
+			{{ sidemenu() }}
 			<ul id="accordion-menu">
-				<li>
-					<a href='{{ app.url_for('users.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-users"></span>
-						<span class="mtext">Users</span>
-					</a>
-				</li>
-				<li>
-					<a href='{{ app.url_for('users.module_roles') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-address-card-o"></span>
-						<span class="mtext">Roles</span>
-					</a>
-				</li>
-				<li>
-					<a href='{{ app.url_for('modules.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-book"></span>
-						<span class="mtext">Modules</span>
-					</a>
-				</li>
-				<li>
-					<a href='{{ app.url_for('pages.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-file-o"></span>
-						<span class="mtext">Pages</span>
-					</a>
-				</li>
-				<li>
-					<a href='{{ app.url_for('trees.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-code-fork"></span>
-						<span class="mtext">Trees</span>
-					</a>
-				</li>
-				<li>
-					<a href='{{ app.url_for('fileLinks.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-upload"></span>
-						<span class="mtext">Files</span>
-					</a>
-				</li>
-				<li>
-					<a href='{{ app.url_for('trackers.index') }}' class="dropdown-toggle no-arrow">
-						<span class="fa fa-gears"></span>
-						<span class="mtext">Trackers</span>
-					</a>
-				</li>
+				{% if request.session.user_id and curuser.isadmin %}
+				{{ adminmenu() }}
+				{% endif %}
 			</ul>
 			</div>
 		</div>

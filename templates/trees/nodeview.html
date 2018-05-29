@@ -3,14 +3,17 @@
 <div class='panel panel-default'>
 	<div class='panel-body' style='padding: 10px;'>
 		<dl class="row">	
+			<dt class='col-4'>Module</dt>
+			<dd class='col-8'>{{node.module}}</dd>
+			<hr>
 			<dt class='col-4'>Slug</dt>
 			<dd class='col-8'>{{node.slug}}</dd>
 			<hr>
-			<dt class='col-4'>Category</dt>
-			<dd class='col-8'>{{node.node_category}}</dd>
-			<hr>
 			<dt class='col-4'>Type</dt>
 			<dd class='col-8'>{{node.node_type}}</dd>
+			<hr>
+			<dt class='col-4'>Category</dt>
+			<dd class='col-8'>{{node.node_category}}</dd>
 			<hr>
 			<dt class='col-4'>Require Login</dt>
 			<dd class='col-8'>{{node.require_login}}</dd>
@@ -31,7 +34,7 @@
 			<dt class='col-4'>Data</dt>
 			<dd class='col-8'>
 			<ul class='list-group list-group-flush'>
-				{% for key,dat in node.data().items() %}
+				{% for key,dat in node.data.items() %}
 				<li class='list-group-item row'><span class='col-1'>{{ key }}</span> : <span class='col-3'>{{ dat }}</span></li>
 				{% endfor %}
 			</ul>

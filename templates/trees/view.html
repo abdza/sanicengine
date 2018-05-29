@@ -45,14 +45,14 @@
 					var nodeId = "";
 					var url = ""
 					if (node == -1) {
-						url = "{{ app.url_for('trees.nodejson',module=tree.module,slug=tree.slug) }}";
+						url = "{{ app.url_for('trees.treenodejson',module=tree.module,slug=tree.slug) }}";
 					}
 					else {
 						nodeId = node.id;
 						if(node.data){
 							nodeId = node.data.dbid;
 						}
-						url = "{{ app.url_for('trees.nodejson',module=tree.module,slug=tree.slug) }}/" + nodeId;
+						url = "{{ app.url_for('trees.treenodejson',module=tree.module,slug=tree.slug) }}/" + nodeId;
 					}
 					return url;
 				},
@@ -84,7 +84,7 @@
 			var dbid = data[0].id;
 			$('#panelcontent').data('node_id',data[0].id);
 			$.ajax({
-				'url': "{{ app.url_for('trees.nodeview') }}/" + data[0].id,
+				'url': "{{ app.url_for('trees.treenodeview') }}/" + data[0].id,
 				'dataType':'html'
 			}).done(function(data){
 				$('#panelcontent').data('node_id',dbid);
@@ -95,9 +95,9 @@
 	});
 
 	function editnode(){
-		$('#nodeform').data('targeturl',"{{ app.url_for('trees.editnode') }}/" + $('#panelcontent').data('node_id'));
+		$('#nodeform').data('targeturl',"{{ app.url_for('trees.treeeditnode') }}/" + $('#panelcontent').data('node_id'));
 		$.ajax({
-			'url': "{{ app.url_for('trees.editnode') }}/" + $('#panelcontent').data('node_id'),
+			'url': "{{ app.url_for('trees.treeeditnode') }}/" + $('#panelcontent').data('node_id'),
 			'dataType':'html'
 		}).done(function(data){
 			// data.node.data.dbid = data.id;
@@ -108,7 +108,7 @@
 	}
 
 	function userform(user_id=null){
-		var targeturl = "{{ app.url_for('trees.nodeuserform') }}/" + $('#panelcontent').data('node_id');
+		var targeturl = "{{ app.url_for('trees.treenodeuserform') }}/" + $('#panelcontent').data('node_id');
 		if(user_id){
 			targeturl += "/" + user_id;
 		}
@@ -126,12 +126,12 @@
 
 	function deleteuser(node_id,nodeuser_id){
 		$.ajax({
-			'url': "{{ app.url_for('trees.deletenodeuser') }}/" + node_id + "/" + nodeuser_id,
+			'url': "{{ app.url_for('trees.treedeletenodeuser') }}/" + node_id + "/" + nodeuser_id,
 			'dataType':'json',
 			'method':'post',
 		}).done(function(data){
 			$.ajax({
-				'url': "{{ app.url_for('trees.nodeview') }}/" + node_id,
+				'url': "{{ app.url_for('trees.treenodeview') }}/" + node_id,
 				'dataType':'html'
 			}).done(function(inpaneldata){
 				$('#panelcontent').html(inpaneldata);
@@ -143,9 +143,9 @@
 		var parentnode = $('#treediv').jstree(true).get_node(data.parent);
 		$('#nodeform').data('parent_id',data.parent);
 		$('#nodeform').data('current_id',data.node.id);
-		$('#nodeform').data('targeturl',"{{ app.url_for('trees.addnode') }}/" + parentnode.data.dbid);
+		$('#nodeform').data('targeturl',"{{ app.url_for('trees.treeaddnode') }}/" + parentnode.data.dbid);
 		$.ajax({
-			'url': "{{ app.url_for('trees.addnode') }}/" + parentnode.data.dbid,
+			'url': "{{ app.url_for('trees.treeaddnode') }}/" + parentnode.data.dbid,
 			'dataType':'html'
 		}).done(function(data){
 			// data.node.data.dbid = data.id;
@@ -157,7 +157,7 @@
 	$('#treediv').on('rename_node.jstree',function(e,data){
 		if(data.old!=data.text){
 			$.ajax({
-				'url': "{{ app.url_for('trees.renamenode') }}/" + data.node.data.dbid,
+				'url': "{{ app.url_for('trees.treerenamenode') }}/" + data.node.data.dbid,
 				'method':'POST',
 				'data': { title: data.text },
 				'dataType':'json'
@@ -168,7 +168,7 @@
 	});
 	$('#treediv').on('delete_node.jstree',function(e,data){
 		$.ajax({
-			'url': "{{ app.url_for('trees.deletenode') }}/" + data.node.data.dbid,
+			'url': "{{ app.url_for('trees.treedeletenode') }}/" + data.node.data.dbid,
 			'method':'POST',
 			'dataType':'json'
 		}).done(function(data){
@@ -178,7 +178,7 @@
 	$('#treediv').on('paste.jstree',function(e,data){
 		var parentnode = $('#treediv').jstree(true).get_node(data.parent);
 		$.ajax({
-			'url': "{{ app.url_for('trees.pastenode') }}/" + parentnode.data.dbid + "/" + data.mode,
+			'url': "{{ app.url_for('trees.treepastenode') }}/" + parentnode.data.dbid + "/" + data.mode,
 			'data': { node: data.node },
 			'method':'POST',
 			'dataType':'json'
@@ -191,7 +191,7 @@
 		var dbid = data.node.data.dbid;
 		$('#nodeform').data('current_id',data.node.id);
 		$.ajax({
-			'url': "{{ app.url_for('trees.nodeview') }}/" + data.node.data.dbid,
+			'url': "{{ app.url_for('trees.treenodeview') }}/" + data.node.data.dbid,
 			'dataType':'html'
 		}).done(function(data){
 			$('#panelcontent').data('node_id',dbid);
@@ -218,7 +218,7 @@
 		},
 		content: "<div id='panelcontent'></div>",
 		contentAjax: {
-			url: "{{ app.url_for('trees.nodeview') }}",
+			url: "{{ app.url_for('trees.treenodeview') }}",
 			done: function (data, textStatus, jqXHR, panel) {
 				// the keyword "this" inside the function refers to the panel
 				$('#panelcontent').html(jqXHR.responseText);

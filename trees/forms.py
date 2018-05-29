@@ -13,9 +13,10 @@ class TreeForm(Form):
 
 class TreeNodeForm(Form):
     title = StringField('Title')
+    module = StringField('Module')
     slug = StringField('Slug')
-    node_category = StringField('Category')
     node_type = StringField('Type')
+    node_category = StringField('Category')
     datastr = TextAreaField('Data')
     published = BooleanField('Published')
     require_login = BooleanField('Require Login')

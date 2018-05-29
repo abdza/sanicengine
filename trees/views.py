@@ -32,7 +32,7 @@ async def view(request, slug):
         return redirect('/')
 
 @bp.route('/trees/nodeview/<node_id>')
-@bp.route('/trees/nodeview/')
+@bp.route('/trees/nodeview/',name='treenodeview')
 @authorized(object_type='tree',require_admin=True)
 async def nodeview(request,node_id=None):
     node = None
@@ -41,7 +41,7 @@ async def nodeview(request,node_id=None):
     return html(render(request,'trees/nodeview.html',node=node))
 
 @bp.route('/trees/nodejson/<module>/<slug>/<node_id>',methods=['GET'])
-@bp.route('/trees/nodejson/<module>/<slug>',methods=['GET'])
+@bp.route('/trees/nodejson/<module>/<slug>',methods=['GET'],name='treenodejson')
 @authorized(object_type='tree',require_admin=True)
 async def nodejson(request, module, slug, node_id=None):
     tree = dbsession.query(Tree).filter_by(module=module,slug=slug).first()
@@ -52,7 +52,7 @@ async def nodejson(request, module, slug, node_id=None):
         return jsonresponse([{ 'text':tree.rootnode.title , 'state':{ 'opened':False }, 'children':True, 'data':{ 'dbid':tree.rootnode.id } }])
 
 @bp.route('/trees/editnode/<node_id>',methods=['GET','POST'])
-@bp.route('/trees/editnode')
+@bp.route('/trees/editnode',name='treeeditnode')
 @authorized(object_type='tree',require_admin=True)
 async def editnode(request, node_id):
     curnode = dbsession.query(TreeNode).get(node_id)
@@ -75,7 +75,7 @@ async def editnode(request, node_id):
     return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode))
 
 @bp.route('/trees/deletenodeuser/<node_id>/<nodeuser_id>',methods=['GET','POST'])
-@bp.route('/trees/deletenodeuser')
+@bp.route('/trees/deletenodeuser',name='treedeletenodeuser')
 @authorized(object_type='tree',require_admin=True)
 async def deletenodeuser(request, node_id=None, nodeuser_id=None):
     nodeuser = None
@@ -91,8 +91,8 @@ async def deletenodeuser(request, node_id=None, nodeuser_id=None):
             return jsonresponse([{ 'id':treenode.id , 'title':treenode.title }])
 
 @bp.route('/trees/nodeuserform/<node_id>/<nodeuser_id>',methods=['GET','POST'])
-@bp.route('/trees/nodeuserform/<node_id>',methods=['GET','POST'])
-@bp.route('/trees/nodeuserform')
+@bp.route('/trees/nodeuserform/<node_id>',methods=['GET','POST'],name='treenodeusernode')
+@bp.route('/trees/nodeuserform',name='treenodeuserform')
 @authorized(object_type='tree',require_admin=True)
 async def nodeuserform(request, node_id=None, nodeuser_id=None):
     nodeuser = None
@@ -120,7 +120,7 @@ async def nodeuserform(request, node_id=None, nodeuser_id=None):
     return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode,nodeuser=nodeuser))
 
 @bp.route('/trees/addnode/<parent_id>',methods=['GET','POST'])
-@bp.route('/trees/addnode')
+@bp.route('/trees/addnode',name='treeaddnode')
 @authorized(object_type='tree',require_admin=True)
 async def addnode(request, parent_id):
     parentnode = dbsession.query(TreeNode).get(parent_id)
@@ -138,7 +138,7 @@ async def addnode(request, parent_id):
     return html(render(request,'trees/nodeform.html',form=form,parentnode=parentnode))
 
 @bp.route('/trees/renamenode/<node_id>',methods=['POST'])
-@bp.route('/trees/renamenode')
+@bp.route('/trees/renamenode',name='treerenamenode')
 @authorized(object_type='tree',require_admin=True)
 async def renamenode(request, node_id=None):
     if node_id:
@@ -150,7 +150,7 @@ async def renamenode(request, node_id=None):
     return jsonresponse([{ 'id':nnode.id if nnode else False }])
 
 @bp.route('/trees/pastenode/<node_id>/<paste_mode>',methods=['POST'])
-@bp.route('/trees/pastenode')
+@bp.route('/trees/pastenode',name='treepastenode')
 @authorized(object_type='tree',require_admin=True)
 async def pastenode(request, node_id, paste_mode):
     parentnode = dbsession.query(TreeNode).get(node_id)
@@ -167,7 +167,7 @@ async def pastenode(request, node_id, paste_mode):
     return jsonresponse([{ 'status':'done' }])
 
 @bp.route('/trees/deletenode/<node_id>',methods=['POST'])
-@bp.route('/trees/deletenode')
+@bp.route('/trees/deletenode',name='treedeletenode')
 @authorized(object_type='tree',require_admin=True)
 async def deletenode(request, node_id):
     nnode = dbsession.query(TreeNode).get(node_id)
