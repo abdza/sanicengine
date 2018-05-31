@@ -5,6 +5,7 @@ class TreeForm(Form):
     module = StringField('Module')
     slug = StringField('Slug')
     title = StringField('Title')
+    datastr = TextAreaField('Data')
     published = BooleanField('Published')
     require_login = BooleanField('Require Login')
     allowed_roles = StringField('Allowed Roles')

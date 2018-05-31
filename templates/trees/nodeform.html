@@ -1,8 +1,10 @@
 <form method='POST' {% if enctype %}enctype='{{enctype}}'{% endif %}>
 {% if parentnode %}
+{% set curtree = parentnode.tree %}
 <input type='hidden' id='parent_id' name='parent_id' value='{{parentnode.id}}'>
 {% endif %}
 {% if node %}
+{% set curtree = node.tree %}
 <input type='hidden' id='id' name='id' value='{{node.id}}'>
 {% endif %}
 {% for field in form %}
@@ -15,7 +17,7 @@
 {% elif field.type=='DateField' %}
 	{{ field(class_='col-sm-10 form-control is-invalid date-picker' if field.errors else 'col-sm-10 form-control date-picker') }}
 {% elif field.name=='datastr' %}
-<div id='datastreditor' class='col-sm-10 form-control' style='height: 100px;'>{{ form.datastr.data|e }}</div>
+<div id='datastreditor' class='col-sm-10 form-control' style='height: 100px;'>{% if form.datastr.data %}{{ form.datastr.data|e }}{% endif %}</div>
 <input type='hidden' name='datastr' id='datastr'>
 {% else %}
 	{{ field(class_='col-sm-10 form-control is-invalid' if field.errors else 'col-sm-10 form-control') }}
@@ -34,7 +36,22 @@
 	{% if field.name == 'user' %}
 
 		$('#{{field.name}}').tokenInput('{{ app.url_for('users.userjson') }}',{ tokenLimit: 1 {% if nodeuser.user %}, prePopulate:[{id:{{nodeuser.user.id}},name:"{{nodeuser.user.name}}"}]{% endif %}});
-
+	{% elif field.name == 'node_type' %}
+		{% if curtree %}
+			{% if 'type_selection' in curtree.data %}
+var curval = $('#node_type').val();
+$('#node_type').replaceWith("<select name='node_type' id='node_type'><option value=''></option>{% for ctype in curtree.data['type_selection'] %}<option value='{{ctype}}'>{{ctype|title}}</option>{% endfor %}</select>");
+$('#node_type').val(curval).change();
+			{% endif %}
+		{% endif %}
+	{% elif field.name == 'node_category' %}
+		{% if curtree %}
+			{% if 'category_selection' in curtree.data %}
+var curval = $('#node_category').val();
+$('#node_category').replaceWith("<select name='node_category' id='node_category'><option value=''></option>{% for ctype in curtree.data['category_selection'] %}<option value='{{ctype}}'>{{ctype|title}}</option>{% endfor %}</select>");
+$('#node_category').val(curval).change();
+			{% endif %}
+		{% endif %}
 	{% elif field.name == 'datastr' %}
 
 function IsJsonString(str) {

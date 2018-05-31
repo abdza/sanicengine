@@ -16,6 +16,7 @@ class Tree(ModelBase):
     title = Column(String(200))
     slug = Column(String(100))
     module = Column(String(100),default='pages')
+    datastr = Column(Text)
     published = Column(Boolean(),default=False)
     require_login = Column(Boolean(),default=False)
     allowed_roles = Column(String(300))
@@ -28,6 +29,25 @@ class Tree(ModelBase):
 
     def __str__(self):
         return 'Tree: ' + self.title
+
+    @property
+    def data(self):
+        if self.datastr:
+            return json.loads(self.datastr)
+        else:
+            return []
+
+    def getdata(self,key=None,default=None):
+        dat = json.loads(self.datastr)
+        if key:
+            if key in dat:
+                return dat[key]
+            elif default:
+                return default
+            else:
+                return None
+        else:
+            return dat
 
     @property
     def rootnode(self):
