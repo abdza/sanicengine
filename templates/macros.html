@@ -1,17 +1,24 @@
 {% macro menunode(node) %}
 <li>
-	<a href='{% if node.children %}#toggle{{node.id}}{% endif %}' data-toggle='collapse' class='collapse-toggle {% if node.children|length==0 %}no-arrow{% endif %}' {% if node.children %}aria-expanded='false'{% endif %}>
+	{% if node.children %}
+	<a href='#toggle{{node.id}}' data-toggle='collapse' class='collapse-toggle' aria-expanded='false'>
 		{% if 'icon' in node.data %}
 		<span class="fa {{ node.data['icon'] }}"></span>
 		{% endif %}
 		<span class="mtext">{{ node.title }}</span>
 	</a>
-	{% if node.children %}
 	<ul id='toggle{{node.id}}' class='collapse list-unstyled'>
 		{% for cnode in node.children %}
 		{{ menunode(cnode) }}
 		{% endfor %}
 	</ul>
+	{% else %}
+	<a href='{% if node.node_type=='page' %}{{ app.url_for('pages.view',module=node.module,slug=node.slug) }}{% elif node.node_type=='file' %}{{ app.url_for('fileLinks.download',module=node.module,slug=node.slug) }}{% elif node.node_type=='tracker' %}{{ app.url_for('trackers.viewlist',module=node.module,slug=node.slug) }}{% endif %}' class='no-arrow'>
+		{% if 'icon' in node.data %}
+		<span class="fa {{ node.data['icon'] }}"></span>
+		{% endif %}
+		<span class="mtext">{{ node.title }}</span>
+	</a>
 	{% endif %}
 </li>
 {% endmacro %}

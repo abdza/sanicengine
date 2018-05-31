@@ -15,13 +15,13 @@ bp = Blueprint('pages')
 async def terms(request):
     return html(render(request,'terms.html'))
 
-@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'])
-@bp.route('/run/<module>/<slug>/<arg1>',methods=['GET','POST'])
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'],name='run5args')
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'],name='run4args')
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'],name='run3args')
+@bp.route('/run/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'],name='run2args')
+@bp.route('/run/<module>/<slug>/<arg1>',methods=['GET','POST'],name='run1args')
 @bp.route('/run/<module>/<slug>',methods=['GET','POST'])
-@bp.route('/run/<module>',methods=['GET','POST'])
+@bp.route('/run/<module>',methods=['GET','POST'],name='runportal')
 @authorized(object_type='page')
 async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=None, arg5=None):
     if slug==None:
@@ -47,13 +47,13 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         print("No page to view")
         return redirect('/')
 
-@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'])
-@bp.route('/view/<module>/<slug>/<arg1>',methods=['GET','POST'])
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'],name='page5args')
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'],name='page4args')
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>/<arg3>',methods=['GET','POST'],name='page3args')
+@bp.route('/view/<module>/<slug>/<arg1>/<arg2>',methods=['GET','POST'],name='page2args')
+@bp.route('/view/<module>/<slug>/<arg1>',methods=['GET','POST'],name='page1args')
 @bp.route('/view/<module>/<slug>',methods=['GET','POST'])
-@bp.route('/view/<module>',methods=['GET','POST'])
+@bp.route('/view/<module>',methods=['GET','POST'],name='portalpage')
 @authorized(object_type='page')
 async def view(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=None, arg5=None):
     if slug==None:
