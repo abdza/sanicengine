@@ -1,61 +1,74 @@
+{% macro menunode(node) %}
+<li>
+	<a href='{% if node.children %}#toggle{{node.id}}{% endif %}' data-toggle='collapse' class='collapse-toggle {% if node.children|length==0 %}no-arrow{% endif %}' {% if node.children %}aria-expanded='false'{% endif %}>
+		{% if 'icon' in node.data %}
+		<span class="fa {{ node.data['icon'] }}"></span>
+		{% endif %}
+		<span class="mtext">{{ node.title }}</span>
+	</a>
+	{% if node.children %}
+	<ul id='toggle{{node.id}}' class='collapse list-unstyled'>
+		{% for cnode in node.children %}
+		{{ menunode(cnode) }}
+		{% endfor %}
+	</ul>
+	{% endif %}
+</li>
+{% endmacro %}
+
 {% macro sidemenu(module=None,slug=None) %}
-<ul>
+<ul class='list-unstyled'>
 {% for node in app.dbsession.query(app.trees.Tree).filter_by(module=module if module else 'portal',slug=slug if slug else 'site').first().rootnode.children %}
-	<li>
-		<a href='#' class='dropdown-toggle no-arrow'>
-			{% if 'icon' in node.data %}
-			<span class="fa {{ node.data['icon'] }}"></span>
-			{% endif %}
-			<span class="mtext">{{ node.title }}</span>
-		</a>
-	</li>
+	{{ menunode(node) }}
 {% endfor %}
 </ul>
 {% endmacro %}
 
 {% macro adminmenu() %}
+	<ul class='list-unstyled'>
 	{% if curuser.superuser %}
 	<li>
-		<a href='{{ app.url_for('users.index') }}' class="dropdown-toggle no-arrow">
+		<a href='{{ app.url_for('users.index') }}' class="no-arrow">
 			<span class="fa fa-users"></span>
 			<span class="mtext">Users</span>
 		</a>
 	</li>
 	{% endif %}
 	<li>
-		<a href='{{ app.url_for('users.module_roles') }}' class="dropdown-toggle no-arrow">
-			<span class="fa fa-address-card-o"></span>
+		<a href='{{ app.url_for('users.module_roles') }}' class="no-arrow">
+			<span class="fa fa-address-card"></span>
 			<span class="mtext">Roles</span>
 		</a>
 	</li>
 	<li>
-		<a href='{{ app.url_for('modules.index') }}' class="dropdown-toggle no-arrow">
+		<a href='{{ app.url_for('modules.index') }}' class="no-arrow">
 			<span class="fa fa-book"></span>
 			<span class="mtext">Modules</span>
 		</a>
 	</li>
 	<li>
-		<a href='{{ app.url_for('pages.index') }}' class="dropdown-toggle no-arrow">
-			<span class="fa fa-file-o"></span>
+		<a href='{{ app.url_for('pages.index') }}' class="no-arrow">
+			<span class="fa fa-file"></span>
 			<span class="mtext">Pages</span>
 		</a>
 	</li>
 	<li>
-		<a href='{{ app.url_for('trees.index') }}' class="dropdown-toggle no-arrow">
-			<span class="fa fa-code-fork"></span>
+		<a href='{{ app.url_for('trees.index') }}' class="no-arrow">
+			<span class="fa fa-sitemap"></span>
 			<span class="mtext">Trees</span>
 		</a>
 	</li>
 	<li>
-		<a href='{{ app.url_for('fileLinks.index') }}' class="dropdown-toggle no-arrow">
+		<a href='{{ app.url_for('fileLinks.index') }}' class="no-arrow">
 			<span class="fa fa-upload"></span>
 			<span class="mtext">Files</span>
 		</a>
 	</li>
 	<li>
-		<a href='{{ app.url_for('trackers.index') }}' class="dropdown-toggle no-arrow">
-			<span class="fa fa-gears"></span>
+		<a href='{{ app.url_for('trackers.index') }}' class="no-arrow">
+			<span class="fa fa-cogs"></span>
 			<span class="mtext">Trackers</span>
 		</a>
 	</li>
+	</ul>
 {% endmacro %}

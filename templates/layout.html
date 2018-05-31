@@ -4,11 +4,9 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-		{% block headtitle %}
-		<title>Sanic Engine</title>
-		{% endblock %}
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap.min.css') }}'>
-		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/style.min.css') }}'>
+		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/fontawesome-all.min.css') }}'>
 		{% block formcss %}{% endblock %}
 		<!-- Mobile Specific Metas -->
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -16,75 +14,66 @@
 		<link href="https://fonts.googleapis.com/css?family=Work+Sans:300,400,500,600,700" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/custom.css') }}'>
+		{% block headtitle %}
+		<title>Sanic Engine</title>
+		{% endblock %}
 		{% block endhead %}
 		{% endblock %}
 	</head>
 {% block body %}
 <body>
+	<div class='wrapper'>
 	{% block bodyheader %}
-	<div class="header clearfix">
-		<div class="header-right">
-			<div class="brand-logo">
-				<a href="{{ app.url_for('pages.home') }}">
-					<img src="{{ app.url_for('static',filename='images/logo.png') }}" alt="" class="mobile-logo">
-				</a>
-			</div>
-			<div class="menu-icon">
-				<span></span>
-				<span></span>
-				<span></span>
-				<span></span>
-			</div>
-			{% if request.session.user_id %}
-				<div class="user-info-dropdown">
-					<div class="dropdown">
-						<a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">
-							<span class="user-icon"><i class="fa fa-user-o"></i></span>
-							<span class="user-name">{{ curuser.name }}</span>
-						</a>
-						<div class="dropdown-menu dropdown-menu-right">
-							<a class="dropdown-item" href="profile.php"><i class="fa fa-user-md" aria-hidden="true"></i> Profile</a>
-							<a class="dropdown-item" href="profile.php"><i class="fa fa-cog" aria-hidden="true"></i> Setting</a>
-							<a class="dropdown-item" href="faq.php"><i class="fa fa-question" aria-hidden="true"></i> Help</a>
-							<a class="dropdown-item" href="{{ app.url_for('users.logout') }}"><i class="fa fa-sign-out" aria-hidden="true"></i> Log Out</a>
-						</div>
+	<nav id="navbar" role="navigation" class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+		<a href="{{ app.url_for('pages.home') }}" class="navbar-brand">
+			<img src="{{ app.url_for('static',filename='images/logo.png') }}" alt="" class="mobile-logo">
+		</a>
+		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navcomponents" aria-controls="navcomponents" aria-expanded="false" aria-label="Toggle navigation">
+			<i class="fas fa-bars"></i>
+		</button>
+		<div class="collapse navbar-collapse" id="navcomponents">
+			<ul class="navbar-nav mr-auto">
+			</ul>
+		{% if request.session.user_id %}
+			<ul class="navbar-nav ml-auto ">
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" id="profilelink">
+						<span class="user-icon"><i class="fa fa-user-o"></i></span>
+						<span class="user-name">{{ curuser.name }}</span>
+					</a>
+					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="profilelink">
+						<a class="dropdown-item" href="profile.php"><i class="fa fa-user-md" aria-hidden="true"></i> Profile</a>
+						<a class="dropdown-item" href="profile.php"><i class="fa fa-cog" aria-hidden="true"></i> Setting</a>
+						<a class="dropdown-item" href="faq.php"><i class="fa fa-question" aria-hidden="true"></i> Help</a>
+						<a class="dropdown-item" href="{{ app.url_for('users.logout') }}"><i class="fa fa-sign-out" aria-hidden="true"></i> Log Out</a>
 					</div>
-				</div>
-			{% else %}
-				<div class='col-md-4 pull-right'>
-					<form method='post' class='row' action='{{ app.url_for('users.login') }}'>
-					<div class='col-md-6'>
-						<input type='hidden' name='targeturl' value='{{request.url}}'/>
-						<input class='col-md-12' placeholder='Username' type='text' name='username' id='username'>
-						<input class='col-md-12' placeholder='Password' type='password' name='password' id='password'>
-					</div>
-					<div class='col-md-6'>
-						<input class='col-md-12' type='submit' value='Login'/>
-					</div>
-					</form>
-				</div>
-			{% endif %}
+				</li>
+			</ul>
+		{% else %}
+			<form method='post' class='form-inline my-2 my-lg-0' action='{{ app.url_for('users.login') }}'>
+				<input type='hidden' name='targeturl' value='{{request.url}}'/>
+				<label for='username' class='sr-only'>Username</label>
+				<input class='form-control mr-sm-2' placeholder='Username' type='text' name='username' id='username'>
+				<label for='password' class='sr-only'>Password</label>
+				<input class='form-control mr-sm-2' placeholder='Password' type='password' name='password' id='password'>
+				<input class='btn my-2 my-sm-0' type='submit' value='Login'/>
+			</form>
+		{% endif %}
 		</div>
-	</div>
+	</nav>
 	{% endblock %}
 	{% block leftsidebar %}
-	<div class="left-side-bar">
-		<div class="brand-logo">
-			<a href="{{ app.url_for('pages.home') }}">
-				<img src="{{ app.url_for('static',filename='images/sanic-engine-logo.png')}}" alt="">
-			</a>
+	<nav id='sidebar'>
+		<div class="sidebar-header">
+			<h3>SanicEngine</h3>
 		</div>
-		<div class="menu-block customscroll">
-			<div class="sidebar-menu">
-			{{ sidemenu() }}
-			<ul id="accordion-menu">
-				{% if request.session.user_id and curuser.isadmin %}
-				{{ adminmenu() }}
-				{% endif %}
-			</ul>
-			</div>
-		</div>
-	</div>
+		<ul class="list-unstyled components">
+		{{ sidemenu() }}
+		{% if request.session.user_id and curuser.isadmin %}
+		{{ adminmenu() }}
+		{% endif %}
+		</ul>
+	</nav>
 	{% endblock %}
 
 
@@ -112,6 +101,7 @@
 	{% block endbody %}
 	{% endblock %}
 	<script src='{{ app.url_for('static', filename='/js/custom.js')}}'></script>
+	</div>
 </body>
 {% endblock %}
 </html>

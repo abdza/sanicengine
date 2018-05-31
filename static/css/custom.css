@@ -1,74 +1,76 @@
 body {
+	padding-top: 90px;
 	background: #fff;
 }
-main {
-	margin-top: 70px;
-	padding: 20px;
+
+.wrapper {
+    display: flex;
+    align-items: stretch;
 }
 
-#login-dp{
+#sidebar {
     min-width: 250px;
-    padding: 14px 14px 0;
-    overflow:hidden;
-    background-color:rgba(255,255,255,.8);
+    max-width: 250px;
+    min-height: 100vh;
 }
-#login-dp .help-block{
-    font-size:12px    
+
+#sidebar.active {
+    margin-left: -250px;
 }
-#login-dp .bottom{
-    background-color:rgba(255,255,255,.8);
-    border-top:1px solid #ddd;
-    clear:both;
-    padding:14px;
+
+#sidebar ul.components {
+    padding: 20px 0;
 }
-#login-dp .social-buttons{
-    margin:12px 0    
-}
-#login-dp .social-buttons a{
-    width: 49%;
-}
-#login-dp .form-group {
-    margin-bottom: 10px;
-}
-.btn-fb{
+
+#sidebar ul p {
     color: #fff;
-    background-color:#3b5998;
+    padding: 10px;
 }
-.btn-fb:hover{
-    color: #fff;
-    background-color:#496ebc 
+
+#sidebar ul li a {
+    padding: 10px;
+    font-size: 1.1em;
+    display: block;
 }
-.btn-tw{
-    color: #fff;
-    background-color:#55acee;
+#sidebar ul li a:hover {
+    color: #7386D5;
+    background: #fff;
 }
-.btn-tw:hover{
-    color: #fff;
-    background-color:#59b5fa;
+
+#sidebar a[data-toggle="collapse"] {
+    position: relative;
 }
-@media(max-width:768px){
-    #login-dp{
-        background-color: inherit;
-        color: #fff;
+
+#sidebar a[aria-expanded="false"]::before, a[aria-expanded="true"]::before {
+    content: '\f078';
+    display: block;
+    position: absolute;
+    right: 20px;
+    font-family: 'fontawesome';
+    font-size: 0.6em;
+}
+
+#sidebar a[aria-expanded="true"]::before {
+    content: '\f077';
+}
+
+#sidebar li > ul > li a {
+  padding-left: 26px !important;
+}
+
+#sidebar li > ul > li > ul > li a {
+  padding-left: 42px !important;
+}
+
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -250px;
     }
-    #login-dp .bottom{
-        background-color: inherit;
-        border-top:0 none;
+    #sidebar.active {
+        margin-left: 0;
     }
 }
 
-.form-group {
-	position: relative;
-}
-
-.navbar-dark span {
-	color: #fff;
-}
-
-hr {
-    height: 1px;
-    background-color:rgba(240,240,240,0.25);
-    margin-top: 4px;
-    margin-bottom: 5px;
-    width: 100%;
+span.fa {
+	width: 1.5em;
 }
