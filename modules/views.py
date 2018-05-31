@@ -74,12 +74,13 @@ async def importmodule(request,slug=None):
             if tree:
                 tree.title = ctree['title']
                 tree.published = ctree['published']
+                tree.datastr = ctree['datastr']
                 tree.require_login = ctree['require_login']
                 tree.allowed_roles = ctree['allowed_roles']
                 tree.publish_date = ctree['publish_date'] if ctree['publish_date'] else None
                 tree.expire_date = ctree['expire_date'] if ctree['expire_date'] else None
             else:
-                tree = Tree(slug=ctree['slug'],module=ctree['module'],title=ctree['title'],published=ctree['published'],require_login=ctree['require_login'],allowed_roles=ctree['allowed_roles'],publish_date=ctree['publish_date'] if ctree['publish_date'] else None,expire_date=ctree['expire_date'] if ctree['expire_date'] else None)
+                tree = Tree(slug=ctree['slug'],datastr=ctree['datastr'],module=ctree['module'],title=ctree['title'],published=ctree['published'],require_login=ctree['require_login'],allowed_roles=ctree['allowed_roles'],publish_date=ctree['publish_date'] if ctree['publish_date'] else None,expire_date=ctree['expire_date'] if ctree['expire_date'] else None)
             dbsession.add(tree)
             dbsession.flush()
             TreeNode.treeload(tree,ctree['nodes'],None)
@@ -222,7 +223,7 @@ async def export(request,slug=None):
     trees = dbsession.query(Tree).filter_by(module=slug).all()
     treearray = []
     for tree in trees:
-        treearray.append({'title':tree.title,'slug':tree.slug,'module':tree.module,'published':tree.published,'require_login':tree.require_login,'allowed_roles':tree.allowed_roles,'publish_date':tree.publish_date.strftime('%Y-%m-%d') if tree.publish_date else '','expire_date':tree.expire_date.strftime('%Y-%m-%d') if tree.expire_date else '','nodes':tree.rootnode.treedump()})
+        treearray.append({'title':tree.title,'slug':tree.slug,'datastr':tree.datastr,'module':tree.module,'published':tree.published,'require_login':tree.require_login,'allowed_roles':tree.allowed_roles,'publish_date':tree.publish_date.strftime('%Y-%m-%d') if tree.publish_date else '','expire_date':tree.expire_date.strftime('%Y-%m-%d') if tree.expire_date else '','nodes':tree.rootnode.treedump()})
 
     curfile = open(os.path.join(modulepath,slug,'treelist.json'),'w')
     curfile.write(json.dumps(treearray))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from sanic import Sanic
-from sanic.response import json, html, redirect
+from sanic.response import html, redirect
 from sanic_session import InMemorySessionInterface
 import users, pages, fileLinks, trackers, modules, trees
 from template import render
@@ -8,6 +8,7 @@ from database import dbsession, ModelBase, dbengine
 import asyncio
 import aiosmtplib
 import os
+import json
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from email.mime.text import MIMEText
 from email.message import EmailMessage
@@ -69,7 +70,8 @@ async def register_bp(app, loop):
 async def default_data(app, loop):
     site_tree = dbsession.query(trees.models.Tree).filter_by(slug='site',module='portal').first()
     if not site_tree:
-        site_tree = trees.models.Tree(title='Site Tree',slug='site',module='portal',published=True,require_login=False)
+        data={'type_selection':['page','file','tracker']}
+        site_tree = trees.models.Tree(title='Site Tree',slug='site',module='portal',published=True,require_login=False,datastr=json.dumps(data))
         dbsession.add(site_tree)
         site_tree.create_rootnode()
 
