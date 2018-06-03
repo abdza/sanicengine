@@ -11,7 +11,7 @@ class Page(ModelBase):
     id = Column(Integer, primary_key=True)
     title = Column(String(200))
     slug = Column(String(100))
-    module = Column(String(100),default='pages')
+    module = Column(String(100),default='portal')
     content = Column(Text())
     published = Column(Boolean(),default=False)
     runable = Column(Boolean(),default=False)

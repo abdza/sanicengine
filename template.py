@@ -13,6 +13,7 @@ def render(request, template_file, *args, **kwargs):
     from trackers import models as trackers
     from trees import models as trees
     from pages import models as pages
+    from portalsettings.models import Setting
     app = request.app
     app.users = users
     app.fileLinks = fileLinks
@@ -20,6 +21,7 @@ def render(request, template_file, *args, **kwargs):
     app.trees = trees
     app.dbsession = dbsession
     app.pages = pages
+    app.settings = Setting
     return jinja_env.get_template(template_file).render(app=app,request=request,curuser=curuser,*args,**kwargs)
 
 def render_string(request, template_string, *args, **kwargs):
@@ -31,6 +33,7 @@ def render_string(request, template_string, *args, **kwargs):
     from trackers import models as trackers
     from trees import models as trees
     from pages import models as pages
+    from portalsettings.models import Setting
     app = request.app
     app.users = users
     app.fileLinks = fileLinks
@@ -38,6 +41,7 @@ def render_string(request, template_string, *args, **kwargs):
     app.trees = trees
     app.dbsession = dbsession
     app.pages = pages
+    app.settings = Setting
     return jinja_env.from_string(template_string).render(app=app,request=request,curuser=curuser,*args,**kwargs)
 
 def bare_render_string(template_string, *args, **kwargs):
