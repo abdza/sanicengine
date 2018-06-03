@@ -1,3 +1,4 @@
+alembic
 uwsgi
 sanic
 Jinja2
