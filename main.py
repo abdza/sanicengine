@@ -17,6 +17,8 @@ import settings
 import hashlib
 import base64
 
+from sqlalchemy import MetaData
+
 app = Sanic()
 app.static('/static','./static')
 app.config.from_object(settings)
@@ -55,7 +57,18 @@ async def save_session(request, response):
 
 @app.listener('before_server_start')
 async def setup_db(app, loop):
+    metadata = MetaData()
+    metadata.reflect(bind=dbengine)
     ModelBase.metadata.create_all(dbengine)
+    for t in ModelBase.metadata.sorted_tables:
+        if not str(t) in metadata.tables.keys():
+            print("Not found table " + str(t))
+        for c in t.c:
+            if not c.name in metadata.tables[str(t)].c:
+                print("Not found column:" + str(c) + " in db")
+                addsql = "alter table " + str(t) + " add column " + c.name + " " + str(c.type)
+                dbsession.execute(addsql)
+                dbsession.commit()
 
 @app.listener('before_server_start')
 async def register_bp(app, loop):
