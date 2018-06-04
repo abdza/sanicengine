@@ -67,7 +67,10 @@ async def setup_db(app, loop):
             for c in t.c:
                 if not c.name in metadata.tables[str(t)].c:
                     print("Not found column:" + str(c) + " in db")
-                    addsql = "alter table " + str(t) + " add column " + c.name + " " + str(c.type)
+                    coltype = str(c.type)
+                    if coltype=='DATETIME':
+                        coltype='TIMESTAMP'
+                    addsql = "alter table " + str(t) + " add column " + c.name + " " + coltype
                     dbsession.execute(addsql)
                     dbsession.commit()
 
