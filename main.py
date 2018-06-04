@@ -63,12 +63,13 @@ async def setup_db(app, loop):
     for t in ModelBase.metadata.sorted_tables:
         if not str(t) in metadata.tables.keys():
             print("Not found table " + str(t))
-        for c in t.c:
-            if not c.name in metadata.tables[str(t)].c:
-                print("Not found column:" + str(c) + " in db")
-                addsql = "alter table " + str(t) + " add column " + c.name + " " + str(c.type)
-                dbsession.execute(addsql)
-                dbsession.commit()
+        else:
+            for c in t.c:
+                if not c.name in metadata.tables[str(t)].c:
+                    print("Not found column:" + str(c) + " in db")
+                    addsql = "alter table " + str(t) + " add column " + c.name + " " + str(c.type)
+                    dbsession.execute(addsql)
+                    dbsession.commit()
 
 @app.listener('before_server_start')
 async def register_bp(app, loop):
