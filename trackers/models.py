@@ -224,6 +224,13 @@ class Tracker(ModelBase):
             del(form['id'])
         fieldnames = list(form.keys())
         data = None
+        for field in transition.edit_fields_list():
+            if field.default and field.name in form and form[field.name][0]=='systemdefault':
+                output=None
+                ldict = locals()
+                exec(field.default,globals(),ldict)
+                output=ldict['output']
+                form[field.name][0]=output
         if oldrecord:
             query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
         try:

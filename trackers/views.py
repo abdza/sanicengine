@@ -708,13 +708,16 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
         if transition.postpage:
             output=None
             ldict = locals()
-            exec(transition.postpage,globals(),ldict)
+            try:
+                exec(transition.postpage,globals(),ldict)
+            except Exception as inst:
+                print("Error with postpage: " + str(inst))
             if 'output' in ldict and str(ldict['output']):
                 return redirect(str(ldict['output']))
             else:
-                return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=data['id']))
+                return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
         else:
-            return redirect(request.app.url_for('trackers.viewrecord',slug=tracker.slug,id=record_id))
+            return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=record_id))
     page = dbsession.query(Page).filter_by(slug=tracker.slug + '_editrecord').first()
     if page:
         return html(page.render(request,tracker=tracker,transition=transition,record=record))
