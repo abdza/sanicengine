@@ -4,11 +4,12 @@
 	{% if record %}
 	<input type='hidden' name='id' value='{{record['id']}}'/>
 	{% endif %}
-
+	{% set ns = namespace(displayed=false) %}
 {% for field in transition.edit_fields_list() %}
 {% if field.default %}
 <input type='hidden' name='{{field.name}}' value='systemdefault'>
 {% else %}
+{% set ns.displayed = true %}
 <div class="form-group row" id="div_{{field.name}}">
 	<label class="col-sm-2 col-form-label" for="{{ field.name }}">{{ field.label }}</label>
 	{% if field.field_type in ['string','integer','number','user','object','date','datetime'] %}
@@ -16,14 +17,18 @@
 	{% elif field.field_type=='text' %}
 	<textarea class="col-sm-10 form-control" id="{{ field.name }}" name="{{ field.name }}">{% if record %}{{record[field.name]}}{% endif %}</textarea>
 	{% elif field.field_type=='boolean' %}
-    <input class="col-sm-10 form-control" id="{{ field.name }}" name="{{ field.name }}" value="{% if record
-    %}{{record[field.name]}}{% endif %}" type="checkbox">
+    <input class="col-sm-10 form-control" id="{{ field.name }}" name="{{ field.name }}" value="{% if record %}{{record[field.name]}}{% endif %}" type="checkbox">
 	{% endif %}
 </div>
 {% endif %}
 {% endfor %}
 <input type='submit' value='Submit' class='btn btn-primary'>
 </form>
+{% if not ns.displayed %}
+	{% block formjs %}
+	<script>window.onload = function() { $('#trackerform').submit(); }</script>
+	{% endblock %}
+{% endif %}
 {%- endmacro %}
 
 {% macro listform(tracker) -%}
