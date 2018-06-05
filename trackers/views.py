@@ -492,6 +492,31 @@ async def view(request,id=None):
     else:
         return redirect('/')
 
+@bp.route('/trackers/createpages/<id>')
+@authorized(require_admin=True)
+async def createpages(request,id=None):
+    tracker = dbsession.query(Tracker).get(int(id))
+    page = dbsession.query(Page).filter_by(module=tracker.module,slug=tracker.slug + '_list').first()
+    if not page:
+        page = Page(title=tracker.title + ' List',module=tracker.module,slug=tracker.slug + '_list',content=open('templates/trackers/viewlist.html').read())
+        dbsession.add(page)
+    page = dbsession.query(Page).filter_by(module=tracker.module,slug=tracker.slug + '_addrecord').first()
+    if not page:
+        page = Page(title=tracker.title + ' Add Record',module=tracker.module,slug=tracker.slug + '_addrecord',content=open('templates/trackers/formrecord.html').read())
+        dbsession.add(page)
+    page = dbsession.query(Page).filter_by(module=tracker.module,slug=tracker.slug + '_editrecord').first()
+    if not page:
+        page = Page(title=tracker.title + ' Edit Record',module=tracker.module,slug=tracker.slug + '_editrecord',content=open('templates/trackers/formrecord.html').read())
+        dbsession.add(page)
+    page = dbsession.query(Page).filter_by(module=tracker.module,slug=tracker.slug + '_view_default').first()
+    if not page:
+        page = Page(title=tracker.title + ' View',module=tracker.module,slug=tracker.slug + '_view_default',content=open('templates/trackers/viewrecord.html').read())
+        dbsession.add(page)
+
+    dbsession.commit()
+
+    return redirect(request.app.url_for('trackers.view',id=id))
+
 @bp.route('/trackers/updatedb/<id>')
 @authorized(require_admin=True)
 async def updatedb(request,id=None):
@@ -629,7 +654,7 @@ async def viewlist(request,module,slug=None):
         slug=module
         module='portal'
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    page = dbsession.query(Page).filter_by(slug=tracker.slug + '_list').first()
+    page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_list').first()
     if page:
         return html(page.render(request,tracker=tracker))
     else:
@@ -684,7 +709,7 @@ async def addrecord(request,module,slug=None):
                 return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
         else:
             return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
-    page = dbsession.query(Page).filter_by(slug=tracker.slug + '_addrecord').first()
+    page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_addrecord').first()
     if page:
         return html(page.render(request,tracker=tracker,transition=newtransition))
     else:
@@ -718,7 +743,7 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
                 return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
         else:
             return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=record_id))
-    page = dbsession.query(Page).filter_by(slug=tracker.slug + '_editrecord').first()
+    page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_editrecord').first()
     if page:
         return html(page.render(request,tracker=tracker,transition=transition,record=record))
     else:
@@ -741,9 +766,9 @@ async def viewrecord(request,module,slug=None,id=None):
         if record:
             status = tracker.status(record)
     if status:
-        page = dbsession.query(Page).filter_by(slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
+        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
     if not page:
-        page = dbsession.query(Page).filter_by(slug=tracker.slug + '_view_default').first()
+        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default').first()
     if page:
         return html(page.render(request,tracker=tracker,record=record))
     else:
