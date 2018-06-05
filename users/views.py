@@ -105,7 +105,7 @@ async def index(request):
     paginator = Paginator(users, 5)
     return html(render(request, 'generic/list.html',title='Users',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
-@bp.route('/register',methods=['GET','POST'])
+@bp.route('/user/register',methods=['GET','POST'])
 async def register(request):
     form = UserForm(request.form)
     if request.method=='POST' and form.validate():
