@@ -67,6 +67,6 @@ async def form(request,id=None):
 @authorized(object_type='setting',require_admin=True)
 async def index(request):
     settings = dbsession.query(Setting)
-    paginator = Paginator(settings, 5)
+    paginator = Paginator(settings, 50)
     return html(render(request,
         'generic/list.html',title='Settings',deletelink='settings.delete',editlink='settings.edit',addlink='settings.create',fields=[{'label':'Module','name':'module'},{'label':'Name','name':'name'},{'label':'Type','name':'setting_type'},{'label':'Value','name':'value'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

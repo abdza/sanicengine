@@ -586,6 +586,7 @@ class TrackerDataUpdate(ModelBase):
             if field.name + '_update' in datas:
                 optype = 'update'
                 searchfield.append(field)
+        print("Will insert fields:" + str(fields))
         rows = []
         headerend = 1
         if optype == 'insert':

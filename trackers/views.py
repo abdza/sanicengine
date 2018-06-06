@@ -606,7 +606,7 @@ async def form(request,id=None):
 @authorized(require_admin=True)
 async def index(request):
     trackers = dbsession.query(Tracker)
-    paginator = Paginator(trackers, 5)
+    paginator = Paginator(trackers, 50)
     return html(render(request,
     'generic/list.html',title='Trackers',editlink='trackers.viewtracker',addlink='trackers.create',maxlength=100,fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'List Fields','name':'list_fields'},{'label':'Require Login','name':'require_login'},{'label':'Allowed Roles','name':'allowed_roles'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
