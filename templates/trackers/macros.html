@@ -32,14 +32,19 @@
 {%- endmacro %}
 
 {% macro listform(tracker) -%}
+	{% set ns = namespace(gotform=false) %}
 <form class='form-horizontal' method='get'>
+    {% if tracker.search_field %}
+    {% set ns.gotform = true %}
     <div class='form-group row'>
     <label class='col-sm-2 col-form-label'>Search:</label>
     <div class='col-sm-10'>
     <input class='form-control' type='text' name='plq' id='plq' value='{% if request.args['plq'] %}{{ request.args['plq'][0] }}{% endif %}'/>
     </div>
     </div>
+    {% endif %}
     {% for field in tracker.fields_from_list(tracker.filter_fields) %}
+    {% set ns.gotform = true %}
     <div class='form-group row'>
     <label class='col-sm-2 col-form-label'>{{field.label}}:</label>
     <div class='col-sm-10'>
@@ -52,7 +57,9 @@
     </div>
     </div>
     {% endfor %}
+    {% if ns.gotform %}
     <input type='submit' value='Search'/>
+    {% endif %}
 </form>
 {%- endmacro %}
 

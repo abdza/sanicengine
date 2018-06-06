@@ -16,6 +16,8 @@ import math
 class Tracker(ModelBase):
     __tablename__ = 'trackers'
     id = Column(Integer, primary_key=True)
+    data_table_name = Column(String(200))
+    update_table_name = Column(String(200))
     title = Column(String(200))
     slug = Column(String(100))
     module = Column(String(100),default='portal')
@@ -77,11 +79,19 @@ class Tracker(ModelBase):
                     rfields.append(rfield)
         return rfields
 
+    @property
     def data_table(self):
-        return "trak_" + self.slug + "_data"
+        if self.data_table_name:
+            return self.data_table_name
+        else:
+            return "trak_" + self.module + "_" + self.slug + "_data"
 
+    @property
     def update_table(self):
-        return "trak_" + self.slug + "_updates"
+        if self.update_table_name:
+            return self.update_table_name
+        else:
+            return "trak_" + self.module + "_" + self.slug + "_updates"
 
     @property
     def pages(self):
@@ -95,36 +105,36 @@ class Tracker(ModelBase):
         query = """
             do $$
             begin
-            if (select not exists(select  1 from information_schema.sequences where sequence_schema = 'public' and sequence_name = '""" + self.data_table() + """_id_seq'))
+            if (select not exists(select  1 from information_schema.sequences where sequence_schema = 'public' and sequence_name = '""" + self.data_table + """_id_seq'))
             then
-                create sequence public.""" + self.data_table() + """_id_seq
+                create sequence public.""" + self.data_table + """_id_seq
                 increment 1
                 minvalue 1
                 maxvalue 9223372036854775807
                 start 1
                 cache 1;
             end if;
-            if (select not exists(select  1 from information_schema.tables where table_schema = 'public' and table_name = '""" + self.data_table() + """'))
+            if (select not exists(select  1 from information_schema.tables where table_schema = 'public' and table_name = '""" + self.data_table + """'))
             then
-                create table public.""" + self.data_table() + """(
-                    id integer not null default nextval('""" + self.data_table() + """_id_seq'::regclass),
+                create table public.""" + self.data_table + """(
+                    id integer not null default nextval('""" + self.data_table + """_id_seq'::regclass),
                     record_status character varying(50) ,
                     batch_no integer
                 );
             end if;
-            if (select not exists(select  1 from information_schema.sequences where sequence_schema = 'public' and sequence_name = '""" + self.update_table() + """_id_seq'))
+            if (select not exists(select  1 from information_schema.sequences where sequence_schema = 'public' and sequence_name = '""" + self.update_table + """_id_seq'))
             then
-                create sequence public.""" + self.update_table() + """_id_seq
+                create sequence public.""" + self.update_table + """_id_seq
                 increment 1
                 minvalue 1
                 maxvalue 9223372036854775807
                 start 1
                 cache 1;
             end if;
-            if (select not exists(select  1 from information_schema.tables where table_schema = 'public' and table_name = '""" + self.update_table() + """'))
+            if (select not exists(select  1 from information_schema.tables where table_schema = 'public' and table_name = '""" + self.update_table + """'))
             then
-                create table public.""" + self.update_table() + """(
-                    id integer not null default nextval('""" + self.update_table() + """_id_seq'::regclass),
+                create table public.""" + self.update_table + """(
+                    id integer not null default nextval('""" + self.update_table + """_id_seq'::regclass),
                     record_id integer,
                     user_id integer,
                     record_status character varying(50),
@@ -149,10 +159,10 @@ class Tracker(ModelBase):
             if 'user_id' in request['session']:
                 curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'id' in record:
-            query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(record[formfield]) for formfield in record.keys()  ]) + """ where id=""" + str(record['id']) + " returning *"
+            query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(record[formfield]) for formfield in record.keys()  ]) + """ where id=""" + str(record['id']) + " returning *"
         else:
             query = """
-                insert into """ + self.data_table() + """ ( """ + ",".join(record.keys()) + """) values 
+                insert into """ + self.data_table + """ ( """ + ",".join(record.keys()) + """) values 
                 (""" + ",".join([ self.field(formfield).sqlvalue(record[formfield]) for formfield in record.keys()  ]) + """) returning *
             """
         try:
@@ -182,7 +192,7 @@ class Tracker(ModelBase):
                 del(form['transition_id'])
         fieldnames = list(form.keys())
         query = """
-            insert into """ + self.data_table() + """ ( """ + ",".join(fieldnames) + """) values 
+            insert into """ + self.data_table + """ ( """ + ",".join(fieldnames) + """) values 
             (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """) returning *
         """
         try:
@@ -196,10 +206,10 @@ class Tracker(ModelBase):
         else:
             desc = 'Updated by anonymous'
 
-        query = """
-            insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
-            ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
         try:
+            query = """
+                insert into """ + self.update_table + """ (record_id,user_id,record_status,update_date,description) values 
+                ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
             dbsession.execute(query)
             dbsession.commit()
         except Exception as inst:
@@ -232,7 +242,7 @@ class Tracker(ModelBase):
                 output=ldict['output']
                 form[field.name][0]=output
         if oldrecord:
-            query = """update """ + self.data_table() + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
+            query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
         try:
             data = dbsession.execute(query).fetchone()
             dbsession.commit()
@@ -247,7 +257,7 @@ class Tracker(ModelBase):
             desc = '<br>'.join(txtdesc)
 
             query = """
-                insert into """ + self.update_table() + """ (record_id,user_id,record_status,update_date,description) values 
+                insert into """ + self.update_table + """ (record_id,user_id,record_status,update_date,description) values 
                 ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
             try:
                 dbsession.execute(query)
@@ -260,8 +270,13 @@ class Tracker(ModelBase):
     def pagelinks(self,curuser=None,request=None,cleared=False):
         # plo : page list offset
         # pll : page list limit
-        recordamount = dbsession.execute("select count(*) as num from " + self.data_table() + self.queryrules(curuser=curuser, request=request)).first()['num']
-        pageamount = int(math.ceil(recordamount/(self.pagelimit if self.pagelimit else 10)))
+        pageamount = 0
+        try:
+            recordamount = dbsession.execute("select count(*) as num from " + self.data_table + self.queryrules(curuser=curuser, request=request)).first()['num']
+            pageamount = int(math.ceil(recordamount/(self.pagelimit if self.pagelimit else 10)))
+        except Exception as inst:
+            print("Exception getting record amount:" + str(inst))
+            dbsession.rollback()
         links = []
         curoffset = 0
         if request:
@@ -321,9 +336,9 @@ class Tracker(ModelBase):
         results = []
         if id:
             if cleared:
-                sqltext = text("select * from " + self.data_table() +  " where id=:id")
+                sqltext = text("select * from " + self.data_table +  " where id=:id")
             else:
-                sqltext = text("select * from " + self.data_table() +  " where id=:id and (" + self.rolesrule(curuser,request) + ")")
+                sqltext = text("select * from " + self.data_table +  " where id=:id and (" + self.rolesrule(curuser,request) + ")")
             sqltext = sqltext.bindparams(id=id)
         else:
             limitstr = ''
@@ -332,7 +347,7 @@ class Tracker(ModelBase):
                 limitstr = ' limit ' + str(limit)
             if offset:
                 offsetstr = ' offset ' + str(offset)
-            sqltext = text("select * from " + self.data_table() + self.queryrules(curuser=curuser,request=request,cleared=cleared) + limitstr + offsetstr)
+            sqltext = text("select * from " + self.data_table + self.queryrules(curuser=curuser,request=request,cleared=cleared) + limitstr + offsetstr)
         try:
             results = dbsession.execute(sqltext)
         except Exception as inst:
@@ -373,11 +388,15 @@ class Tracker(ModelBase):
                     croles.append(role)
             elif record:
                 rolesrule = render_string(request,role.compare)
-                sqltext = "select id from " + self.data_table() + " where id=" + str(record['id']) + " and " + rolesrule
-                results = dbsession.execute(sqltext)
-                if results:
-                    for row in results:
-                        croles.append(role)
+                sqltext = "select id from " + self.data_table + " where id=" + str(record['id']) + " and " + rolesrule
+                try:
+                    results = dbsession.execute(sqltext)
+                    if results:
+                        for row in results:
+                            croles.append(role)
+                except Exception as inst:
+                    print("Error running query:" + str(inst))
+                    dbsession.rollback()
         return croles
 
     def activetransitions(self,record,curuser,request):
@@ -396,7 +415,11 @@ class Tracker(ModelBase):
     def recordupdates(self,record,curuser):
         updates = []
         if record:
-            updates = dbsession.execute("select * from " + self.update_table() + " where record_id=" + str(record['id']) + " order by update_date desc")
+            try:
+                updates = dbsession.execute("select * from " + self.update_table + " where record_id=" + str(record['id']) + " order by update_date desc")
+            except Exception as inst:
+                print("Error updating record:" + str(inst))
+                dbsession.rollback()
         return updates
 
 
@@ -425,21 +448,33 @@ class TrackerField(ModelBase):
             return self.obj_fields()[0]
 
     def filter_options(self):
-        values = dbsession.execute("select distinct " + self.name + " as val from " + self.tracker.data_table() + " order by " + self.name)
+        try:
+            values = dbsession.execute("select distinct " + self.name + " as val from " + self.tracker.data_table + " order by " + self.name)
+        except Exception as inst:
+            print("Error getting filter:" + str(inst))
+            dbsession.rollback()
         return values
 
     def disp_value(self, value):
         if value:
             if self.field_type=='object':
                 sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=" + str(value)
-                result = dbsession.execute(sqlq)
-                for r in result:
-                    return r[0]
+                try:
+                    result = dbsession.execute(sqlq)
+                    for r in result:
+                        return r[0]
+                except Exception as inst:
+                    print("Error running query:" + str(inst))
+                    dbsession.rollback()
             elif self.field_type=='user':
                 sqlq = "select name from users where id=" + str(value)
-                result = dbsession.execute(sqlq)
-                for r in result:
-                    return r[0]
+                try:
+                    result = dbsession.execute(sqlq)
+                    for r in result:
+                        return r[0]
+                except Exception as inst:
+                    print("Error running query:" + str(inst))
+                    dbsession.rollback()
             
         return value
 
@@ -499,13 +534,17 @@ class TrackerField(ModelBase):
             begin 
                 IF not EXISTS (SELECT column_name 
                     FROM information_schema.columns 
-                    WHERE table_schema='public' and table_name='""" + self.tracker.data_table() + """' and column_name='""" + self.name + """') THEN
-                        alter table public.""" + self.tracker.data_table() + """ add column """ + self.name + " " + self.db_field_type() + """ null ;
+                    WHERE table_schema='public' and table_name='""" + self.tracker.data_table + """' and column_name='""" + self.name + """') THEN
+                        alter table public.""" + self.tracker.data_table + """ add column """ + self.name + " " + self.db_field_type() + """ null ;
                 end if;
             end$$;
         """
-        dbsession.execute(query)
-        dbsession.commit()
+        try:
+            dbsession.execute(query)
+            dbsession.commit()
+        except Exception as inst:
+            print("Error running updating db:" + str(inst))
+            dbsession.rollback()
 
 class TrackerRole(ModelBase):
     __tablename__ = 'tracker_roles'
@@ -550,7 +589,7 @@ class TrackerDataUpdate(ModelBase):
         rows = []
         headerend = 1
         if optype == 'insert':
-            query = 'insert into ' + self.tracker.data_table() + ' (' + ','.join([ f.name for f in fields ]) + ') values '
+            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ') values '
             for i,row in enumerate(ws.rows):
                 if i>headerend:
                     cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] for f in fields]
@@ -580,24 +619,32 @@ class TrackerDataUpdate(ModelBase):
                         fieldupdates.append( f.name + '=' + f.sqlvalue(cellrow.value) )
                     queryrow = ' where ' + 'and'.join(fieldupdates)
 
-                    sqltext = text("select id from " + self.tracker.data_table() + queryrow)
-                    result = dbsession.execute(sqltext)
-                    gotdata = False
-                    for r in result:
-                        gotdata = True
+                    sqltext = text("select id from " + self.tracker.data_table + queryrow)
+                    try:
+                        result = dbsession.execute(sqltext)
+                        gotdata = False
+                        for r in result:
+                            gotdata = True
+                    except Exception as inst:
+                        print("Error running query:" + str(inst))
+                        dbsession.rollback()
                     
                     if gotdata:
-                        query = 'update ' + self.tracker.data_table() + ' set ' 
+                        query = 'update ' + self.tracker.data_table + ' set ' 
                         fieldinfos = []
                         for f in fields:
                             if not f in searchfield:
                                 cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
                                 fieldinfos.append( f.name + '=' + f.sqlvalue(cellrow.value) )
                         query += ','.join(fieldinfos) + queryrow + ' returning *'
-                        result = dbsession.execute(query)
+                        try:
+                            result = dbsession.execute(query)
+                        except Exception as inst:
+                            print("Error runing query:" + str(inst))
+                            dbsession.rollback()
                     else:
                         cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
-                        query = 'insert into ' + self.tracker.data_table() + ' (' + ','.join([ f.name for f in fields ]) + ') values (' + ','.join([ f.sqlvalue(cellrow.value) for f in fields ]) + ')'
+                        query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ') values (' + ','.join([ f.sqlvalue(cellrow.value) for f in fields ]) + ')'
                         query += ' returning *'
                         result = dbsession.execute(query)
                     try:

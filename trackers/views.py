@@ -277,7 +277,7 @@ async def trackerfieldsjson(request,module,slug=None):
 @authorized(require_admin=True)
 async def transitionform(request,module,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    title = 'Create Tracker Transition'
+    title = tracker.title + '-Create Transition'
     form = TrackerTransitionForm(request.form)
     dstatuses = [('','None'),] + [(str(g.id),g.name) for g in dbsession.query(TrackerStatus).filter(TrackerStatus.tracker==tracker).all()]
     form.prev_status_id.choices = dstatuses
@@ -297,7 +297,7 @@ async def transitionform(request,module,slug=None,id=None):
     if id:
         trackertransition = dbsession.query(TrackerTransition).get(int(id))
     if trackertransition:
-        title = 'Edit Tracker Transition'
+        title = tracker.title + '-Edit Transition'
     if request.method=='POST':
         if form.validate():
             if not trackertransition:
@@ -343,7 +343,7 @@ async def transitionform(request,module,slug=None,id=None):
             form = TrackerTransitionForm(obj=trackertransition)
             form.prev_status_id.choices = dstatuses
             form.next_status_id.choices = dstatuses
-            title = 'Edit Tracker Transition'
+            title = tracker.title + '-Edit Transition'
             tokeninput['display_fields']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.tracker.fields_from_list(trackertransition.display_fields) ]
             tokeninput['edit_fields']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.tracker.fields_from_list(trackertransition.edit_fields) ]
             tokeninput['roles']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.roles ]
@@ -372,13 +372,13 @@ async def deletetransition(request,transition_id=None):
 @authorized(require_admin=True)
 async def roleform(request,module,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    title = 'Create Tracker Role'
+    title = tracker.title + '-Create Role'
     form = TrackerRoleForm(request.form)
     trackerrole = None
     if id:
         trackerrole = dbsession.query(TrackerRole).get(int(id))
     if trackerrole:
-        title = 'Edit Tracker Role'
+        title = tracker.title + '-Edit Role'
     if request.method=='POST':
         if form.validate():
             if not trackerrole:
@@ -396,7 +396,7 @@ async def roleform(request,module,slug=None,id=None):
             trackerrole = dbsession.query(TrackerRole).get(int(id))
         if trackerrole:
             form = TrackerRoleForm(obj=trackerrole)
-            title = 'Edit Tracker Role'
+            title = tracker.title + '-Edit Role'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
 @bp.route('/trackers/deleterole/<role_id>',methods=['POST'])
@@ -422,13 +422,13 @@ async def deleterole(request,role_id=None):
 @authorized(require_admin=True)
 async def fieldform(request,module,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    title = 'Create Tracker Field'
+    title = tracker.title + '-Create Field'
     form = TrackerFieldForm(request.form)
     trackerfield = None
     if id:
         trackerfield = dbsession.query(TrackerField).get(int(id))
     if trackerfield:
-        title = 'Edit Tracker Field'
+        title = tracker.title + '-Edit Field'
     if request.method=='POST':
         if form.validate():
             if not trackerfield:
@@ -446,7 +446,7 @@ async def fieldform(request,module,slug=None,id=None):
             trackerfield = dbsession.query(TrackerField).get(int(id))
         if trackerfield:
             form = TrackerFieldForm(obj=trackerfield)
-            title = 'Edit Tracker Field'
+            title = tracker.title + '-Edit Field'
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
 
 @bp.route('/trackers/deletefield/<field_id>',methods=['POST'])
@@ -488,7 +488,7 @@ async def view(request,id=None):
         tracker = dbsession.query(Tracker).get(int(id))
         dataupdates = dbsession.query(TrackerDataUpdate).filter(TrackerDataUpdate.tracker==tracker)
         updatespaginator = Paginator(dataupdates, 10)
-        return html(render(request,'trackers/view.html',tracker=tracker,updatespaginator=updatespaginator,curupdatepage=updatespaginator.page(int(request.args['updatepage'][0]) if 'updatepage' in request.args else 1)))
+        return html(render(request,'trackers/view.html',title=tracker.title,tracker=tracker,updatespaginator=updatespaginator,curupdatepage=updatespaginator.page(int(request.args['updatepage'][0]) if 'updatepage' in request.args else 1)))
     else:
         return redirect('/')
 
@@ -636,10 +636,10 @@ async def delete(request,module,slug=None):
     for trackertransition in tracker.transitions:
         print('deleting transition' + str(trackertransition))
         dbsession.delete(trackertransition)
-    dbsession.execute("drop table if exists " + tracker.data_table() + ";")
-    dbsession.execute("drop sequence if exists public." + tracker.data_table() + "_id_seq;")
-    dbsession.execute("drop table if exists " + tracker.update_table() + ";")
-    dbsession.execute("drop sequence if exists public." + tracker.update_table() + "_id_seq;")
+    dbsession.execute("drop table if exists " + tracker.data_table + ";")
+    dbsession.execute("drop sequence if exists public." + tracker.data_table + "_id_seq;")
+    dbsession.execute("drop table if exists " + tracker.update_table + ";")
+    dbsession.execute("drop sequence if exists public." + tracker.update_table + "_id_seq;")
     dbsession.delete(tracker)
     try:
         dbsession.commit()
@@ -655,10 +655,11 @@ async def viewlist(request,module,slug=None):
         module='portal'
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_list').first()
+    title = tracker.title + '-List'
     if page:
-        return html(page.render(request,tracker=tracker))
+        return html(page.render(request,title=title,tracker=tracker))
     else:
-        return html(render(request,'trackers/viewlist.html',tracker=tracker))
+        return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
 
 @bp.route('/system/<module>/<slug>/excel')
 @authorized(object_type='tracker')
@@ -695,12 +696,12 @@ async def listexcel(request,module,slug=None):
 @bp.route('/system/<module>/<slug>/addrecord',methods=['POST','GET'])
 @authorized(object_type='tracker')
 async def addrecord(request,module,slug=None):
+    data = []
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
     if request.method=='POST':
         data = tracker.addrecord(request.form,request)
         if newtransition.postpage:
-            output=None
             ldict = locals()
             exec(newtransition.postpage,globals(),ldict)
             if 'output' in ldict and str(ldict['output']):
@@ -710,10 +711,11 @@ async def addrecord(request,module,slug=None):
         else:
             return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_addrecord').first()
+    title = tracker.title + "-Add Record"
     if page:
-        return html(page.render(request,tracker=tracker,transition=newtransition))
+        return html(page.render(request,tracker=tracker,transition=newtransition,title=title))
     else:
-        return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition))
+        return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition,title=title))
 
 @bp.route('/system/<module>/<slug>/edit/<transition_id>/<record_id>',methods=['POST','GET'])
 @authorized(object_type='tracker')
@@ -731,7 +733,6 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
     if request.method=='POST':
         data = tracker.editrecord(request.form,request,id=record_id)
         if transition.postpage:
-            output=None
             ldict = locals()
             try:
                 exec(transition.postpage,globals(),ldict)
@@ -744,10 +745,11 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
         else:
             return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=record_id))
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_editrecord').first()
+    title = tracker.title + '-Edit Record'
     if page:
-        return html(page.render(request,tracker=tracker,transition=transition,record=record))
+        return html(page.render(request,tracker=tracker,title=title,transition=transition,record=record))
     else:
-        return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=transition,record=record))
+        return html(render(request,'trackers/formrecord.html',tracker=tracker,title=title,transition=transition,record=record))
 
 @bp.route('/system/<module>/<slug>/<id>',methods=['POST','GET'])
 @authorized(object_type='tracker')
@@ -769,7 +771,8 @@ async def viewrecord(request,module,slug=None,id=None):
         page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
     if not page:
         page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default').first()
+    title = tracker.title + '-View'
     if page:
-        return html(page.render(request,tracker=tracker,record=record))
+        return html(page.render(request,tracker=tracker,record=record,title=title))
     else:
-        return html(render(request,'trackers/viewrecord.html',tracker=tracker,record=record))
+        return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))

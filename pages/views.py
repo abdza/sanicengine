@@ -112,7 +112,7 @@ async def form(request,id=None):
     else:
         if page:
             form = PageForm(obj=page)
-            title = 'Edit Page'
+            title = page.title + '-Edit'
             submitcontinue = True
 
     return html(render(request,'pages/form.html',title=title,page=page,
