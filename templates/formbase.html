@@ -4,12 +4,12 @@
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input-facebook.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap-datepicker.css') }}'>
+	<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/air-datepicker/dist/css/datepicker.min.css') }}'>
 {% endblock %}
 {% block formjs %}
 	<script src='{{ app.url_for('static', filename='/plugins/air-datepicker/dist/js/datepicker.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/plugins/air-datepicker/dist/js/i18n/datepicker.en.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/plugins/timedropper/timedropper.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/js/jquery.tokeninput.js')}}'></script>
-	<script src="{{ app.url_for('static', filename='/js/ace/ace.js') }}" type="text/javascript" charset="utf-8"></script>
 	<script src='{{ app.url_for('static', filename='/js/formcustom.js')}}'></script>
 {% endblock %}

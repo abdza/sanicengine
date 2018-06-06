@@ -592,9 +592,8 @@ class TrackerDataUpdate(ModelBase):
             query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ') values '
             for i,row in enumerate(ws.rows):
                 if i>headerend:
-                    cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] for f in fields]
-                    cellpos = [ datas[f.name + '_column'][0] + str(i+1) for f in fields ]
-                    drowdata = [ f.value for f in cellrows ]
+                    cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] if datas[f.name + '_column'][0]!='custom' else datas[f.name + '_custom'][0] for f in fields]
+                    drowdata = [ f.value if type(f) is not str else f for f in cellrows ]
                     sqlrowdata = [ f.sqlvalue(drowdata[dd]) for dd,f in enumerate(fields) ]
                     drow = '('
                     drow = drow + ','.join(sqlrowdata)
@@ -608,6 +607,7 @@ class TrackerDataUpdate(ModelBase):
                 dbsession.add(self)
                 dbsession.commit()
             except Exception as inst:
+                print("Error inserting data:" + str(inst))
                 dbsession.rollback()
         else:
             allresults = []

@@ -34,7 +34,7 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         ldict = locals()
         exec(page.content,globals(),ldict)
         if 'redirecturl' in ldict:
-           redirecturl=ldict['redirecturl']
+            redirecturl=ldict['redirecturl']
         if 'results' in ldict:
             results=ldict['results']
         if redirecturl:
