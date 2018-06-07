@@ -132,4 +132,4 @@ async def index(request):
     pages = dbsession.query(Page)
     paginator = Paginator(pages, 50)
     return html(render(request,
-        'generic/list.html',title='Pages',deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

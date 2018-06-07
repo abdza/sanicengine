@@ -32,6 +32,13 @@
 		<td>{{ item['user'].name }}</td>
 		{% else %}
 		<td>
+			{% if linktitle and field.name=='title' %}
+			{% if item['runable'] %}
+			<a href='{{ app.url_for('pages.run',module=item['module'],slug=item['slug']) }}'>
+			{% else %}
+			<a href='{{ app.url_for('pages.view',module=item['module'],slug=item['slug']) }}'>
+			{% endif %}
+			{% endif %}
 			{% if maxlength %}
 				{% if item[field.name] and item[field.name]|string|length < maxlength %}
 					{{ item[field.name] }}
@@ -40,6 +47,9 @@
 				{% endif %}
 			{% else %}
 				{{ item[field.name] }}
+			{% endif %}
+			{% if linktitle and field.name=='title' %}
+			</a>
 			{% endif %}
 		</td>
 		{% endif %}
