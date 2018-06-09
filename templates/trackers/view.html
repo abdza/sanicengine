@@ -17,6 +17,7 @@
     <h3>Details</h3>
     <a href='{{ app.url_for('trackers.edit') }}/{{ tracker.id }}' class='btn btn-primary'>Edit</a>
     <a href='{{ app.url_for('trackers.updatedb',id=tracker.id) }}' class='btn btn-primary'>Update DB</a>
+    <a href='{{ app.url_for('trackers.createpages',id=tracker.id) }}' class='btn btn-primary'>Create Pages</a>
     <a href='{{ app.url_for('trackers.viewlist',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>View Tracker</a>
     <a href='{{ app.url_for('trackers.create_from_excel',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>From Excel</a>
     <a href='{{ app.url_for('trackers.runupdate',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Run Update</a>
@@ -25,27 +26,31 @@
 		<dt class='col-2'>Title</dt>
 		<dd class='col-4'>{{tracker.title}}</dd>
 		<dt class='col-2'>Slug</dt class='col-2'>
-		<dd class='col-4'>{{tracker.slug}}</dd class='col-4'>
+		<dd class='col-4'>{{tracker.slug}}</dd>
 		<dt class='col-2'>Module</dt class='col-2'>
-		<dd class='col-4'>{{tracker.module}}</dd class='col-4'>
+		<dd class='col-4'>{{tracker.module}}</dd>
 		<dt class='col-2'>Published</dt class='col-2'>
-		<dd class='col-4'>{{tracker.published}}</dd class='col-4'>
+		<dd class='col-4'>{{tracker.published}}</dd>
 		<dt class='col-2'>Publish Date</dt class='col-2'>
-		<dd class='col-4'>{{tracker.publish_date}}</dd class='col-4'>
+		<dd class='col-4'>{{tracker.publish_date}}</dd>
 		<dt class='col-2'>Expire Date</dt class='col-2'>
-		<dd class='col-4'>{{tracker.expire_date}}</dd class='col-4'>
+		<dd class='col-4'>{{tracker.expire_date}}</dd>
 		<dt class='col-2'>Page Limit</dt class='col-2'>
-		<dd class='col-4'>{{tracker.pagelimit}}</dd class='col-4'>
+		<dd class='col-4'>{{tracker.pagelimit}}</dd>
 		<dt class='col-2'>Require Login</dt class='col-2'>
-		<dd class='col-4'>{{tracker.require_login}}</dd class='col-4'>
+		<dd class='col-4'>{{tracker.require_login}}</dd>
+		<dt class='col-2'>Data Table</dt class='col-2'>
+		<dd class='col-4'>{{tracker.data_table}}</dd>
+		<dt class='col-2'>Updates Table</dt class='col-2'>
+		<dd class='col-4'>{{tracker.update_table}}</dd>
 		<dt class='col-4'>List Fields</dt class='col-2'>
-		<dd class='col-8'>{{tracker.list_fields}}</dd class='col-4'>
+		<dd class='col-8'>{{tracker.list_fields}}</dd>
 		<dt class='col-4'>Search Fields</dt class='col-2'>
-		<dd class='col-8'>{{tracker.search_fields}}</dd class='col-4'>
+		<dd class='col-8'>{{tracker.search_fields}}</dd>
 		<dt class='col-4'>Filter Fields</dt class='col-2'>
-		<dd class='col-8'>{{tracker.filter_fields}}</dd class='col-4'>
+		<dd class='col-8'>{{tracker.filter_fields}}</dd>
 		<dt class='col-4'>Allowed Roles</dt class='col-2'>
-		<dd class='col-8'>{{tracker.allowed_roles}}</dd class='col-4'>
+		<dd class='col-8'>{{tracker.allowed_roles}}</dd>
 	</dl>
   </div>
   <div id="fields" class="tab-pane fade">
@@ -58,7 +63,7 @@
 		    <td><a href="{{ app.url_for('trackers.editfield',module=tracker.module,slug=tracker.slug) }}/{{field.id}}">{{field.name}}</a></td>
 		    <td>{{field.label}}</td>
 		    <td>{{field.field_type}}</td>
-		    <td><form action='{{ app.url_for('trackers.deletefield',module=tracker.module,slug=tracker.slug,field_id=field.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete field {{field.label}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deletefield',field_id=field.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete field {{field.label}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -72,7 +77,7 @@
 	    <tr>
 		    <td><a href="{{ app.url_for('trackers.editstatus',module=tracker.module,slug=tracker.slug) }}/{{status.id}}">{{status.name}}</a></td>
 		    <td>{{status.display_fields}}</td>
-		    <td><form action='{{ app.url_for('trackers.deletestatus',module=tracker.module,slug=tracker.slug,status_id=status.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete status {{status.name}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deletestatus',status_id=status.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete status {{status.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -87,7 +92,7 @@
 		    <td><a href="{{ app.url_for('trackers.editrole',module=tracker.module,slug=tracker.slug) }}/{{role.id}}">{{role.name}}</a></td>
 		    <td>{{role.role_type}}</td>
 		    <td>{{role.compare}}</td>
-		    <td><form action='{{ app.url_for('trackers.deleterole',module=tracker.module,slug=tracker.slug,role_id=role.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete role {{role.name}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deleterole',role_id=role.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete role {{role.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -105,7 +110,7 @@
 		    <td>{{transition.next_status}}</td>
 		    <td>{{transition.display_fields}}</td>
 		    <td>{{transition.edit_fields}}</td>
-		    <td><form action='{{ app.url_for('trackers.deletetransition',module=tracker.module,slug=tracker.slug,transition_id=transition.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete transition {{transition.name}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deletetransition',transition_id=transition.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete transition {{transition.name}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -117,8 +122,9 @@
 	    <tr><th>Title</th><th>Slug</th><th>Action</th></tr>
 	    {% for page in tracker.pages %}
 	    <tr>
-		    <td><a href="{{ app.url_for('pages.edit',module=page.module,slug=page.slug) }}/{{page.id}}">{{page.title}}</a></td>
+		    <td><a href="{{ app.url_for('pages.edit') }}/{{page.id}}">{{page.title}}</a></td>
 		    <td>{{page.slug}}</td>
+		    <td>&nbsp;</td>
 	    </tr>
 	    {% endfor %}
     </table>
@@ -133,7 +139,7 @@
 		    <td>{{dataupdate.created_date}}</td>
 		    <td>{{dataupdate.filename}}</td>
 		    <td>{{dataupdate.status}}</td>
-		    <td><form action='{{ app.url_for('trackers.deleteupdate',module=tracker.module,slug=tracker.slug,update_id=dataupdate.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete data update {{dataupdate.created_date}}?")'></form></td>
+		    <td><form action='{{ app.url_for('trackers.deleteupdate',update_id=dataupdate.id) }}' method='POST'><input type='submit' value='Delete' onclick='return confirm("Confirm delete data update {{dataupdate.created_date}}?")'></form></td>
 	    </tr>
 	    {% endfor %}
     </table>

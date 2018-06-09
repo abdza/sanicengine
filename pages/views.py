@@ -34,7 +34,7 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         ldict = locals()
         exec(page.content,globals(),ldict)
         if 'redirecturl' in ldict:
-           redirecturl=ldict['redirecturl']
+            redirecturl=ldict['redirecturl']
         if 'results' in ldict:
             results=ldict['results']
         if redirecturl:
@@ -112,7 +112,7 @@ async def form(request,id=None):
     else:
         if page:
             form = PageForm(obj=page)
-            title = 'Edit Page'
+            title = page.title + '-Edit'
             submitcontinue = True
 
     return html(render(request,'pages/form.html',title=title,page=page,
@@ -130,6 +130,6 @@ async def home(request):
 @authorized(object_type='page',require_admin=True)
 async def index(request):
     pages = dbsession.query(Page)
-    paginator = Paginator(pages, 5)
+    paginator = Paginator(pages, 50)
     return html(render(request,
-        'generic/list.html',title='Pages',deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

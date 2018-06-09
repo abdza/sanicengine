@@ -43,3 +43,21 @@ class Setting(ModelBase):
             return dsetting.value
         else:
             return default
+
+    def setcreate(module,name,value,set_type='text'):
+        dsetting = dbsession.query(Setting).filter_by(module=module,name=name).first()
+        if not dsetting:
+            dsetting = Setting(module=module,name=name)
+        dsetting.setting_type = set_type
+        if dsetting.setting_type == 'text':
+            dsetting.txtdata = value
+        elif dsetting.setting_type == 'json':
+            dsetting.txtdata = json.dumps(value)
+        elif dsetting.setting_type == 'integer':
+            dsetting.intdata = value
+        elif dsetting.setting_type == 'float':
+            dsetting.floatdata = value
+        elif dsetting.setting_type == 'date':
+            dsetting.datedata = value
+        dbsession.add(dsetting)
+        dbsession.commit()

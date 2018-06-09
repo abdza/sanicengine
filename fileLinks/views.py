@@ -108,5 +108,5 @@ async def form(request,id=None):
 @authorized(object_type='filelink', require_admin=True)
 async def index(request):
     filelinks = dbsession.query(FileLink)
-    paginator = Paginator(filelinks, 5)
+    paginator = Paginator(filelinks, 50)
     return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.create', fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

@@ -16,6 +16,8 @@ class TrackerForm(Form):
     allowed_roles = StringField('Allowed Roles')
     publish_date = DateField('Publish Date',validators=(Optional(),))
     expire_date = DateField('Expire Date',validators=(Optional(),))
+    data_table_name = StringField('Data Table')
+    update_table_name = StringField('Update Table')
 
 class TrackerFieldForm(Form):
     name = StringField('Name')

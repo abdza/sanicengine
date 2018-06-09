@@ -25,7 +25,6 @@ app.config.from_object(settings)
 
 session_interface = InMemorySessionInterface()
 
-
 @app.middleware('request')
 async def add_session_to_request(request):
     # before each request initialize a session
@@ -105,6 +104,22 @@ async def default_data(app, loop):
         dbsession.add(super_user)
 
     dbsession.commit()
+
+async def returnfunction(request):
+    custom_routes = portalsettings.models.Setting.namedefault('portal','customurl',[])
+    croute = custom_routes[request.uri_template]
+    if croute['type']=='page':
+        return await pages.views.view(request,module=croute['module'],slug=croute['slug'])
+    elif croute['type']=='file':
+        return await fileLinks.views.download(request,module=croute['module'],slug=croute['slug'])
+    elif croute['type']=='tracker':
+        return await trackers.views.viewlist(request,module=croute['module'],slug=croute['slug'])
+
+@app.listener('before_server_start')
+async def custom_routes(app, loop):
+    custom_routes = portalsettings.models.Setting.namedefault('portal','customurl',[])
+    for cr in custom_routes:
+        app.add_route(returnfunction,cr)
 
 async def send_email(data):
     scheduler = AsyncIOScheduler()

@@ -1,7 +1,6 @@
 {% extends "formbase.html" %}
 {% block endhead %}
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/js/jstree/themes/default/jstreestyle.min.css') }}'>
-	<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/js/jspanel/jquery.jspanel.min.css') }}'>
 {% endblock %}
 {% block content %}
@@ -32,8 +31,6 @@
 {% endblock %}
 {% block endbody %}
 	<script src='{{ app.url_for('static', filename='/js/jstree/jstree.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery.ui.touch-punch.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/js/jspanel/jquery.jspanel.min.js')}}'></script>
 	<script>
 	$("#treediv").jstree({

@@ -87,7 +87,7 @@ async def module_role_form(request,module_role_id=None):
 @authorized(require_admin=True)
 async def module_roles(request):
     module_roles = dbsession.query(ModuleRole)
-    paginator = Paginator(module_roles, 5)
+    paginator = Paginator(module_roles, 50)
     return html(render(request, 'generic/list.html',title='Module Roles',deletelink='users.module_role_delete',editlink='users.module_role_edit',addlink='users.module_role_create',fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/users/json/')
@@ -102,10 +102,10 @@ async def userjson(request):
 @authorized(require_admin=True)
 async def index(request):
     users = dbsession.query(User)
-    paginator = Paginator(users, 5)
+    paginator = Paginator(users, 50)
     return html(render(request, 'generic/list.html',title='Users',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
-@bp.route('/register',methods=['GET','POST'])
+@bp.route('/user/register',methods=['GET','POST'])
 async def register(request):
     form = UserForm(request.form)
     if request.method=='POST' and form.validate():

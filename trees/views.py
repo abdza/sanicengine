@@ -243,6 +243,6 @@ async def form(request,id=None):
 @authorized(object_type='tree',require_admin=True)
 async def index(request):
     trees = dbsession.query(Tree)
-    paginator = Paginator(trees, 5)
+    paginator = Paginator(trees, 50)
     return html(render(request,
         'trees/list.html',title='Trees',deletelink='trees.delete',editlink='trees.edit',addlink='trees.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))
