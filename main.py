@@ -143,4 +143,12 @@ async def _send_email(data):
     await send_a_message()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    try:
+        host = settings.LISTEN_ON
+    except:
+        host = "0.0.0.0"
+    try:
+        port = settings.PORT
+    except:
+        port = 8000
+    app.run(host=host, port=port)
