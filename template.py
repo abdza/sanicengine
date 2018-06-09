@@ -1,5 +1,5 @@
 from jinja2 import Template, Environment, FileSystemLoader
-from database import dbsession
+from database import dbsession, executedb, querydb
 from users.models import User
 
 jinja_env = Environment(loader=FileSystemLoader('templates'))
@@ -20,6 +20,8 @@ def render(request, template_file, *args, **kwargs):
     app.trackers = trackers
     app.trees = trees
     app.dbsession = dbsession
+    app.executedb = executedb
+    app.querydb = querydb
     app.pages = pages
     app.settings = Setting
     return jinja_env.get_template(template_file).render(app=app,request=request,curuser=curuser,*args,**kwargs)
@@ -40,6 +42,8 @@ def render_string(request, template_string, *args, **kwargs):
     app.trackers = trackers
     app.trees = trees
     app.dbsession = dbsession
+    app.executedb = executedb
+    app.querydb = querydb
     app.pages = pages
     app.settings = Setting
     return jinja_env.from_string(template_string).render(app=app,request=request,curuser=curuser,*args,**kwargs)

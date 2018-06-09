@@ -23,3 +23,15 @@ def reference_col(tablename, nullable=False, pk_name='id', **kwargs):
     return Column(
         ForeignKey('{0}.{1}'.format(tablename, pk_name)),
         nullable=nullable, **kwargs)
+
+def executedb(query):
+    try:
+        return dbsession.execute(query)
+    except Exception as inst:
+        print "Error executing query:" + str(inst)
+
+def querydb(query):
+    try:
+        return dbsession.query(query)
+    except Exception as inst:
+        print "Error querying:" + str(inst)

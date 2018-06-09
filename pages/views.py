@@ -3,7 +3,7 @@ from sanic import Blueprint
 from sanic.response import html, redirect
 from .models import Page
 from .forms import PageForm
-from database import dbsession
+from database import dbsession, executedb, querydb
 from template import render
 from decorators import authorized
 from sqlalchemy_paginator import Paginator
