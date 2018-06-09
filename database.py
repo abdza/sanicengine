@@ -28,10 +28,10 @@ def executedb(query):
     try:
         return dbsession.execute(query)
     except Exception as inst:
-        print "Error executing query:" + str(inst)
+        print("Error executing query:" + str(inst))
 
 def querydb(query):
     try:
         return dbsession.query(query)
     except Exception as inst:
-        print "Error querying:" + str(inst)
+        print("Error querying:" + str(inst))
