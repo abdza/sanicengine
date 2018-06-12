@@ -1,4 +1,4 @@
-{% macro menunode(node) %}
+{% macro sidemenunode(node) %}
 <li>
 	{% if node.children %}
 	<a href='#toggle{{node.id}}' data-toggle='collapse' class='collapse-toggle' aria-expanded='false'>
@@ -9,7 +9,7 @@
 	</a>
 	<ul id='toggle{{node.id}}' class='collapse list-unstyled'>
 		{% for cnode in node.children %}
-		{{ menunode(cnode) }}
+		{{ sidemenunode(cnode) }}
 		{% endfor %}
 	</ul>
 	{% else %}
@@ -23,11 +23,55 @@
 </li>
 {% endmacro %}
 
+{% macro topmenunode(node,isdropdown=False) %}
+	{% if node.children %}
+	<li class='{% if isdropdown %}dropdown-item{% else %}nav-item{% endif %} dropdown'>
+	<a id='toggle{{node.id}}' href='#' class='nav-link dropdown-toggle'>
+		{% if 'icon' in node.data %}
+		<span class="fa {{ node.data['icon'] }}"></span>
+		{% endif %}
+		<span class="mtext">{{ node.title }}</span>
+	</a>
+	<ul class='dropdown-menu'>
+		{% for cnode in node.children %}
+		{{ topmenunode(cnode,True) }}
+		{% endfor %}
+	</ul>
+	{% else %}
+	<li class='{% if isdropdown %}dropdown-item{% else %}nav-item{% endif %}'>
+	<a href='{% if node.node_type=='page' %}{{ app.url_for('pages.view',module=node.module,slug=node.slug) }}{% elif node.node_type=='file' %}{{ app.url_for('fileLinks.download',module=node.module,slug=node.slug) }}{% elif node.node_type=='tracker' %}{{ app.url_for('trackers.viewlist',module=node.module,slug=node.slug) }}{% endif %}' class='nav-link'>
+		{% if 'icon' in node.data %}
+		<span class="fa {{ node.data['icon'] }}"></span>
+		{% endif %}
+		<span class="mtext">{{ node.title }}</span>
+	</a>
+	{% endif %}
+</li>
+{% endmacro %}
+
+{% macro topmenu(module=None,slug=None) %}
+{% set portaltree = app.dbsession.query(app.trees.Tree).filter_by(module=module if module else 'portal',slug=slug if slug else 'site').first() %}
+{% set menus = app.dbsession.query(app.trees.TreeNode).filter_by(tree=portaltree,slug='topmenu',module='portal').all() %}
+{% if menus %}
+{% for menu in menus %}
+	{% for node in menu.children %}
+		{{ topmenunode(node) }}
+	{% endfor %}
+{% endfor %}
+{% endif %}
+{% endmacro %}
+
 {% macro sidemenu(module=None,slug=None) %}
 <ul class='list-unstyled'>
-{% for node in app.dbsession.query(app.trees.Tree).filter_by(module=module if module else 'portal',slug=slug if slug else 'site').first().rootnode.children %}
-	{{ menunode(node) }}
+{% set portaltree = app.dbsession.query(app.trees.Tree).filter_by(module=module if module else 'portal',slug=slug if slug else 'site').first() %}
+{% set menus = app.dbsession.query(app.trees.TreeNode).filter_by(tree=portaltree,slug='sidemenu',module='portal').all() %}
+{% if menus %}
+{% for menu in menus %}
+	{% for node in menu.children %}
+		{{ sidemenunode(node) }}
+	{% endfor %}
 {% endfor %}
+{% endif %}
 </ul>
 {% endmacro %}
 

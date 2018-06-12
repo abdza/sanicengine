@@ -1,4 +1,4 @@
-{% from 'macros.html' import sidemenu,adminmenu with context %}
+{% from 'macros.html' import topmenu,sidemenu,adminmenu with context %}
 <!doctype html>
 <html lang='en' dir='ltr'>
 	<head>
@@ -8,6 +8,7 @@
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap.min.css') }}'>
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/fontawesome-all.min.css') }}'>
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.css') }}'>
+		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/jquery.smartmenus.bootstrap-4.css') }}'>
 		{% block formcss %}{% endblock %}
 		<!-- Mobile Specific Metas -->
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -33,7 +34,8 @@
 			<i class="fas fa-bars"></i>
 		</button>
 		<div class="collapse navbar-collapse" id="navcomponents">
-			<ul class="navbar-nav mr-auto">
+			<ul class="nav navbar-nav mr-auto">
+				{{ topmenu() }}
 			</ul>
 		{% if request.session.user_id %}
 			<ul class="navbar-nav ml-auto ">
@@ -99,6 +101,8 @@
 	<script src='{{ app.url_for('static', filename='/js/bootstrap.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery.ui.touch-punch.min.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/js/jquery.smartmenus.min.js')}}'></script>
+	<script src='{{ app.url_for('static', filename='/js/jquery.smartmenus.bootstrap-4.min.js')}}'></script>
 	{% block formjs %}{% endblock %}
 	{% endblock %}
 	{% block endbody %}
