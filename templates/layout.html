@@ -54,7 +54,7 @@
 			</ul>
 		{% else %}
 			<form method='post' class='form-inline my-2 my-lg-0' action='{{ app.url_for('users.login') }}'>
-				<input type='hidden' name='targeturl' value='{{request.url}}'/>
+				<input type='hidden' name='targeturl' value='{% if targeturl %}{{ targeturl }}{% else %}{{request.url}}{% endif %}'/>
 				<label for='username' class='sr-only'>Username</label>
 				<input class='form-control mr-sm-2' placeholder='Username' type='text' name='username' id='username'>
 				<label for='password' class='sr-only'>Password</label>

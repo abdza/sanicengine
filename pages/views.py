@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
-from sanic.response import html, redirect
+from sanic.response import html, redirect, json as jsonresponse
 from .models import Page
 from .forms import PageForm
 from database import dbsession, executedb, querydb
@@ -120,11 +120,19 @@ async def form(request,id=None):
 
 @bp.route('/')
 async def home(request):
-    home = dbsession.query(Page).filter_by(slug='home').first()
+    home = dbsession.query(Page).filter_by(module='portal',slug='home').first()
     if home:
         return html(home.render(request))
     return html(render(request,'pages/home.html'))
 
+@bp.route('/loginrequired')
+async def loginrequired(request):
+    if 'authorization' in request.headers:
+        return jsonresponse({'message':'Login required'},status=401)
+    loginrequired = dbsession.query(Page).filter_by(module='portal',slug='loginrequired').first()
+    if loginrequired:
+        return html(loginrequired.render(request))
+    return html(render(request,'pages/loginrequired.html',targeturl=request['session'].pop('targeturl',None)))
 
 @bp.route('/pages')
 @authorized(object_type='page',require_admin=True)

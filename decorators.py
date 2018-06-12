@@ -75,7 +75,13 @@ def authorized(object_type=None, require_admin=False, require_superuser=False):
                 return response
             else:
                 # the user is not authorized.
-                request['session']['flashmessage'] = 'You are not authorized to view that page'
-                return redirect(request.app.url_for('pages.home'))
+                if curuser:
+                    request['session']['flashmessage'] = 'You are not authorized to view that page'
+                    return redirect(request.app.url_for('pages.home'))
+                else:
+                    request['session']['flashmessage'] = 'You need to login to view that page'
+                    request['session']['targeturl'] = request.url
+                    return redirect(request.app.url_for('pages.loginrequired'))
+
         return decorated_function
     return decorator
