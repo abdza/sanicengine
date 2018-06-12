@@ -13,6 +13,8 @@ class User(ModelBase):
     resethash = Column(String(300))
     resetexpire = Column(DateTime)
     superuser = Column(Boolean(),default=False)
+    authhash = Column(String(300))
+    authexpire = Column(DateTime)
 
     def __str__(self):
         return self.name

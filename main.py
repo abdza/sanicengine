@@ -16,6 +16,7 @@ from email.utils import make_msgid
 import settings
 import hashlib
 import base64
+import datetime
 
 from sqlalchemy import MetaData
 
@@ -45,8 +46,18 @@ async def user_from_request(request):
                 if curuser:
                     if curuser.password == curuser.hashpassword(authtoken[1]):
                         request['session']['user_id']=curuser.id
+                        authhash = curuser.email + str(datetime.datetime.now())
+                        curuser.authhash = hashlib.sha224(authhash.encode('utf-8')).hexdigest()
+                        curuser.authexpire = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                        dbsession.add(curuser)
+                        dbsession.commit()
         else:
-            print('token:' + request.headers['authorization'])
+            curuser=dbsession.query(users.models.User).filter_by(authhash=request.headers['authorization']).first()
+            if curuser and datetime.datetime.today() < curuser.authexpire:
+                request['session']['user_id']=curuser.id
+                curuser.authexpire = datetime.datetime.now() + datetime.timedelta(minutes=5)
+                dbsession.add(curuser)
+                dbsession.commit()
 
 @app.middleware('response')
 async def save_session(request, response):

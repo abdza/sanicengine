@@ -18,6 +18,13 @@ bp = Blueprint('users')
 
 @bp.route('/login',methods=['GET','POST'])
 async def login(request):
+    if 'authorization' in request.headers:
+        if 'user_id' in request['session']:
+            curuser = dbsession.query(User).get(request['session']['user_id'])
+            return jsonresponse({'authtoken':curuser.authhash})
+        else:
+            return jsonresponse({'message':'Login required'},status=401)
+
     if request.method=='POST':
         curuser = dbsession.query(User).filter(User.username==request.form.get('username')).first()
         if curuser:
