@@ -76,7 +76,12 @@
 {% endmacro %}
 
 {% macro adminmenu() %}
-	<ul class='list-unstyled'>
+	<li>
+	<a href='#toggleadmin' data-toggle='collapse' class='collapse-toggle' aria-expanded='false'>
+		<span class="fa fa-toolbox"></span>
+		<span class="mtext">Admin</span>
+	</a>
+	<ul id='toggleadmin' class='collapse list-unstyled {% if request.path.split('/')[1] in ['users','module_roles','settings','modules','pages','trees','files','trackers'] %}show{% endif %}'>
 	{% if curuser.superuser %}
 	<li>
 		<a href='{{ app.url_for('users.index') }}' class="no-arrow">
@@ -92,7 +97,7 @@
 		</a>
 	</li>
 	<li>
-		<a href='{{ app.url_for('settings.index') }}' class="no-arrow">
+		<a href='{{ app.url_for('settings.index') }}' class="no-arrow active">
 			<span class="fa fa-cog"></span>
 			<span class="mtext">Settings</span>
 		</a>
@@ -128,4 +133,5 @@
 		</a>
 	</li>
 	</ul>
+	</li>
 {% endmacro %}
