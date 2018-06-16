@@ -25,7 +25,7 @@
 <input type='submit' value='Submit' class='btn btn-primary'>
 </form>
 {% if not ns.displayed %}
-	{% block formjs %}
+	{% block js %}
 	<script>window.onload = function() { $('#trackerform').submit(); }</script>
 	{% endblock %}
 {% endif %}

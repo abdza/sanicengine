@@ -8,10 +8,23 @@ body {
     align-items: stretch;
 }
 
+#navbar {
+    box-shadow:-2px 0px 10px rgba(0, 0, 0, 0.4); 
+}
+
 #sidebar {
     min-width: 250px;
     max-width: 250px;
     min-height: 100vh;
+    box-shadow:-2px 0px 10px rgba(0, 0, 0, 0.4); 
+    padding: 10px;
+    z-index: 1000;
+    background: #fff;
+    margin-top: -20px;
+}
+
+#sidebar li {
+    background: #ffffff;
 }
 
 #sidebar.active {
@@ -66,7 +79,7 @@ body {
     #sidebar {
         margin-left: -250px;
     }
-    #sidebar.active {
+    #sidebar.show {
         margin-left: 0;
     }
 }

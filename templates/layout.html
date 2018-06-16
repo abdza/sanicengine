@@ -30,6 +30,9 @@
 		<a href="{{ app.url_for('pages.home') }}" class="navbar-brand">
 			<img src="{{ app.url_for('static',filename='images/logo.png') }}" alt="" class="mobile-logo">
 		</a>
+		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle sidebar">
+			<i class="fas fa-bars"></i>
+		</button>
 		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navcomponents" aria-controls="navcomponents" aria-expanded="false" aria-label="Toggle navigation">
 			<i class="fas fa-bars"></i>
 		</button>
@@ -103,7 +106,7 @@
 	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery.ui.touch-punch.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/js/jquery.smartmenus.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/js/jquery.smartmenus.bootstrap-4.min.js')}}'></script>
-	{% block formjs %}{% endblock %}
+	{% block js %}{% endblock %}
 	{% endblock %}
 	{% block endbody %}
 	{% endblock %}
