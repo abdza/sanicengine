@@ -9,6 +9,12 @@ from sqlalchemy_mptt.mixins import BaseNestedSets
 from template import render_string
 import json
 
+def readarray(arrayvar,arraykey,default=''):
+    if arraykey in arrayvar:
+        return arrayvar[arraykey]
+    else:
+        return default
+
 class Tree(ModelBase):
     __tablename__ = 'trees'
 
@@ -83,6 +89,55 @@ class TreeNode(ModelBase, BaseNestedSets):
     tree_id = reference_col('trees')
     tree = relationship('Tree',backref='nodes')
 
+    def treedump(self):
+        return { 
+                'title':self.title,
+                'module':self.module,
+                'slug':self.slug,
+                'require_login':self.require_login,
+                'allowed_roles':self.allowed_roles,
+                'published':self.published,
+                'publish_date':self.publish_date.strftime('%Y-%m-%d') if self.publish_date else None,
+                'expire_date':self.expire_date.strftime('%Y-%m-%d') if self.expire_date else None,
+                'node_category':self.node_category,
+                'node_type':self.node_type,
+                'datastr':self.datastr,
+                'tree':self.tree.slug,
+                'users': [ user.treedump() for user in self.users ],
+                'children':[ child.treedump() for child in self.children ] 
+                }
+
+    @staticmethod
+    def treeload(tree,nodearray,parentnode=None):
+        newnode = TreeNode(
+                parent=parentnode,
+                tree=tree,
+                title=readarray(nodearray,'title'),
+                module=readarray(nodearray,'module'),
+                slug=readarray(nodearray,'slug'),
+                require_login=readarray(nodearray,'require_login',False),
+                allowed_roles=readarray(nodearray,'allowed_roles'),
+                published=readarray(nodearray,'published',False),
+                publish_date=readarray(nodearray,'publish_date',None),
+                expire_date=readarray(nodearray,'expire_date',None),
+                node_category=readarray(nodearray,'node_category'),
+                node_type=readarray(nodearray,'node_type'),
+                datastr=readarray(nodearray,'datastr')
+                )
+        dbsession.add(newnode)
+        from users.models import User
+        for cuser in nodearray['users']:
+            newuser = TreeNodeUser(
+                    node=newnode,
+                    role=readarray(cuser,'role'),
+                    user=dbsession.query(User).filter_by(username=readarray(cuser,'user')).first()
+                    )
+            dbsession.add(newuser)
+
+        dbsession.flush()
+        for cnode in nodearray['children']:
+            TreeNode.treeload(tree,cnode,newnode)
+
     def copy(self,parent_id,appendslug):
         newcopy = TreeNode(
                 title = self.title,
@@ -123,22 +178,6 @@ class TreeNode(ModelBase, BaseNestedSets):
         else:
             return dat
 
-    def treedump(self):
-        return { 'title':self.title,'module':self.module,'slug':self.slug,'require_login':self.require_login,'allowed_roles':self.allowed_roles,'published':self.published,'publish_date':self.publish_date.strftime('%Y-%m-%d') if self.publish_date else '','expire_date':self.expire_date.strftime('%Y-%m-%d') if self.expire_date else '','node_category':self.node_category,'node_type':self.node_type,'datastr':self.datastr,'tree':self.tree.slug,'users': [ user.treedump() for user in self.users ],'children':[ child.treedump() for child in self.children ] }
-
-    @staticmethod
-    def treeload(tree,nodearray,parentnode=None):
-        newnode = TreeNode(parent=parentnode,tree=tree,title=nodearray['title'],module=nodearray['module'],slug=nodearray['slug'],require_login=nodearray['require_login'],allowed_roles=nodearray['allowed_roles'],published=nodearray['published'],publish_date=nodearray['publish_date'] if nodearray['publish_date'] else None,expire_date=nodearray['expire_date'] if nodearray['expire_date'] else None,node_category=nodearray['node_category'],node_type=nodearray['node_type'],datastr=nodearray['datastr'])
-        dbsession.add(newnode)
-        from users.models import User
-        for cuser in nodearray['users']:
-            newuser = TreeNodeUser(node=newnode,role=cuser['role'],user=dbsession.query(User).filter_by(username=cuser['user']).first())
-            dbsession.add(newuser)
-
-        dbsession.flush()
-        for cnode in nodearray['children']:
-            TreeNode.treeload(tree,cnode,newnode)
-
 class TreeNodeUser(ModelBase):
     __tablename__ = 'tree_node_users'
     id = Column(Integer, primary_key=True)
@@ -155,4 +194,7 @@ class TreeNodeUser(ModelBase):
     }
 
     def treedump(self):
-        return { 'user':self.user.username,'role':self.role }
+        return { 
+                'user':self.user.username,
+                'role':self.role 
+                }

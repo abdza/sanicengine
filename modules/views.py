@@ -18,6 +18,12 @@ import shutil
 bp = Blueprint('modules')
 modulepath = 'custom_module'
 
+def readarray(arrayvar,arraykey,default=''):
+    if arraykey in arrayvar:
+        return arrayvar[arraykey]
+    else:
+        return default
+
 @bp.route('/modules/import/<slug>')
 @authorized(require_superuser=True)
 async def importmodule(request,slug=None):
@@ -30,14 +36,18 @@ async def importmodule(request,slug=None):
         curfile.close()
         for cpage in pagesarray:
             page = dbsession.query(Page).filter_by(module=slug,slug=cpage['slug']).first()
-            if page:
-                page.title = cpage['title']
-                page.published = cpage['published']
-                page.require_login = cpage['require_login']
-                page.publish_date = cpage['publish_date'] if cpage['publish_date'] else None
-                page.expire_date = cpage['expire_date'] if cpage['expire_date'] else None
-            else:
-                page = Page(title=cpage['title'],module=cpage['module'],slug=cpage['slug'],published=cpage['published'],require_login=cpage['require_login'],publish_date=cpage['publish_date'] if cpage['publish_date'] else None,expire_date=cpage['expire_date'] if cpage['expire_date'] else None)
+            if not page:
+                page = Page()
+
+            page.title = readarray(cpage,'title')
+            page.slug = readarray(cpage,'slug')
+            page.module = readarray(cpage,'module')
+            page.published = readarray(cpage,'published',False)
+            page.runable = readarray(cpage,'runable',False)
+            page.require_login = readarray(cpage,'require_login',False)
+            page.allowed_roles = readarray(cpage,'allowed_roles',False)
+            page.publish_date = readarray(cpage,'publish_date',None)
+            page.expire_date = readarray(cpage,'expire_date',None)
             try:
                 cfile = open(os.path.join(modulepath,slug,'pages',cpage['slug']),'r')
                 page.content = cfile.read()
@@ -52,14 +62,19 @@ async def importmodule(request,slug=None):
         curfile.close()
         for cfile in filearray:
             filelink = dbsession.query(FileLink).filter_by(module=slug,slug=cfile['slug']).first()
-            if filelink:
-                filelink.title = cfile['title']
-                filelink.filename = cfile['filename']
-                filelink.filepath = cfile['filepath']
-                filelink.require_login = cfile['require_login']
-                filelink.allowed_roles = cfile['allowed_roles']
-            else:
-                filelink = FileLink(slug=cfile['slug'],module=cfile['module'],title=cfile['title'],filename=cfile['filename'],filepath=cfile['filepath'],require_login=cfile['require_login'],allowed_roles=cfile['allowed_roles'])
+            if not filelink:
+                filelink = FileLink()
+
+            filelink.title = readarray(cfile,'title')
+            filelink.slug = readarray(cfile,'slug')
+            filelink.module = readarray(cfile,'module')
+            filelink.published = readarray(cfile,'published',False)
+            filelink.filename = readarray(cfile,'filename')
+            filelink.filepath = readarray(cfile,'filepath')
+            filelink.require_login = readarray(cfile,'require_login',False)
+            filelink.allowed_roles = readarray(cfile,'allowed_roles',False)
+            filelink.published_date = readarray(cfile,'published_date',None)
+            filelink.expire_date = readarray(cfile,'expire_date',None)
             try:
                 shutil.copy2(os.path.join(modulepath,slug,'files',os.path.basename(filelink.filepath)),filelink.filepath)
             except c:
@@ -71,16 +86,18 @@ async def importmodule(request,slug=None):
         curfile.close()
         for ctree in treearray:
             tree = dbsession.query(Tree).filter_by(module=slug,slug=ctree['slug']).first()
-            if tree:
-                tree.title = ctree['title']
-                tree.published = ctree['published']
-                tree.datastr = ctree['datastr']
-                tree.require_login = ctree['require_login']
-                tree.allowed_roles = ctree['allowed_roles']
-                tree.publish_date = ctree['publish_date'] if ctree['publish_date'] else None
-                tree.expire_date = ctree['expire_date'] if ctree['expire_date'] else None
-            else:
-                tree = Tree(slug=ctree['slug'],datastr=ctree['datastr'],module=ctree['module'],title=ctree['title'],published=ctree['published'],require_login=ctree['require_login'],allowed_roles=ctree['allowed_roles'],publish_date=ctree['publish_date'] if ctree['publish_date'] else None,expire_date=ctree['expire_date'] if ctree['expire_date'] else None)
+            if not tree:
+                tree = Tree()
+
+            tree.title = readarray(ctree,'title')
+            tree.slug = readarray(ctree,'slug')
+            tree.module = readarray(ctree,'module')
+            tree.datastr = readarray(ctree,'datastr')
+            tree.published = readarray(ctree,'published',False)
+            tree.require_login = readarray(ctree,'require_login',False)
+            tree.allowed_roles = readarray(ctree,'allowed_roles',False)
+            tree.publish_date = readarray(ctree,'publish_date',None)
+            tree.expire_date = readarray(ctree,'expire_date',None)
             dbsession.add(tree)
             dbsession.flush()
             TreeNode.treeload(tree,ctree['nodes'],None)
@@ -91,56 +108,64 @@ async def importmodule(request,slug=None):
         curfile.close()
         for ctracker in trackersarray:
             tracker = dbsession.query(Tracker).filter_by(module=slug,slug=ctracker['slug']).first()
-            if tracker:
-                tracker.title = ctracker['title']
-                tracker.list_fields = ctracker['list_fields']
-                tracker.search_fields = ctracker['search_fields']
-                tracker.filter_fields = ctracker['filter_fields']
-                tracker.excel_fields = ctracker['excel_fields']
-                tracker.pagelimit = ctracker['pagelimit']
-                tracker.require_login = ctracker['require_login']
-                tracker.allowed_roles = ctracker['allowed_roles']
-            else:
-                tracker = Tracker(title=ctracker['title'],module=ctracker['module'],slug=ctracker['slug'],list_fields=ctracker['list_fields'],search_fields=ctracker['search_fields'],filter_fields=ctracker['filter_fields'],excel_fields=ctracker['excel_fields'],pagelimit=ctracker['pagelimit'],require_login=ctracker['require_login'],allowed_roles=ctracker['allowed_roles'])
+            if not tracker:
+                tracker = Tracker()
+
+            tracker.title = readarray(ctracker,'title')
+            tracker.slug = readarray(ctracker,'slug')
+            tracker.module = readarray(ctracker,'module')
+            tracker.list_fields = readarray(ctracker,'list_fields')
+            tracker.search_fields = readarray(ctracker,'search_fields')
+            tracker.filter_fields = readarray(ctracker,'filter_fields')
+            tracker.excel_fields = readarray(ctracker,'excel_fields')
+            tracker.published = readarray(ctracker,'published',False)
+            tracker.pagelimit = readarray(ctracker,'pagelimit')
+            tracker.require_login = readarray(ctracker,'require_login',False)
+            tracker.allowed_roles = readarray(ctracker,'allowed_roles',False)
+            tracker.publish_date = readarray(ctracker,'publish_date',None)
+            tracker.expire_date = readarray(ctracker,'expire_date',None)
+            tracker.data_table_name = readarray(ctracker,'data_table_name')
+            tracker.update_table_name = readarray(ctracker,'update_table_name')
             dbsession.add(tracker)
 
             for cfield in ctracker['fields']:
                 field = dbsession.query(TrackerField).filter_by(tracker=tracker,name=cfield['name']).first()
-                if field:
-                    field.label = cfield['label']
-                    field.field_type = cfield['field_type']
-                    field.obj_table = cfield['obj_table']
-                    field.obj_field = cfield['obj_field']
-                    field.default = cfield['default']
-                else:
-                    field = TrackerField(tracker=tracker,name=cfield['name'],label=cfield['label'],field_type=cfield['field_type'],obj_table=cfield['obj_table'],obj_field=cfield['obj_table'],default=cfield['default'])
+                if not field:
+                    field = TrackerField()
+                field.name = readarray(cfield,'name')
+                field.label = readarray(cfield,'label')
+                field.field_type = readarray(cfield,'field_type')
+                field.obj_table = readarray(cfield,'obj_table')
+                field.obj_field = readarray(cfield,'obj_field')
+                field.default = readarray(cfield,'default')
                 dbsession.add(field)
 
             for crole in ctracker['roles']:
                 role = dbsession.query(TrackerRole).filter_by(tracker=tracker,name=crole['name']).first()
-                if role:
-                    role.role_type = crole['role_type']
-                    role.compare = crole['compare']
-                else:
-                    role = TrackerRole(tracker=tracker,name=crole['name'],role_type=crole['role_type'],compare=crole['compare'])
+                if not role:
+                    role = TrackerRole()
+                role.name = readarray(crole,'name')
+                role.role_type = readarray(crole,'role_type')
+                role.compare = readarray(crole,'compare')
                 dbsession.add(role)
 
             for cstatus in ctracker['statuses']:
                 status = dbsession.query(TrackerStatus).filter_by(tracker=tracker,name=cstatus['name']).first()
-                if status:
-                    status.display_fields = cstatus['display_fields']
-                else:
-                    status = TrackerStatus(tracker=tracker,name=cstatus['name'],display_fields=cstatus['display_fields'])
+                if not status:
+                    status = TrackerStatus()
+
+                status.name = readarray(cstatus,'name')
+                status.display_fields = readarray(cstatus,'display_fields')
                 dbsession.add(status)
 
             for ctransition in ctracker['transitions']:
                 transition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name=ctransition['name']).first()
-                if transition:
-                    transition.display_fields = ctransition['display_fields']
-                    transition.edit_fields = ctransition['edit_fields']
-                    transition.postpage = ctransition['postpage'] if 'postpage' in ctransition else ''
-                else:
-                    transition = TrackerTransition(tracker=tracker,name=ctransition['name'],postpage=ctransition['postpage'] if 'postpage' in ctransition else '',display_fields=ctransition['display_fields'],edit_fields=ctransition['edit_fields'])
+                if not transition:
+                    transition = TrackerTransition()
+                transition.name = readarray(ctransition,'name')
+                transition.display_fields = readarray(ctransition,'display_fields')
+                transition.edit_fields = readarray(ctransition,'edit_fields')
+                transition.postpage = readarray(ctransition,'postpage')
 
                 if ctransition['prev_status']:
                     transition.prev_status = dbsession.query(TrackerStatus).filter_by(name=ctransition['prev_status'],tracker=tracker).first()
@@ -178,7 +203,17 @@ async def export(request,slug=None):
         curfile = open(os.path.join(modulepath,slug,'pages',page.slug),'w')
         curfile.write(page.content)
         curfile.close()
-        pagesarray.append({'title':page.title,'slug':page.slug,'module':page.module,'published':page.published,'runable':page.runable,'require_login':page.require_login,'allowed_roles':page.allowed_roles,'publish_date':page.publish_date.strftime('%Y-%m-%d') if page.publish_date else '','expire_date':page.expire_date.strftime('%Y-%m-%d') if page.expire_date else ''})
+        pagesarray.append({
+            'title':page.title,
+            'slug':page.slug,
+            'module':page.module,
+            'published':page.published,
+            'runable':page.runable,
+            'require_login':page.require_login,
+            'allowed_roles':page.allowed_roles,
+            'publish_date':page.publish_date.strftime('%Y-%m-%d') if page.publish_date else None,
+            'expire_date':page.expire_date.strftime('%Y-%m-%d') if page.expire_date else None 
+            })
     curfile = open(os.path.join(modulepath,slug,'pagelist.json'),'w')
     curfile.write(json.dumps(pagesarray))
     curfile.close()
@@ -188,7 +223,18 @@ async def export(request,slug=None):
     filesarray = []
     for filelink in filelinks:
         shutil.copy2(filelink.filepath,os.path.join(modulepath,slug,'files',os.path.basename(filelink.filepath)))
-        filesarray.append({'title':filelink.title,'slug':filelink.slug,'module':filelink.module,'filename':filelink.filename,'filepath':filelink.filepath,'require_login':filelink.require_login,'allowed_roles':filelink.allowed_roles})
+        filesarray.append({
+            'title':filelink.title,
+            'slug':filelink.slug,
+            'module':filelink.module,
+            'published':filelink.published,
+            'filename':filelink.filename,
+            'filepath':filelink.filepath,
+            'require_login':filelink.require_login,
+            'allowed_roles':filelink.allowed_roles,
+            'publish_date':filelink.publish_date.strftime('%Y-%m-%d') if filelink.publish_date else None,
+            'expire_date':filelink.expire_date.strftime('%Y-%m-%d') if filelink.expire_date else None 
+            })
     curfile = open(os.path.join(modulepath,slug,'filelist.json'),'w')
     curfile.write(json.dumps(filesarray))
     curfile.close()
@@ -199,19 +245,61 @@ async def export(request,slug=None):
     for tracker in trackers:
         fields = []
         for field in tracker.fields:
-            fields.append({'name':field.name,'label':field.label,'field_type':field.field_type,'obj_table':field.obj_table,'obj_field':field.obj_field,'default':field.default})
+            fields.append({
+                'name':field.name,
+                'label':field.label,
+                'field_type':field.field_type,
+                'obj_table':field.obj_table,
+                'obj_field':field.obj_field,
+                'default':field.default
+                })
         roles = []
         for role in tracker.roles:
-            roles.append({'name':role.name,'role_type':role.role_type,'compare':role.compare})
+            roles.append({
+                'name':role.name,
+                'role_type':role.role_type,
+                'compare':role.compare
+                })
         statuses = []
         for status in tracker.statuses:
-            statuses.append({'name':status.name,'display_fields':status.display_fields})
+            statuses.append({
+                'name':status.name,
+                'display_fields':status.display_fields
+                })
         transitions = []
         for transition in tracker.transitions:
-            transitions.append({'name':transition.name,'display_fields':transition.display_fields,'edit_fields':transition.edit_fields,'prev_status':transition.prev_status.name if transition.prev_status else None,'next_status':transition.next_status.name if transition.next_status else None,'roles':','.join([ role.name for role in transition.roles ]),'postpage':transition.postpage})
+            transitions.append({
+                'name':transition.name,
+                'display_fields':transition.display_fields,
+                'edit_fields':transition.edit_fields,
+                'prev_status':transition.prev_status.name if transition.prev_status else None,
+                'next_status':transition.next_status.name if transition.next_status else None,
+                'roles':','.join([ role.name for role in transition.roles ]),
+                'postpage':transition.postpage
+                })
 
 
-        trackersarray.append({'title':tracker.title,'slug':tracker.slug,'module':tracker.module,'list_fields':tracker.list_fields,'search_fields':tracker.search_fields,'filter_fields':tracker.filter_fields,'excel_fields':tracker.excel_fields,'pagelimit':tracker.pagelimit,'require_login':tracker.require_login,'allowed_roles':tracker.allowed_roles,'fields':fields,'roles':roles,'statuses':statuses,'transitions':transitions})
+        trackersarray.append({
+            'title':tracker.title,
+            'slug':tracker.slug,
+            'module':tracker.module,
+            'list_fields':tracker.list_fields,
+            'search_fields':tracker.search_fields,
+            'filter_fields':tracker.filter_fields,
+            'excel_fields':tracker.excel_fields,
+            'published':tracker.published,
+            'pagelimit':tracker.pagelimit,
+            'require_login':tracker.require_login,
+            'allowed_roles':tracker.allowed_roles,
+            'publish_date':tracker.publish_date.strftime('%Y-%m-%d') if tracker.publish_date else None,
+            'expire_date':tracker.expire_date.strftime('%Y-%m-%d') if tracker.expire_date else None,
+            'data_table_name':tracker.data_table_name,
+            'update_table_name':tracker.update_table_name,
+            'fields':fields,
+            'roles':roles,
+            'statuses':statuses,
+            'transitions':transitions
+            })
 
 
     curfile = open(os.path.join(modulepath,slug,'trackerlist.json'),'w')
@@ -223,7 +311,18 @@ async def export(request,slug=None):
     trees = dbsession.query(Tree).filter_by(module=slug).all()
     treearray = []
     for tree in trees:
-        treearray.append({'title':tree.title,'slug':tree.slug,'datastr':tree.datastr,'module':tree.module,'published':tree.published,'require_login':tree.require_login,'allowed_roles':tree.allowed_roles,'publish_date':tree.publish_date.strftime('%Y-%m-%d') if tree.publish_date else '','expire_date':tree.expire_date.strftime('%Y-%m-%d') if tree.expire_date else '','nodes':tree.rootnode.treedump()})
+        treearray.append({
+            'title':tree.title,
+            'slug':tree.slug,
+            'module':tree.module,
+            'datastr':tree.datastr,
+            'published':tree.published,
+            'require_login':tree.require_login,
+            'allowed_roles':tree.allowed_roles,
+            'publish_date':tree.publish_date.strftime('%Y-%m-%d') if tree.publish_date else None,
+            'expire_date':tree.expire_date.strftime('%Y-%m-%d') if tree.expire_date else None,
+            'nodes':tree.rootnode.treedump()
+            })
 
     curfile = open(os.path.join(modulepath,slug,'treelist.json'),'w')
     curfile.write(json.dumps(treearray))

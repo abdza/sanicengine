@@ -16,21 +16,21 @@ import math
 class Tracker(ModelBase):
     __tablename__ = 'trackers'
     id = Column(Integer, primary_key=True)
-    data_table_name = Column(String(200))
-    update_table_name = Column(String(200))
     title = Column(String(200))
     slug = Column(String(100))
     module = Column(String(100),default='portal')
     list_fields = Column(Text)
     search_fields = Column(Text)
     filter_fields = Column(Text)
-    published = Column(Boolean(),default=False)
     excel_fields = Column(Text)
+    published = Column(Boolean(),default=False)
     pagelimit = Column(Integer,default=10)
     require_login = Column(Boolean(),default=False)
     allowed_roles = Column(String(300))
     publish_date = Column(Date(),nullable=True)
     expire_date = Column(Date(),nullable=True)
+    data_table_name = Column(String(200))
+    update_table_name = Column(String(200))
 
     __table_args__ = (
         UniqueConstraint(module, slug, name='tracker_module_slug_uidx'),
