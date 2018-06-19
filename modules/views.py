@@ -81,6 +81,7 @@ async def importmodule(request,slug=None):
                 print("Error copying file to import file " + cpage['slug'])
             dbsession.add(filelink)
 
+        """ Import trees """
         curfile = open(os.path.join(modulepath,slug,'treelist.json'),'r')
         treearray = json.loads(curfile.read())
         curfile.close()
@@ -99,6 +100,7 @@ async def importmodule(request,slug=None):
             tree.publish_date = readarray(ctree,'publish_date',None)
             tree.expire_date = readarray(ctree,'expire_date',None)
             dbsession.add(tree)
+            dbsession.commit()
             dbsession.flush()
             TreeNode.treeload(tree,ctree['nodes'],None)
 

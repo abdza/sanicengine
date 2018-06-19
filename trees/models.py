@@ -86,7 +86,7 @@ class TreeNode(ModelBase, BaseNestedSets):
     node_type = Column(String(100))
     datastr = Column(Text)
 
-    tree_id = reference_col('trees')
+    sanictree_id = reference_col('trees')
     tree = relationship('Tree',backref='nodes')
 
     def treedump(self):
