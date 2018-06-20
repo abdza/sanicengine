@@ -177,4 +177,8 @@ if __name__ == "__main__":
         port = settings.PORT
     except:
         port = 8000
-    app.run(host=host, port=port)
+    try:
+        workers = settings.WORKERS
+    except:
+        workers = 1
+    app.run(host=host, port=port, workers=workers)
