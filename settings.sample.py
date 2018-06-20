@@ -1,4 +1,5 @@
 APP = 'sanicengine'
+APP_TITLE = 'SanicEngine'
 DATABASE_USERNAME = 'dbusername'
 DATABASE_PASSWORD = 'dbpassword'
 DATABASE_NAME = 'dbname'
