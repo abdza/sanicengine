@@ -1,6 +1,10 @@
 from wtforms import Form, StringField, PasswordField
 from wtforms.fields.html5 import EmailField
 
+class ProfileForm(Form):
+    name = StringField('Name')
+    email = EmailField('Email')
+
 class UserForm(Form):
     name = StringField('Name')
     username = StringField('User Name')

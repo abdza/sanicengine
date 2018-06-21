@@ -2,7 +2,7 @@
 from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse
 from template import render
-from .forms import UserForm, ModuleRoleForm
+from .forms import UserForm, ModuleRoleForm, ProfileForm
 from .models import User, ModuleRole
 from pages.models import Page
 from database import dbsession
@@ -111,6 +111,23 @@ async def index(request):
     users = dbsession.query(User)
     paginator = Paginator(users, 50)
     return html(render(request, 'generic/list.html',title='Users',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+
+@bp.route('/profile',methods=['GET','POST'])
+@authorized()
+async def profile(request):
+    curuser = dbsession.query(User).get(request['session']['user_id'])
+    form = ProfileForm(request.form)
+    if request.method=='POST' and form.validate():
+        curuser.name = form.name.data
+        curuser.email = form.email.data
+        dbsession.add(curuser)
+        dbsession.commit()
+        request['session']['flashmessage']='Updated profile'
+        return redirect('/')
+    else:
+        form.name.data = curuser.name
+        form.email.data = curuser.email
+    return html(render(request,'users/profile.html',form=form))
 
 @bp.route('/user/register',methods=['GET','POST'])
 async def register(request):
