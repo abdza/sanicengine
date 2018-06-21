@@ -1,36 +1,34 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="login-wrap customscroll d-flex align-items-center flex-wrap justify-content-center pd-20">
-	<div class="login-box bg-white box-shadow pd-30 border-radius-5">
-		<img src="{{ app.url_for('static',filename='images/login-img.png')}}" alt="login" class="login-img">
-		<h2 class="text-center mb-30">Login</h2>
-		<form method='post'>
-			<div class="input-group custom input-group-lg">
-				<input name='username' id='username' type="text" class="form-control" placeholder="Username">
-				<div class="input-group-append custom">
-					<span class="input-group-text"><i class="fa fa-user" aria-hidden="true"></i></span>
-				</div>
+<div class="card col-sm-6 offset-sm-3">
+	<img class="card-img-top" src="{{ app.url_for('static',filename='images/login-img.png')}}" alt="login">
+	<h2 class="card-title text-center mb-30">Login</h2>
+	<form method='post'>
+		<div class="card-body input-group custom input-group-lg">
+			<input name='username' id='username' type="text" class="form-control" placeholder="Username">
+			<div class="input-group-append custom">
+				<span class="input-group-text"><i class="fa fa-user" aria-hidden="true"></i></span>
 			</div>
-			<div class="input-group custom input-group-lg">
-				<input name='password' id='password' type="password" class="form-control" placeholder="**********">
-				<div class="input-group-append custom">
-					<span class="input-group-text"><i class="fa fa-lock" aria-hidden="true"></i></span>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-sm-6">
-					<div class="input-group">
-						<input class="btn btn-outline-primary btn-lg btn-block" type="submit" value="Sign In">
-					</div>
-				</div>
-				<div class="col-sm-6">
-					<div class="forgot-password padding-top-10"><a href="{{ app.url_for('users.forgotpassword') }}">Forgot Password</a></div>
-				</div>
-			</div>
-		</form>
-		<div class="text-center text-muted">
-		Not account yet? <a href="{{ app.url_for('users.register') }}">Register Here</a>
 		</div>
+		<div class="card-body input-group custom input-group-lg">
+			<input name='password' id='password' type="password" class="form-control" placeholder="**********">
+			<div class="input-group-append custom">
+				<span class="input-group-text"><i class="fa fa-lock" aria-hidden="true"></i></span>
+			</div>
+		</div>
+		<div class="row card-body">
+			<div class="col-sm-6">
+				<div class="input-group">
+					<input class="btn btn-primary btn-lg btn-block" type="submit" value="Sign In">
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="input-group"><a class='btn btn-block' href="{{ app.url_for('users.forgotpassword') }}">Forgot Password</a></div>
+			</div>
+		</div>
+	</form>
+	<div class="card-body text-center text-muted">
+	No account yet? <a href="{{ app.url_for('users.register') }}">Register Here</a>
 	</div>
 </div>
 {% endblock %}
