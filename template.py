@@ -2,7 +2,7 @@ from jinja2 import Template, Environment, FileSystemLoader
 from database import dbsession, executedb, querydb
 from users.models import User
 
-jinja_env = Environment(loader=FileSystemLoader(['templates','custom_module/templates']))
+jinja_env = Environment(loader=FileSystemLoader(['custom_module/templates','templates']))
 
 def render(request, template_file, *args, **kwargs):
     curuser = None
