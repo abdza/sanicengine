@@ -1,4 +1,19 @@
 {% extends "formbase.html" %}
+{% block endhead %}
+    <style type="text/css" media="screen">
+    #editorwrap {
+	position: relative;
+	height: 200px;
+    }
+    #datastreditor { 
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+    }
+</style>
+{% endblock %}
 {% block content %}
 <h1>
 	{% if title %}
@@ -18,7 +33,9 @@
 {% elif field.type=='DateField' %}
 	{{ field(class_='col-sm-10 form-control is-invalid date-picker' if field.errors else 'col-sm-10 form-control date-picker') }}
 {% elif field.name=='datastr' %}
-<div id='datastreditor' class='col-sm-10 form-control' style='height: 100px;'>{{ form.datastr.data|e }}</div>
+<div id='editorwrap' class='col-sm-10'>
+<div id='datastreditor' class='form-control'>{{ form.datastr.data|e }}</div>
+</div>
 <input type='hidden' name='datastr' id='datastr'>
 {% else %}
 	{{ field(class_='col-sm-10 form-control is-invalid' if field.errors else 'col-sm-10 form-control') }}
@@ -58,13 +75,21 @@
 		    }
 		    return true;
 		}
-		var editor = ace.edit("datastreditor");
-		editor.setTheme("ace/theme/xcode");
-		editor.session.setMode("ace/mode/json");
-		editor.getSession().on('change', function() {
-			if(IsJsonString(editor.getValue())){
-				$('#datastr').val(editor.getValue());
-			}
+
+		$(document).ready(function(){
+			var editor = ace.edit("datastreditor");
+			editor.setTheme("ace/theme/xcode");
+			editor.session.setMode("ace/mode/json");
+			editor.getSession().on('change', function() {
+				if(IsJsonString(editor.getValue())){
+					$('#datastr').val(editor.getValue());
+				}
+			});
+			$('#editorwrap').resizable({
+				resize: function(event, ui){
+					editor.resize();
+				}
+			});
 		});
 	{% endif %}
 	</script>

@@ -1,8 +1,16 @@
 {% extends "formbase.html" %}
 {% block endhead %}
     <style type="text/css" media="screen">
+    #editorwrap {
+	position: relative;
+	height: 500px;
+    }
     #contenteditor { 
-        height: 500px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
     }
 </style>
 {% endblock %}
@@ -16,22 +24,24 @@
 </h1>
 <form id='pageform' method='POST' {% if enctype %}enctype='{{enctype}}'{% endif %}>
 {% for field in form %}
-<div class='form-group row'>
+	<div class='form-group row'>
 	{{ field.label(class_='col-sm-2 col-form-label') }}
-{% if field.name!='content' %}
-{% if field.type=='BooleanField' %}
-<div class="{{'col-sm-10 is-invalid' if field.errors else 'col-sm-10'}}">
-	{{ field() }}
-</div>
-{% elif field.type=='DateField' %}
-	{{ field(class_='col-sm-10 form-control is-invalid date-picker' if field.errors else 'col-sm-10 form-control date-picker') }}
-{% else %}
-	{{ field(class_='col-sm-10 form-control is-invalid' if field.errors else 'col-sm-10 form-control') }}
-    {% endif %}
-{% else %}
-<div id='contenteditor' class='col-sm-10 form-control'>{% if form.content.data %}{{ form.content.data|e }}{% endif %}</div>
-<input type='hidden' name='content' id='content'>
-{% endif %}
+	{% if field.name!='content' %}
+		{% if field.type=='BooleanField' %}
+			<div class="{{'col-sm-10 is-invalid' if field.errors else 'col-sm-10'}}">
+			{{ field() }}
+			</div>
+		{% elif field.type=='DateField' %}
+			{{ field(class_='col-sm-10 form-control is-invalid date-picker' if field.errors else 'col-sm-10 form-control date-picker') }}
+		{% else %}
+			{{ field(class_='col-sm-10 form-control is-invalid' if field.errors else 'col-sm-10 form-control') }}
+		{% endif %}
+	{% else %}
+		<div id='editorwrap' class='col-sm-10'>
+		<div id='contenteditor' class='form-control'>{% if form.content.data %}{{ form.content.data|e }}{% endif %}</div>
+		</div>
+		<input type='hidden' name='content' id='content'>
+	{% endif %}
 	{% if field.errors %}
 	{% for error in field.errors %}
 	<div class='offset-sm-2 invalid-feedback'>{{ error }}</div>
@@ -47,34 +57,41 @@
 {% endblock %}
 {% block endbody %}
 	<script type='text/javascript'>
-		$(document).ready(function(){
-            var editor = ace.edit("contenteditor");
-            editor.setTheme("ace/theme/xcode");
-            {% if page.runable %}
-            editor.session.setMode("ace/mode/python");
-            {% else %}
-            editor.session.setMode("ace/mode/html");
-            {% endif %}
-            $('#runable').on('change',function(){
-                if($('#runable').prop("checked")){
-                    editor.session.setMode("ace/mode/python");
-                }
-                else{
-                    editor.session.setMode("ace/mode/html");
-                }
-            });
-            $('#pageform').on('submit',function(){
-                $('#content').val(editor.getValue());
-            });
-
-			{% if 'user' in form %}
-			$('input#user').tokenInput('{{ app.url_for('users.userjson') }}',{tokenLimit:1{% if userdata %},prePopulate:[{id:{{ userdata.id }},name:"{{ userdata.name }}"}]{% endif %}});
-			{% endif %}
-			{% if tokeninput %}
-			{% for key,input in tokeninput.items() %}
-			$('input#{{key}}').tokenInput('{{ input.url }}',{ {% if input.prePopulate %}prePopulate:[{% for data in input.prePopulate %}{id:{{ data.id }},name:"{{ data.name }}"},{% endfor %}]{% endif %}});
-			{% endfor %}
-			{% endif %}
+	$(document).ready(function(){
+		var editor = ace.edit("contenteditor");
+		editor.setTheme("ace/theme/xcode");
+		{% if page.runable %}
+			editor.session.setMode("ace/mode/python");
+		{% else %}
+			editor.session.setMode("ace/mode/html");
+		{% endif %}
+	
+		$('#runable').on('change',function(){
+			if($('#runable').prop("checked")){
+				editor.session.setMode("ace/mode/python");
+			}
+			else{
+				editor.session.setMode("ace/mode/html");
+			}
 		});
+		$('#pageform').on('submit',function(){
+			$('#content').val(editor.getValue());
+		});
+
+		$('#editorwrap').resizable({
+			resize: function(event, ui){
+				editor.resize();
+			}
+		});
+
+		{% if 'user' in form %}
+			$('input#user').tokenInput('{{ app.url_for('users.userjson') }}',{tokenLimit:1{% if userdata %},prePopulate:[{id:{{ userdata.id }},name:"{{ userdata.name }}"}]{% endif %}});
+		{% endif %}
+		{% if tokeninput %}
+			{% for key,input in tokeninput.items() %}
+				$('input#{{key}}').tokenInput('{{ input.url }}',{ {% if input.prePopulate %}prePopulate:[{% for data in input.prePopulate %}{id:{{ data.id }},name:"{{ data.name }}"},{% endfor %}]{% endif %}});
+			{% endfor %}
+		{% endif %}
+	});
 	</script>
 {% endblock %}
