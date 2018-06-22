@@ -397,7 +397,7 @@ async def roleform(request,module,slug=None,id=None):
         if trackerrole:
             form = TrackerRoleForm(obj=trackerrole)
             title = tracker.title + '-Edit Role'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['compare'],acetype={'compare':'python'}))
 
 @bp.route('/trackers/deleterole/<role_id>',methods=['POST'])
 @authorized(require_admin=True)
@@ -447,7 +447,7 @@ async def fieldform(request,module,slug=None,id=None):
         if trackerfield:
             form = TrackerFieldForm(obj=trackerfield)
             title = tracker.title + '-Edit Field'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data'))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default'],acetype={'default':'python'}))
 
 @bp.route('/trackers/deletefield/<field_id>',methods=['POST'])
 @authorized(require_admin=True)
