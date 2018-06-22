@@ -1,11 +1,11 @@
 {% extends "formbase.html" %}
 {% block endhead %}
     <style type="text/css" media="screen">
-    #editorwrap {
+    .editorwrap {
 	position: relative;
 	height: 200px;
     }
-    #datastreditor { 
+    .editorwrap .aceeditor { 
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -32,11 +32,11 @@
 </div>
 {% elif field.type=='DateField' %}
 	{{ field(class_='col-sm-10 form-control is-invalid date-picker' if field.errors else 'col-sm-10 form-control date-picker') }}
-{% elif field.name=='datastr' %}
-<div id='editorwrap' class='col-sm-10'>
-<div id='datastreditor' class='form-control'>{{ form.datastr.data|e }}</div>
+{% elif acefield and field.name in acefield %}
+<div class='col-sm-10 editorwrap'>
+	<div id='{{field.name}}editor' class='form-control aceeditor'>{% if field.data %}{{ field.data|e }}{% endif %}</div>
 </div>
-<input type='hidden' name='datastr' id='datastr'>
+<input type='hidden' name='{{field.name}}' id='{{field.name}}'>
 {% else %}
 	{{ field(class_='col-sm-10 form-control is-invalid' if field.errors else 'col-sm-10 form-control') }}
 {% endif %}
@@ -66,7 +66,7 @@
 			{% endif %}
 		});
 
-	{% if 'datastr' in form %}
+	{% if acefield %}
 		function IsJsonString(str) {
 		    try {
 			JSON.parse(str);
@@ -77,17 +77,27 @@
 		}
 
 		$(document).ready(function(){
-			var editor = ace.edit("datastreditor");
-			editor.setTheme("ace/theme/xcode");
-			editor.session.setMode("ace/mode/json");
-			editor.getSession().on('change', function() {
-				if(IsJsonString(editor.getValue())){
-					$('#datastr').val(editor.getValue());
+			{% for afield in acefield %}
+			var {{afield}}editor = ace.edit("{{afield}}editor");
+			{{afield}}editor.setTheme("ace/theme/xcode");
+			{% if acetype and afield in acetype %}
+			{{afield}}editor.session.setMode("ace/mode/{{acetype[afield]}}");
+			{{afield}}editor.getSession().on('change', function() {
+				{% if acetype[afield]=='json' %}
+				if(IsJsonString({{afield}}editor.getValue())){
+					$('#{{afield}}').val({{afield}}editor.getValue());
 				}
+				{% else %}
+					$('#{{afield}}').val({{afield}}editor.getValue());
+				{% endif %}
 			});
-			$('#editorwrap').resizable({
+			{% endif %}
+			{% endfor %}
+			$('.editorwrap').resizable({
 				resize: function(event, ui){
-					editor.resize();
+					{% for afield in acefield %}
+					{{afield}}editor.resize();
+					{% endfor %}
 				}
 			});
 		});

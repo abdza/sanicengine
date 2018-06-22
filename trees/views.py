@@ -16,18 +16,14 @@ bp = Blueprint('trees')
 async def view(request, slug):
     tree = dbsession.query(Tree).filter_by(slug=slug).first()
     if tree:
-        print("root node:" + str(tree.rootnode))
         if not tree.rootnode:
-            print("No rootnode. Will create")
             tree.create_rootnode()
             try:
                 dbsession.commit()
             except Exception as inst:
-                print("exception creating rootnode:" + str(inst))
                 dbsession.rollback()
         return html(render(request,'trees/view.html',tree=tree))
     else:
-        print("No tree to view")
         request['session']['flashmessage'] = 'No tree to view'
         return redirect('/')
 
@@ -237,7 +233,7 @@ async def form(request,id=None):
         if tree:
             form = TreeForm(obj=tree)
 
-    return html(render(request,'generic/form.html',title=title,tree=tree, form=form,enctype='multipart/form-data'))
+    return html(render(request,'generic/form.html',title=title,tree=tree, form=form,enctype='multipart/form-data',acefield=['datastr'],acetype={'datastr':'json'}))
 
 @bp.route('/trees')
 @authorized(object_type='tree',require_admin=True)
