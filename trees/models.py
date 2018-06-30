@@ -57,10 +57,10 @@ class Tree(ModelBase):
 
     @property
     def rootnode(self):
-        return dbsession.query(TreeNode).filter(TreeNode.tree==self,TreeNode.parent_id==None).first()
+        return dbsession.query(TreeNode).filter(TreeNode.sanictree==self,TreeNode.parent_id==None).first()
 
     def create_rootnode(self):
-        rootnode=TreeNode(tree=self)
+        rootnode=TreeNode(sanictree=self)
         rootnode.title = self.title
         rootnode.module = self.module
         rootnode.slug = self.slug
@@ -87,7 +87,7 @@ class TreeNode(ModelBase, BaseNestedSets):
     datastr = Column(Text)
 
     sanictree_id = reference_col('trees')
-    tree = relationship('Tree',backref='nodes')
+    sanictree = relationship('Tree',backref='nodes')
 
     def treedump(self):
         return { 
@@ -102,7 +102,7 @@ class TreeNode(ModelBase, BaseNestedSets):
                 'node_category':self.node_category,
                 'node_type':self.node_type,
                 'datastr':self.datastr,
-                'tree':self.tree.slug,
+                'sanictree':self.sanictree.slug,
                 'users': [ user.treedump() for user in self.users ],
                 'children':[ child.treedump() for child in self.children ] 
                 }
@@ -111,7 +111,7 @@ class TreeNode(ModelBase, BaseNestedSets):
     def treeload(tree,nodearray,parentnode=None):
         newnode = TreeNode(
                 parent=parentnode,
-                tree=tree,
+                sanictree=tree,
                 title=readarray(nodearray,'title'),
                 module=readarray(nodearray,'module'),
                 slug=readarray(nodearray,'slug'),
@@ -151,7 +151,7 @@ class TreeNode(ModelBase, BaseNestedSets):
                 node_category = self.node_category,
                 node_type = self.node_type,
                 datastr = self.datastr,
-                tree = self.tree,
+                sanictree = self.sanictree,
                 parent_id = parent_id)
 
         dbsession.add(newcopy)

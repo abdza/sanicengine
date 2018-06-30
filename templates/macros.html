@@ -51,7 +51,7 @@
 
 {% macro topmenu(module=None,slug=None) %}
 {% set portaltree = app.dbsession.query(app.trees.Tree).filter_by(module=module if module else 'portal',slug=slug if slug else 'site').first() %}
-{% set menus = app.dbsession.query(app.trees.TreeNode).filter_by(tree=portaltree,slug='topmenu',module='portal').all() %}
+{% set menus = app.dbsession.query(app.trees.TreeNode).filter_by(sanictree=portaltree,slug='topmenu',module='portal').all() %}
 {% if menus %}
 {% for menu in menus %}
 	{% for node in menu.children %}
@@ -64,7 +64,7 @@
 {% macro sidemenu(module=None,slug=None) %}
 <ul class='list-unstyled'>
 {% set portaltree = app.dbsession.query(app.trees.Tree).filter_by(module=module if module else 'portal',slug=slug if slug else 'site').first() %}
-{% set menus = app.dbsession.query(app.trees.TreeNode).filter_by(tree=portaltree,slug='sidemenu',module='portal').all() %}
+{% set menus = app.dbsession.query(app.trees.TreeNode).filter_by(sanictree=portaltree,slug='sidemenu',module='portal').all() %}
 {% if menus %}
 {% for menu in menus %}
 	{% for node in menu.children %}

@@ -32,7 +32,7 @@ async def view(request, slug):
 @authorized(object_type='tree',require_admin=True)
 async def nodeview(request,node_id=None):
     node = None
-    if node_id:
+    if node_id and not node_id=='null':
         node = dbsession.query(TreeNode).get(node_id)
     return html(render(request,'trees/nodeview.html',node=node))
 
@@ -125,6 +125,7 @@ async def addnode(request, parent_id):
         treenode = TreeNode()
         form.populate_obj(treenode)
         treenode.parent_id = int(request.form.get('parent_id'))
+        treenode.sanictree = parentnode.sanictree
         dbsession.add(treenode)
         try:
             dbsession.commit()
@@ -139,7 +140,7 @@ async def addnode(request, parent_id):
 async def renamenode(request, node_id=None):
     if node_id:
         nnode = dbsession.query(TreeNode).get(node_id)
-        if request.method=='POST' and request.form:
+        if nnode and request.method=='POST' and request.form:
             nnode.title = request.form.get('title')
             dbsession.add(nnode)
             dbsession.commit()
