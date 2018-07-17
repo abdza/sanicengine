@@ -1,7 +1,7 @@
 #!/usr/bin/env python3 
 
 try:
-    import settings
+    from sanicengine import settings
 except ImportError:
     print("Error importing settings. Please copy settings.sample.py to settings.py and modify the content for your use")
     exit()
