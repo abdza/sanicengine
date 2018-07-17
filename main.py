@@ -2,9 +2,9 @@
 from sanic import Sanic
 from sanic.response import html, redirect
 from sanic_session import InMemorySessionInterface
-import users, pages, fileLinks, trackers, modules, trees, portalsettings
-from template import render
-from database import dbsession, ModelBase, dbengine
+from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings
+from sanicengine.template import render
+from sanicengine.database import dbsession, ModelBase, dbengine
 import asyncio
 import aiosmtplib
 import os
@@ -13,7 +13,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from email.mime.text import MIMEText
 from email.message import EmailMessage
 from email.utils import make_msgid
-import settings
+from sanicengine import settings
 import hashlib
 import base64
 import datetime
@@ -21,7 +21,7 @@ import datetime
 from sqlalchemy import MetaData
 
 app = Sanic()
-app.static('/static','./static')
+app.static('custom_module/static','sanicengine/static')
 app.config.from_object(settings)
 
 session_interface = InMemorySessionInterface()

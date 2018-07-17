@@ -2,13 +2,13 @@
 """User models."""
 import datetime
 
-from database import ModelBase, dbsession, reference_col
+from sanicengine.database import ModelBase, dbsession, reference_col
 from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolean, DateTime, Date, Table, MetaData, select, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
-from template import render_string
-from users.models import ModuleRole, User
-from pages.models import Page
+from sanicengine.template import render_string
+from sanicengine.users.models import ModuleRole, User
+from sanicengine.pages.models import Page
 from openpyxl import load_workbook
 import json
 import math
@@ -219,6 +219,7 @@ class Tracker(ModelBase):
 
     def editrecord(self, form, request, id=None):
         curuser = None
+        transition = None
         if 'user_id' in request['session']:
             curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'transition_id' in form:
@@ -234,13 +235,14 @@ class Tracker(ModelBase):
             del(form['id'])
         fieldnames = list(form.keys())
         data = None
-        for field in transition.edit_fields_list():
-            if field.default and field.name in form and form[field.name][0]=='systemdefault':
-                output=None
-                ldict = locals()
-                exec(field.default,globals(),ldict)
-                output=ldict['output']
-                form[field.name][0]=output
+        if transition:
+            for field in transition.edit_fields_list():
+                if field.default and field.name in form and form[field.name][0]=='systemdefault':
+                    output=None
+                    ldict = locals()
+                    exec(field.default,globals(),ldict)
+                    output=ldict['output']
+                    form[field.name][0]=output
         if oldrecord:
             query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
         try:
@@ -252,8 +254,12 @@ class Tracker(ModelBase):
         if data:
             for okey,oval in enumerate(oldrecord):
                 if oval!=data[okey]:
+                    print("okey:" + str(okey) + " data:" + str(oldrecord.keys()[okey]))
                     dfield = dbsession.query(TrackerField).filter_by(name=oldrecord.keys()[okey]).first()
-                    txtdesc.append('Updated ' + dfield.label + ' from ' + str(oval) + ' to ' + str(data[okey]))
+                    if dfield:
+                        txtdesc.append('Updated ' + dfield.label + ' from ' + str(oval) + ' to ' + str(data[okey]))
+                    else:
+                        print("not found")
             desc = '<br>'.join(txtdesc)
 
             query = """
@@ -432,12 +438,24 @@ class TrackerField(ModelBase):
     obj_table = Column(String(50))
     obj_field = Column(String(100))
     default = Column(Text())
+    foreignfields = []
 
     tracker_id = reference_col('trackers')
     tracker = relationship('Tracker',backref='fields')
 
     def __repr__(self):
         return self.label
+
+    def load_foreign_fields(self):
+        if self.field_type=='hasMany' and self.obj_table and self.obj_field:
+            self.foreignfields = []
+            tt = self.obj_table.split('.')
+            dtracker = dbsession.query(Tracker).filter_by(module=tt[0],slug=tt[1]).first()
+            if dtracker:
+                for f in self.obj_field.split(','):
+                    ddm = dbsession.query(TrackerField).filter_by(tracker=dtracker,name=f.strip()).first()
+                    if ddm:
+                        self.foreignfields.append(ddm)
 
     def obj_fields(self):
         if self.obj_field:
@@ -519,6 +537,8 @@ class TrackerField(ModelBase):
             return 'integer'
         elif self.field_type=='user':
             return 'integer'
+        elif self.field_type=='belongsTo':
+            return 'integer'
         elif self.field_type=='number':
             return 'double precision'
         elif self.field_type=='date':
@@ -529,22 +549,23 @@ class TrackerField(ModelBase):
             return 'boolean'
 
     def updatedb(self):
-        query = """
-            do $$
-            begin 
-                IF not EXISTS (SELECT column_name 
-                    FROM information_schema.columns 
-                    WHERE table_schema='public' and table_name='""" + self.tracker.data_table + """' and column_name='""" + self.name + """') THEN
-                        alter table public.""" + self.tracker.data_table + """ add column """ + self.name + " " + self.db_field_type() + """ null ;
-                end if;
-            end$$;
-        """
-        try:
-            dbsession.execute(query)
-            dbsession.commit()
-        except Exception as inst:
-            print("Error running updating db:" + str(inst))
-            dbsession.rollback()
+        if not self.field_type=='hasMany':
+            query = """
+                do $$
+                begin 
+                    IF not EXISTS (SELECT column_name 
+                        FROM information_schema.columns 
+                        WHERE table_schema='public' and table_name='""" + self.tracker.data_table + """' and column_name='""" + self.name + """') THEN
+                            alter table public.""" + self.tracker.data_table + """ add column """ + self.name + " " + self.db_field_type() + """ null ;
+                    end if;
+                end$$;
+            """
+            try:
+                dbsession.execute(query)
+                dbsession.commit()
+            except Exception as inst:
+                print("Error running updating db:" + str(inst))
+                dbsession.rollback()
 
 class TrackerRole(ModelBase):
     __tablename__ = 'tracker_roles'

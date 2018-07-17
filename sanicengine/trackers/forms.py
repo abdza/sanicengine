@@ -6,7 +6,7 @@ class TrackerForm(Form):
     module = StringField('Module')
     slug = StringField('Slug')
     title = StringField('Title')
-    pagelimit = IntegerField('Page Limit')
+    pagelimit = IntegerField('Page Limit',validators=(Optional(),))
     list_fields = StringField('List Fields')
     search_fields = StringField('Search Fields')
     filter_fields = StringField('Filter Fields')
@@ -22,7 +22,7 @@ class TrackerForm(Form):
 class TrackerFieldForm(Form):
     name = StringField('Name')
     label = StringField('Label')
-    field_type = SelectField('Type',choices=[('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object'),('user','User')])
+    field_type = SelectField('Type',choices=[('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object'),('user','User'),('hasMany','Has Many'),('belongsTo','Belongs To')])
     obj_table = StringField('Object Table')
     obj_field = StringField('Object Field')
     default = TextAreaField('Default')

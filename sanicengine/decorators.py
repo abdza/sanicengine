@@ -1,6 +1,6 @@
 from functools import wraps
 from sanic.response import json, redirect
-from database import dbsession
+from sanicengine.database import dbsession
 
 
 def authorized(object_type=None, require_admin=False, require_superuser=False):
@@ -12,7 +12,7 @@ def authorized(object_type=None, require_admin=False, require_superuser=False):
             is_authorized = False
             curuser = None
             if 'user_id' in request['session']:
-                from users.models import User
+                from sanicengine.users.models import User
                 curuser = dbsession.query(User).filter(
                     User.id == request['session']['user_id']).first()
 
@@ -22,21 +22,21 @@ def authorized(object_type=None, require_admin=False, require_superuser=False):
             if object_type in ['page', 'filelink', 'tracker'] and ('slug' in kwargs or 'module' in kwargs):
                 curobj = None
                 if object_type == 'page':
-                    from pages.models import Page
+                    from sanicengine.pages.models import Page
                     if not 'slug' in kwargs:
                         kwargs['slug'] = kwargs['module']
                         kwargs['module'] = 'portal'
                     curobj = dbsession.query(Page).filter(
                         Page.module == kwargs['module'], Page.slug == kwargs['slug']).first()
                 elif object_type == 'filelink':
-                    from fileLinks.models import FileLink
+                    from sanicengine.fileLinks.models import FileLink
                     if not 'slug' in kwargs:
                         kwargs['slug'] = kwargs['module']
                         kwargs['module'] = 'portal'
                     curobj = dbsession.query(FileLink).filter(
                         FileLink.module == kwargs['module'], FileLink.slug == kwargs['slug']).first()
                 elif object_type == 'tracker':
-                    from trackers.models import Tracker
+                    from sanicengine.trackers.models import Tracker
                     if not 'slug' in kwargs:
                         kwargs['slug'] = kwargs['module']
                         kwargs['module'] = 'portal'

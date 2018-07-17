@@ -3,9 +3,9 @@ from sanic import Blueprint
 from sanic.response import html, redirect
 from .models import Setting
 from .forms import SettingForm
-from database import dbsession
-from template import render
-from decorators import authorized
+from sanicengine.database import dbsession
+from sanicengine.template import render
+from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
 

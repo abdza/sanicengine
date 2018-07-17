@@ -1,4 +1,4 @@
-from database import ModelBase, dbsession, reference_col
+from sanicengine.database import ModelBase, dbsession, reference_col
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
 import hashlib

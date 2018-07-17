@@ -2,7 +2,7 @@
 """User models."""
 import datetime
 
-from database import ModelBase, dbsession
+from sanicengine.database import ModelBase, dbsession
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, Float, Date, UniqueConstraint
 import json
 

@@ -3,6 +3,10 @@ body {
 	background: #fff;
 }
 
+div.datepicker {
+	z-index: 1500;
+}
+
 .wrapper {
     display: flex;
     align-items: stretch;

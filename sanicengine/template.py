@@ -1,19 +1,19 @@
 from jinja2 import Template, Environment, FileSystemLoader
-from database import dbsession, executedb, querydb
-from users.models import User
+from sanicengine.database import dbsession, executedb, querydb
+from sanicengine.users.models import User
 
-jinja_env = Environment(loader=FileSystemLoader(['custom_module/templates','templates']))
+jinja_env = Environment(loader=FileSystemLoader(['custom_module/templates','sanicengine/templates']))
 
 def render(request, template_file, *args, **kwargs):
     curuser = None
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
-    from users import models as users
-    from fileLinks import models as fileLinks
-    from trackers import models as trackers
-    from trees import models as trees
-    from pages import models as pages
-    from portalsettings.models import Setting
+    from sanicengine.users import models as users
+    from sanicengine.fileLinks import models as fileLinks
+    from sanicengine.trackers import models as trackers
+    from sanicengine.trees import models as trees
+    from sanicengine.pages import models as pages
+    from sanicengine.portalsettings.models import Setting
     app = request.app
     app.users = users
     app.fileLinks = fileLinks
@@ -30,12 +30,12 @@ def render_string(request, template_string, *args, **kwargs):
     curuser = None
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
-    from users import models as users
-    from fileLinks import models as fileLinks
-    from trackers import models as trackers
-    from trees import models as trees
-    from pages import models as pages
-    from portalsettings.models import Setting
+    from sanicengine.users import models as users
+    from sanicengine.fileLinks import models as fileLinks
+    from sanicengine.trackers import models as trackers
+    from sanicengine.trees import models as trees
+    from sanicengine.pages import models as pages
+    from sanicengine.portalsettings.models import Setting
     app = request.app
     app.users = users
     app.fileLinks = fileLinks

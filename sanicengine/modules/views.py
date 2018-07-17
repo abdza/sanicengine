@@ -2,14 +2,14 @@
 from sanic import Blueprint
 from sanic.response import html, redirect
 from .models import Module
-from pages.models import Page
-from trackers.models import Tracker,TrackerField,TrackerRole,TrackerStatus,TrackerTransition
-from fileLinks.models import FileLink
-from trees.models import Tree, TreeNode, TreeNodeUser
+from sanicengine.pages.models import Page
+from sanicengine.trackers.models import Tracker,TrackerField,TrackerRole,TrackerStatus,TrackerTransition
+from sanicengine.fileLinks.models import FileLink
+from sanicengine.trees.models import Tree, TreeNode, TreeNodeUser
 from .forms import ModuleForm
-from database import dbsession
-from decorators import authorized
-from template import render
+from sanicengine.database import dbsession
+from sanicengine.decorators import authorized
+from sanicengine.template import render
 from sqlalchemy_paginator import Paginator
 import os
 import json

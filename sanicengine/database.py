@@ -2,7 +2,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine, Column, ForeignKey
 try:
-    import settings
+    from sanicengine import settings
 except ImportError:
     print("Error importing settings. Please copy settings.sample.py to settings.py and modify the content for your use")
     exit()

@@ -2,9 +2,9 @@
 """User models."""
 import datetime as dt
 
-from database import ModelBase, dbsession
+from sanicengine.database import ModelBase, dbsession
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date
-from template import render_string
+from sanicengine.template import render_string
 
 class Module(ModelBase):
     __tablename__ = 'modules'

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse
-from template import render
+from sanicengine.template import render
 from .forms import UserForm, ModuleRoleForm, ProfileForm
 from .models import User, ModuleRole
-from pages.models import Page
-from database import dbsession
-from decorators import authorized
+from sanicengine.pages.models import Page
+from sanicengine.database import dbsession
+from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
 from main import send_email

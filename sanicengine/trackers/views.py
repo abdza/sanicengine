@@ -2,12 +2,12 @@
 from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse, file_stream, stream, raw
 from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition, TrackerDataUpdate
-from users.models import User
-from pages.models import Page
+from sanicengine.users.models import User
+from sanicengine.pages.models import Page
 from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
-from database import dbsession
-from template import render
-from decorators import authorized
+from sanicengine.database import dbsession
+from sanicengine.template import render
+from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError

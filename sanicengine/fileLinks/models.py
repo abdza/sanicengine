@@ -1,5 +1,5 @@
 import datetime
-from database import ModelBase, dbsession
+from sanicengine.database import ModelBase, dbsession
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, UniqueConstraint
 
 class FileLink(ModelBase):
