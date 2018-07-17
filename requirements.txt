@@ -1,7 +1,6 @@
 uwsgi
 sanic
 Jinja2
-locust
 psycopg2-binary
 sqlalchemy
 wtforms
