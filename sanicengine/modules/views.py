@@ -189,146 +189,147 @@ async def importmodule(request,slug=None):
 @authorized(require_superuser=True)
 async def export(request,slug=None):
     if slug:
+        print("curpath:" + str(os.path.join(modulepath,slug)))
         if not os.path.exists(os.path.join(modulepath,slug)):
             os.makedirs(os.path.join(modulepath,slug))
-    if not os.path.exists(os.path.join(modulepath,slug,'pages')):
-        os.makedirs(os.path.join(modulepath,slug,'pages'))
-    if not os.path.exists(os.path.join(modulepath,slug,'trackers')):
-        os.makedirs(os.path.join(modulepath,slug,'trackers'))
-    if not os.path.exists(os.path.join(modulepath,slug,'files')):
-        os.makedirs(os.path.join(modulepath,slug,'files'))
+        if not os.path.exists(os.path.join(modulepath,slug,'pages')):
+            os.makedirs(os.path.join(modulepath,slug,'pages'))
+        if not os.path.exists(os.path.join(modulepath,slug,'trackers')):
+            os.makedirs(os.path.join(modulepath,slug,'trackers'))
+        if not os.path.exists(os.path.join(modulepath,slug,'files')):
+            os.makedirs(os.path.join(modulepath,slug,'files'))
 
-    """ Export pages """
-    pages = dbsession.query(Page).filter_by(module=slug).all()
-    pagesarray = []
-    for page in pages:
-        curfile = open(os.path.join(modulepath,slug,'pages',page.slug),'w')
-        curfile.write(page.content)
+        """ Export pages """
+        pages = dbsession.query(Page).filter_by(module=slug).all()
+        pagesarray = []
+        for page in pages:
+            curfile = open(os.path.join(modulepath,slug,'pages',page.slug),'w')
+            curfile.write(page.content)
+            curfile.close()
+            pagesarray.append({
+                'title':page.title,
+                'slug':page.slug,
+                'module':page.module,
+                'published':page.published,
+                'runable':page.runable,
+                'require_login':page.require_login,
+                'allowed_roles':page.allowed_roles,
+                'publish_date':page.publish_date.strftime('%Y-%m-%d') if page.publish_date else None,
+                'expire_date':page.expire_date.strftime('%Y-%m-%d') if page.expire_date else None 
+                })
+        curfile = open(os.path.join(modulepath,slug,'pagelist.json'),'w')
+        curfile.write(json.dumps(pagesarray))
         curfile.close()
-        pagesarray.append({
-            'title':page.title,
-            'slug':page.slug,
-            'module':page.module,
-            'published':page.published,
-            'runable':page.runable,
-            'require_login':page.require_login,
-            'allowed_roles':page.allowed_roles,
-            'publish_date':page.publish_date.strftime('%Y-%m-%d') if page.publish_date else None,
-            'expire_date':page.expire_date.strftime('%Y-%m-%d') if page.expire_date else None 
-            })
-    curfile = open(os.path.join(modulepath,slug,'pagelist.json'),'w')
-    curfile.write(json.dumps(pagesarray))
-    curfile.close()
 
-    """ Export fileLinks """
-    filelinks = dbsession.query(FileLink).filter_by(module=slug).all()
-    filesarray = []
-    for filelink in filelinks:
-        shutil.copy2(filelink.filepath,os.path.join(modulepath,slug,'files',os.path.basename(filelink.filepath)))
-        filesarray.append({
-            'title':filelink.title,
-            'slug':filelink.slug,
-            'module':filelink.module,
-            'published':filelink.published,
-            'filename':filelink.filename,
-            'filepath':filelink.filepath,
-            'require_login':filelink.require_login,
-            'allowed_roles':filelink.allowed_roles,
-            'publish_date':filelink.publish_date.strftime('%Y-%m-%d') if filelink.publish_date else None,
-            'expire_date':filelink.expire_date.strftime('%Y-%m-%d') if filelink.expire_date else None 
-            })
-    curfile = open(os.path.join(modulepath,slug,'filelist.json'),'w')
-    curfile.write(json.dumps(filesarray))
-    curfile.close()
-
-    """ Export trackers """
-    trackers = dbsession.query(Tracker).filter_by(module=slug).all()
-    trackersarray = []
-    for tracker in trackers:
-        fields = []
-        for field in tracker.fields:
-            fields.append({
-                'name':field.name,
-                'label':field.label,
-                'field_type':field.field_type,
-                'obj_table':field.obj_table,
-                'obj_field':field.obj_field,
-                'default':field.default
+        """ Export fileLinks """
+        filelinks = dbsession.query(FileLink).filter_by(module=slug).all()
+        filesarray = []
+        for filelink in filelinks:
+            shutil.copy2(filelink.filepath,os.path.join(modulepath,slug,'files',os.path.basename(filelink.filepath)))
+            filesarray.append({
+                'title':filelink.title,
+                'slug':filelink.slug,
+                'module':filelink.module,
+                'published':filelink.published,
+                'filename':filelink.filename,
+                'filepath':filelink.filepath,
+                'require_login':filelink.require_login,
+                'allowed_roles':filelink.allowed_roles,
+                'publish_date':filelink.publish_date.strftime('%Y-%m-%d') if filelink.publish_date else None,
+                'expire_date':filelink.expire_date.strftime('%Y-%m-%d') if filelink.expire_date else None 
                 })
-        roles = []
-        for role in tracker.roles:
-            roles.append({
-                'name':role.name,
-                'role_type':role.role_type,
-                'compare':role.compare
+        curfile = open(os.path.join(modulepath,slug,'filelist.json'),'w')
+        curfile.write(json.dumps(filesarray))
+        curfile.close()
+
+        """ Export trackers """
+        trackers = dbsession.query(Tracker).filter_by(module=slug).all()
+        trackersarray = []
+        for tracker in trackers:
+            fields = []
+            for field in tracker.fields:
+                fields.append({
+                    'name':field.name,
+                    'label':field.label,
+                    'field_type':field.field_type,
+                    'obj_table':field.obj_table,
+                    'obj_field':field.obj_field,
+                    'default':field.default
+                    })
+            roles = []
+            for role in tracker.roles:
+                roles.append({
+                    'name':role.name,
+                    'role_type':role.role_type,
+                    'compare':role.compare
+                    })
+            statuses = []
+            for status in tracker.statuses:
+                statuses.append({
+                    'name':status.name,
+                    'display_fields':status.display_fields
+                    })
+            transitions = []
+            for transition in tracker.transitions:
+                transitions.append({
+                    'name':transition.name,
+                    'display_fields':transition.display_fields,
+                    'edit_fields':transition.edit_fields,
+                    'prev_status':transition.prev_status.name if transition.prev_status else None,
+                    'next_status':transition.next_status.name if transition.next_status else None,
+                    'roles':','.join([ role.name for role in transition.roles ]),
+                    'postpage':transition.postpage
+                    })
+
+
+            trackersarray.append({
+                'title':tracker.title,
+                'slug':tracker.slug,
+                'module':tracker.module,
+                'list_fields':tracker.list_fields,
+                'search_fields':tracker.search_fields,
+                'filter_fields':tracker.filter_fields,
+                'excel_fields':tracker.excel_fields,
+                'published':tracker.published,
+                'pagelimit':tracker.pagelimit,
+                'require_login':tracker.require_login,
+                'allowed_roles':tracker.allowed_roles,
+                'publish_date':tracker.publish_date.strftime('%Y-%m-%d') if tracker.publish_date else None,
+                'expire_date':tracker.expire_date.strftime('%Y-%m-%d') if tracker.expire_date else None,
+                'data_table_name':tracker.data_table_name,
+                'update_table_name':tracker.update_table_name,
+                'fields':fields,
+                'roles':roles,
+                'statuses':statuses,
+                'transitions':transitions
                 })
-        statuses = []
-        for status in tracker.statuses:
-            statuses.append({
-                'name':status.name,
-                'display_fields':status.display_fields
+
+
+        curfile = open(os.path.join(modulepath,slug,'trackerlist.json'),'w')
+        curfile.write(json.dumps(trackersarray))
+        curfile.close()
+
+
+        """ Export Trees """
+        trees = dbsession.query(Tree).filter_by(module=slug).all()
+        treearray = []
+        for tree in trees:
+            treearray.append({
+                'title':tree.title,
+                'slug':tree.slug,
+                'module':tree.module,
+                'datastr':tree.datastr,
+                'published':tree.published,
+                'require_login':tree.require_login,
+                'allowed_roles':tree.allowed_roles,
+                'publish_date':tree.publish_date.strftime('%Y-%m-%d') if tree.publish_date else None,
+                'expire_date':tree.expire_date.strftime('%Y-%m-%d') if tree.expire_date else None,
+                'nodes':tree.rootnode.treedump()
                 })
-        transitions = []
-        for transition in tracker.transitions:
-            transitions.append({
-                'name':transition.name,
-                'display_fields':transition.display_fields,
-                'edit_fields':transition.edit_fields,
-                'prev_status':transition.prev_status.name if transition.prev_status else None,
-                'next_status':transition.next_status.name if transition.next_status else None,
-                'roles':','.join([ role.name for role in transition.roles ]),
-                'postpage':transition.postpage
-                })
 
-
-        trackersarray.append({
-            'title':tracker.title,
-            'slug':tracker.slug,
-            'module':tracker.module,
-            'list_fields':tracker.list_fields,
-            'search_fields':tracker.search_fields,
-            'filter_fields':tracker.filter_fields,
-            'excel_fields':tracker.excel_fields,
-            'published':tracker.published,
-            'pagelimit':tracker.pagelimit,
-            'require_login':tracker.require_login,
-            'allowed_roles':tracker.allowed_roles,
-            'publish_date':tracker.publish_date.strftime('%Y-%m-%d') if tracker.publish_date else None,
-            'expire_date':tracker.expire_date.strftime('%Y-%m-%d') if tracker.expire_date else None,
-            'data_table_name':tracker.data_table_name,
-            'update_table_name':tracker.update_table_name,
-            'fields':fields,
-            'roles':roles,
-            'statuses':statuses,
-            'transitions':transitions
-            })
-
-
-    curfile = open(os.path.join(modulepath,slug,'trackerlist.json'),'w')
-    curfile.write(json.dumps(trackersarray))
-    curfile.close()
-
-
-    """ Export Trees """
-    trees = dbsession.query(Tree).filter_by(module=slug).all()
-    treearray = []
-    for tree in trees:
-        treearray.append({
-            'title':tree.title,
-            'slug':tree.slug,
-            'module':tree.module,
-            'datastr':tree.datastr,
-            'published':tree.published,
-            'require_login':tree.require_login,
-            'allowed_roles':tree.allowed_roles,
-            'publish_date':tree.publish_date.strftime('%Y-%m-%d') if tree.publish_date else None,
-            'expire_date':tree.expire_date.strftime('%Y-%m-%d') if tree.expire_date else None,
-            'nodes':tree.rootnode.treedump()
-            })
-
-    curfile = open(os.path.join(modulepath,slug,'treelist.json'),'w')
-    curfile.write(json.dumps(treearray))
-    curfile.close()
+        curfile = open(os.path.join(modulepath,slug,'treelist.json'),'w')
+        curfile.write(json.dumps(treearray))
+        curfile.close()
 
 
     return redirect(request.app.url_for('modules.index'))
@@ -336,6 +337,8 @@ async def export(request,slug=None):
 @bp.route('/modules/updatelist')
 @authorized(require_superuser=True)
 async def updatelist(request):
+    dbsession.execute("delete from modules");
+    dbsession.commit()
     modules = []
     pagemodule = dbsession.execute("select distinct module from pages")
     trackermodule = dbsession.execute("select distinct module from trackers")
@@ -356,9 +359,8 @@ async def updatelist(request):
     if os.path.exists(modulepath):
         moduledirs = os.listdir(modulepath)
         for md in moduledirs:
-            if md.lower() not in modules:
+            if md.lower() not in modules and md.lower() not in ['templates'] and not md[0]=='.':
                 modules.append(md.lower())
-        print("l:" + str(moduledirs))
     for module in modules:
         try:
             dbsession.execute("insert into modules (title) values ('" + module + "')");
