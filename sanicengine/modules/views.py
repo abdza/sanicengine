@@ -134,6 +134,7 @@ async def importmodule(request,slug=None):
                 field = dbsession.query(TrackerField).filter_by(tracker=tracker,name=cfield['name']).first()
                 if not field:
                     field = TrackerField()
+                field.tracker = tracker
                 field.name = readarray(cfield,'name')
                 field.label = readarray(cfield,'label')
                 field.field_type = readarray(cfield,'field_type')
@@ -146,6 +147,7 @@ async def importmodule(request,slug=None):
                 role = dbsession.query(TrackerRole).filter_by(tracker=tracker,name=crole['name']).first()
                 if not role:
                     role = TrackerRole()
+                role.tracker = tracker
                 role.name = readarray(crole,'name')
                 role.role_type = readarray(crole,'role_type')
                 role.compare = readarray(crole,'compare')
@@ -156,6 +158,7 @@ async def importmodule(request,slug=None):
                 if not status:
                     status = TrackerStatus()
 
+                status.tracker = tracker
                 status.name = readarray(cstatus,'name')
                 status.display_fields = readarray(cstatus,'display_fields')
                 dbsession.add(status)
@@ -164,6 +167,7 @@ async def importmodule(request,slug=None):
                 transition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name=ctransition['name']).first()
                 if not transition:
                     transition = TrackerTransition()
+                transition.tracker = tracker
                 transition.name = readarray(ctransition,'name')
                 transition.display_fields = readarray(ctransition,'display_fields')
                 transition.edit_fields = readarray(ctransition,'edit_fields')
