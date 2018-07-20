@@ -34,6 +34,13 @@ async def login(request):
                     return redirect(request.form['targeturl'][0])
                 else:
                     return redirect('/')
+            else:
+                request['session']['flashmessage']='Wrong username or password'
+                return redirect('/')
+        else:
+            request['session']['flashmessage']='Wrong username or password'
+            return redirect('/')
+
     return html(render(request,'users/login.html'))
 
 @bp.route('/logout')
@@ -141,6 +148,20 @@ async def register(request):
         dbsession.commit()
         return redirect('/')
     return html(render(request,'users/register.html',form=form))
+
+@bp.route('/changepassword',methods=['GET','POST'])
+async def changepassword(request):
+    user = dbsession.query(User).get(request['session']['user_id'])
+    if request.method=='POST':
+        if request.form.get('password')==request.form.get('passwordrepeat'):
+            user.password = hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest()
+            dbsession.add(user)
+            dbsession.commit()
+            return redirect(request.app.url_for('pages.home'))
+        else:
+            request['session']['flashmessage']='Repeated password need to be the same password'
+            return redirect(request.app.url_for('users.changepassword'))
+    return html(render(request,'users/changepassword.html',user=user))
 
 @bp.route('/resetpassword/<resethash>',methods=['GET','POST'])
 async def resetpassword(request,resethash=None):
