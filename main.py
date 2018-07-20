@@ -21,7 +21,7 @@ import datetime
 from sqlalchemy import MetaData
 
 app = Sanic()
-app.static('custom_module/static','sanicengine/static')
+app.static('/static','./sanicengine/static')
 app.config.from_object(settings)
 
 session_interface = InMemorySessionInterface()
