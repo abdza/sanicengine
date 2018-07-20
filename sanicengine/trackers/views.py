@@ -447,7 +447,7 @@ async def fieldform(request,module,slug=None,id=None):
         if trackerfield:
             form = TrackerFieldForm(obj=trackerfield)
             title = tracker.title + '-Edit Field'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default'],acetype={'default':'python'}))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default'],acetype={'default':'python'},info="<p>Default will take final value of the output variable. curuser is available if the user is logged in. The form variable is also available to check on the information submitted in other fields.</p>"))
 
 @bp.route('/trackers/deletefield/<field_id>',methods=['POST'])
 @authorized(require_admin=True)

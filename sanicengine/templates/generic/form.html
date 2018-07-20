@@ -52,6 +52,9 @@
 <input type='submit' name='submit' value='Update'/>
 {% endif %}
 </form>
+{% if info %}
+{{ info }}
+{% endif %}
 {% endblock %}
 {% block endbody %}
 	<script type='text/javascript'>
