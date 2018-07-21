@@ -1,5 +1,5 @@
 {% macro transitionform(transition,record=None) -%}
-<form method='POST' id='trackerform'>
+<form method='POST' id='trackerform' enctype='multipart/form-data'>
 	<input type='hidden' name='transition_id' value='{{transition.id}}'/>
 	{% if record %}
 	<input type='hidden' name='id' value='{{record['id']}}'/>
@@ -28,6 +28,8 @@
 {% macro fieldform(field,record=None,prependname='') -%}
 	{% if field.field_type in ['string','integer','number','user','object','date','datetime'] %}
 	<input class="col-sm-10 form-control {% if field.field_type=='date' %}date-picker{% endif %} {% if field.field_type=='datetime' %}datetimepicker{% endif %}" id="{{ prependname }}{{ field.name }}" name="{{ prependname}}{{ field.name }}" value="{% if record %}{{record[field.name]}}{% endif %}" type="text">
+	{% elif field.field_type=='file' %}
+	<input class="col-sm-10 form-control" id="{{ prependname }}{{ field.name }}" name="{{ prependname}}{{ field.name }}" value="{% if record %}{{record[field.name]}}{% endif %}" type="file">
 	{% elif field.field_type=='text' %}
 	<textarea class="col-sm-10 form-control" id="{{ prependname}}{{ field.name }}" name="{{ prependname}}{{ field.name }}">{% if record %}{{record[field.name]}}{% endif %}</textarea>
 	{% elif field.field_type=='boolean' %}

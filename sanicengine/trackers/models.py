@@ -9,9 +9,12 @@ from sqlalchemy.sql import text
 from sanicengine.template import render_string
 from sanicengine.users.models import ModuleRole, User
 from sanicengine.pages.models import Page
+from sanicengine.fileLinks.models import FileLink
 from openpyxl import load_workbook
 import json
 import math
+import os
+import time
 
 class Tracker(ModelBase):
     __tablename__ = 'trackers'
@@ -179,6 +182,7 @@ class Tracker(ModelBase):
             curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'transition_id' in form:
             transition = dbsession.query(TrackerTransition).get(form['transition_id'][0])
+            del(form['transition_id'])
             if transition:
                 if transition.next_status:
                     form['record_status'] = [transition.next_status.name,]
@@ -189,7 +193,35 @@ class Tracker(ModelBase):
                         exec(field.default,globals(),ldict)
                         output=ldict['output']
                         form[field.name][0]=output
-                del(form['transition_id'])
+                    elif field.field_type in ['file']:
+                        if request.files.get(field.name) and request.files.get(field.name).name:
+                            filelink=FileLink()
+                            dfile = request.files.get(field.name)
+                            ext = dfile.type.split('/')[1]
+                            if not os.path.exists(os.path.join('upload',self.module)):
+                                os.makedirs(os.path.join('upload',self.module))
+                            outfilename = str(int(time.time())) + dfile.name
+                            dst = os.path.join('upload',self.module,outfilename)
+                            try:
+                                # extract starting byte from Content-Range header string
+                                range_str = request.headers['Content-Range']
+                                start_bytes = int(range_str.split(' ')[1].split('-')[0])
+                                with open(dst, 'ab') as f:
+                                    f.seek(start_bytes)
+                                    f.write(dfile.body)
+                            except KeyError:
+                                with open(dst, 'wb') as f:
+                                    f.write(dfile.body)
+                            filelink.filename = dfile.name
+                            filelink.filepath = dst
+                            filelink.module = self.module
+                            filelink.slug = outfilename.replace(' ','_').lower()
+                            filelink.title = dfile.name
+                            filelink.published = True
+                            filelink.require_login = False
+                            dbsession.add(filelink)
+                            dbsession.commit()
+                            form[field.name]=[filelink.id,]
         fieldnames = list(form.keys())
         query = """
             insert into """ + self.data_table + """ ( """ + ",".join(fieldnames) + """) values 
@@ -233,7 +265,6 @@ class Tracker(ModelBase):
         elif 'id' in form:
             oldrecord = self.records(form['id'][0],curuser=curuser,request=request)
             del(form['id'])
-        fieldnames = list(form.keys())
         data = None
         if transition:
             for field in transition.edit_fields_list():
@@ -243,6 +274,36 @@ class Tracker(ModelBase):
                     exec(field.default,globals(),ldict)
                     output=ldict['output']
                     form[field.name][0]=output
+                elif field.field_type in ['file']:
+                    if request.files.get(field.name) and request.files.get(field.name).name:
+                        filelink=FileLink()
+                        dfile = request.files.get(field.name)
+                        ext = dfile.type.split('/')[1]
+                        if not os.path.exists(os.path.join('upload',self.module)):
+                            os.makedirs(os.path.join('upload',self.module))
+                        outfilename = str(int(time.time())) + dfile.name
+                        dst = os.path.join('upload',self.module,outfilename)
+                        try:
+                            # extract starting byte from Content-Range header string
+                            range_str = request.headers['Content-Range']
+                            start_bytes = int(range_str.split(' ')[1].split('-')[0])
+                            with open(dst, 'ab') as f:
+                                f.seek(start_bytes)
+                                f.write(dfile.body)
+                        except KeyError:
+                            with open(dst, 'wb') as f:
+                                f.write(dfile.body)
+                        filelink.filename = dfile.name
+                        filelink.filepath = dst
+                        filelink.module = self.module
+                        filelink.slug = outfilename.replace(' ','_').lower()
+                        filelink.title = dfile.name
+                        filelink.published = True
+                        filelink.require_login = False
+                        dbsession.add(filelink)
+                        dbsession.commit()
+                        form[field.name]=[filelink.id,]
+        fieldnames = list(form.keys())
         if oldrecord:
             query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
         try:
@@ -512,7 +573,7 @@ class TrackerField(ModelBase):
         if value:
             if self.field_type in ['string','text','date','datetime']:
                 return "'" + str(value).replace("'","''") + "'"
-            elif self.field_type in ['integer','number','object','user']:
+            elif self.field_type in ['integer','number','object','user','file']:
                 return str(value)
             elif self.field_type=='boolean':
                 if value:
@@ -538,6 +599,8 @@ class TrackerField(ModelBase):
         elif self.field_type=='user':
             return 'integer'
         elif self.field_type=='belongsTo':
+            return 'integer'
+        elif self.field_type=='file':
             return 'integer'
         elif self.field_type=='number':
             return 'double precision'
