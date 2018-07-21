@@ -193,7 +193,7 @@ class Tracker(ModelBase):
                         exec(field.default,globals(),ldict)
                         output=ldict['output']
                         form[field.name][0]=output
-                    elif field.field_type in ['file']:
+                    elif field.field_type in ['file','picture','video']:
                         if request.files.get(field.name) and request.files.get(field.name).name:
                             filelink=FileLink()
                             dfile = request.files.get(field.name)
@@ -274,7 +274,7 @@ class Tracker(ModelBase):
                     exec(field.default,globals(),ldict)
                     output=ldict['output']
                     form[field.name][0]=output
-                elif field.field_type in ['file']:
+                elif field.field_type in ['file','picture','video']:
                     if request.files.get(field.name) and request.files.get(field.name).name:
                         filelink=FileLink()
                         dfile = request.files.get(field.name)
@@ -563,7 +563,7 @@ class TrackerField(ModelBase):
                 return self.name + " = '" + str(value) + "'"
             else:
                 return self.name + " ilike '%" + str(value) + "%'"
-        elif self.field_type in ['integer','number','object','user']:
+        elif self.field_type in ['integer','number','object','user','file','picture','video']:
             return self.name + "=" + str(value)
         elif self.field_type in ['date','datetime']:
             return self.name + "='" + str(value) + "'"
@@ -573,7 +573,7 @@ class TrackerField(ModelBase):
         if value:
             if self.field_type in ['string','text','date','datetime']:
                 return "'" + str(value).replace("'","''") + "'"
-            elif self.field_type in ['integer','number','object','user','file']:
+            elif self.field_type in ['integer','number','object','user','file','picture','video']:
                 return str(value)
             elif self.field_type=='boolean':
                 if value:
@@ -601,6 +601,10 @@ class TrackerField(ModelBase):
         elif self.field_type=='belongsTo':
             return 'integer'
         elif self.field_type=='file':
+            return 'integer'
+        elif self.field_type=='picture':
+            return 'integer'
+        elif self.field_type=='video':
             return 'integer'
         elif self.field_type=='number':
             return 'double precision'
