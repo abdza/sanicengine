@@ -32,8 +32,8 @@
 		<td>{{ item[field.name] }}</td>
 		{% endif %}
 		<th>
-			<a href='{{ request.app.url_for('modules.export',slug=item.title) }}' class='btn btn-primary'>Export</a>
-			<a href='{{ request.app.url_for('modules.importmodule',slug=item.title) }}' class='btn btn-primary'>Import</a>
+			<a href='{{ request.app.url_for('modules.export',slug=item.title) }}' class='btn btn-primary' onclick='return confirm("Export the module {{item.title}}?");'>Export</a>
+			<a href='{{ request.app.url_for('modules.importmodule',slug=item.title) }}' class='btn btn-primary' onclick='return confirm("Import the module {{item.title}}?");'>Import</a>
 		</th>
 		{% endfor %}
 	</tr>
