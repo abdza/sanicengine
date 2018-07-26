@@ -109,30 +109,35 @@ class TreeNode(ModelBase, BaseNestedSets):
 
     @staticmethod
     def treeload(tree,nodearray,parentnode=None):
-        newnode = TreeNode(
-                parent=parentnode,
-                sanictree=tree,
-                title=readarray(nodearray,'title'),
-                module=readarray(nodearray,'module'),
-                slug=readarray(nodearray,'slug'),
-                require_login=readarray(nodearray,'require_login',False),
-                allowed_roles=readarray(nodearray,'allowed_roles'),
-                published=readarray(nodearray,'published',False),
-                publish_date=readarray(nodearray,'publish_date',None),
-                expire_date=readarray(nodearray,'expire_date',None),
-                node_category=readarray(nodearray,'node_category'),
-                node_type=readarray(nodearray,'node_type'),
-                datastr=readarray(nodearray,'datastr')
-                )
+        newnode = dbsession.query(TreeNode).filter_by(parent=parentnode,title=readarray(nodearray,'title')).first()
+        if not newnode:
+            newnode = TreeNode()
+
+        newnode.parent=parentnode
+        newnode.sanictree=tree
+        newnode.title=readarray(nodearray,'title')
+        newnode.module=readarray(nodearray,'module')
+        newnode.slug=readarray(nodearray,'slug')
+        newnode.require_login=readarray(nodearray,'require_login',False)
+        newnode.allowed_roles=readarray(nodearray,'allowed_roles')
+        newnode.published=readarray(nodearray,'published',False)
+        newnode.publish_date=readarray(nodearray,'publish_date',None)
+        newnode.expire_date=readarray(nodearray,'expire_date',None)
+        newnode.node_category=readarray(nodearray,'node_category')
+        newnode.node_type=readarray(nodearray,'node_type')
+        newnode.datastr=readarray(nodearray,'datastr')
+
         dbsession.add(newnode)
         from sanicengine.users.models import User
         for cuser in nodearray['users']:
-            newuser = TreeNodeUser(
-                    node=newnode,
-                    role=readarray(cuser,'role'),
-                    user=dbsession.query(User).filter_by(username=readarray(cuser,'user')).first()
-                    )
-            dbsession.add(newuser)
+            newuser = dbsession.query(TreeNodeUser).filter_by(node=newnode,role=readarray(cuser,'role'),user=dbsession.query(User).filter_by(username=readarray(cuser,'user')).first()).first()
+            if not newuser:
+                newuser = TreeNodeUser(
+                        node=newnode,
+                        role=readarray(cuser,'role'),
+                        user=dbsession.query(User).filter_by(username=readarray(cuser,'user')).first()
+                        )
+                dbsession.add(newuser)
 
         dbsession.flush()
         for cnode in nodearray['children']:
