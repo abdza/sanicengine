@@ -64,6 +64,12 @@ async def deleteupdate(request,update_id=None):
                 os.remove(update.filename)
             if os.path.exists(os.path.join(uploadfolder,update.tracker.slug,'dataupdate',str(update.id))):
                 os.rmdir(os.path.join(uploadfolder,update.tracker.slug,'dataupdate',str(update.id)))
+            try:
+                dbsession.execute("delete from " + update.tracker.update_table + " where record_id in (select id from " + update.tracker.data_table + " where batch_no=" + str(update.id) + ")")
+                dbsession.execute("delete from " + update.tracker.data_table + " where batch_no=" + str(update.id))
+            except:
+                dbsession.rollback()
+
             dbsession.delete(update)
             try:
                 dbsession.commit()

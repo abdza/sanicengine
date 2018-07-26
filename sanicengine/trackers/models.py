@@ -677,11 +677,10 @@ class TrackerDataUpdate(ModelBase):
             if field.name + '_update' in datas:
                 optype = 'update'
                 searchfield.append(field)
-        print("Will insert fields:" + str(fields))
         rows = []
         headerend = 1
         if optype == 'insert':
-            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ') values '
+            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no) values '
             for i,row in enumerate(ws.rows):
                 if i>headerend:
                     cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] if datas[f.name + '_column'][0]!='custom' else datas[f.name + '_custom'][0] for f in fields]
@@ -689,6 +688,7 @@ class TrackerDataUpdate(ModelBase):
                     sqlrowdata = [ f.sqlvalue(drowdata[dd]) for dd,f in enumerate(fields) ]
                     drow = '('
                     drow = drow + ','.join(sqlrowdata)
+                    drow = drow + ',' + str(self.id)
                     drow = drow + ')'
                     rows.append(drow)
             query = query + ','.join(rows)
@@ -726,8 +726,12 @@ class TrackerDataUpdate(ModelBase):
                         fieldinfos = []
                         for f in fields:
                             if not f in searchfield:
-                                cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
-                                fieldinfos.append( f.name + '=' + f.sqlvalue(cellrow.value) )
+                                if datas[f.name + '_column'][0]!='custom':
+                                    cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
+                                    fieldinfos.append( f.name + '=' + f.sqlvalue(cellrow.value) )
+                                else:
+                                    cellrow = datas[f.name + '_custom'][0]
+                                    fieldinfos.append( f.name + '=' + f.sqlvalue(cellrow) )
                         query += ','.join(fieldinfos) + queryrow + ' returning *'
                         try:
                             result = dbsession.execute(query)
@@ -735,8 +739,13 @@ class TrackerDataUpdate(ModelBase):
                             print("Error runing query:" + str(inst))
                             dbsession.rollback()
                     else:
-                        cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
-                        query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ') values (' + ','.join([ f.sqlvalue(cellrow.value) for f in fields ]) + ')'
+                        celldatas = {}
+                        for f in fields:
+                            if datas[f.name + '_column'][0]!='custom':
+                                celldatas[f.name] = ws[datas[f.name + '_column'][0] + str(i+1)].value
+                            else:
+                                celldatas[f.name] = datas[f.name + '_custom'][0]
+                        query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no) values (' + ','.join([ f.sqlvalue(celldatas[f.name]) for f in fields ]) + ',' + str(self.id) + ')'
                         query += ' returning *'
                         result = dbsession.execute(query)
                     try:
