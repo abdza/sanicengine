@@ -125,7 +125,7 @@ class TreeNode(ModelBase, BaseNestedSets):
                 datastr=readarray(nodearray,'datastr')
                 )
         dbsession.add(newnode)
-        from users.models import User
+        from sanicengine.users.models import User
         for cuser in nodearray['users']:
             newuser = TreeNodeUser(
                     node=newnode,

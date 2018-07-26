@@ -52,7 +52,7 @@ async def importmodule(request,slug=None):
                 cfile = open(os.path.join(modulepath,slug,'pages',cpage['slug']),'r')
                 page.content = cfile.read()
                 cfile.close()
-            except c:
+            except:
                 print("Error importing page content for " + cpage['slug'])
             dbsession.add(page)
         
@@ -77,8 +77,8 @@ async def importmodule(request,slug=None):
             filelink.expire_date = readarray(cfile,'expire_date',None)
             try:
                 shutil.copy2(os.path.join(modulepath,slug,'files',os.path.basename(filelink.filepath)),filelink.filepath)
-            except c:
-                print("Error copying file to import file " + cpage['slug'])
+            except:
+                print("Error copying file to import file " + cfile['slug'])
             dbsession.add(filelink)
 
         """ Import trees """
