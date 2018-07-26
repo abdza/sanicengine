@@ -61,7 +61,7 @@ async def view(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4
         module = 'portal'
     page = dbsession.query(Page).filter_by(module=module,slug=slug).first()
     if page:
-        return html(page.render(request,arg1=arg1,arg2=arg2,arg3=arg3,arg4=arg4,arg5=arg5))
+        return html(page.render(request,title=page.title,arg1=arg1,arg2=arg2,arg3=arg3,arg4=arg4,arg5=arg5))
     else:
         print("No page to view")
         request['session']['flashmessage'] = 'Sorry but page was not found'
