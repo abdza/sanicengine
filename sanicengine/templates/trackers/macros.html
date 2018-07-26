@@ -35,7 +35,7 @@
 	{% elif field.field_type=='video' %}
 	<input class="col-sm-10 form-control" id="{{ prependname }}{{ field.name }}" name="{{ prependname}}{{ field.name }}" value="{% if record %}{{record[field.name]}}{% endif %}" type="file" accpet="video/*" capture="capture">
 	{% elif field.field_type=='text' %}
-	<textarea class="col-sm-10 form-control" id="{{ prependname}}{{ field.name }}" name="{{ prependname}}{{ field.name }}">{% if record %}{{record[field.name]}}{% endif %}</textarea>
+	<textarea class="col-sm-10 form-control" id="{{ prependname}}{{ field.name }}" name="{{ prependname}}{{ field.name }}">{% if record %}{% if record[field.name] %}{{record[field.name]}}{% endif %}{% endif %}</textarea>
 	{% elif field.field_type=='boolean' %}
 	<input class="col-sm-10 form-control" id="{{ prependname }}{{ field.name }}" name="{{ prependname }}{{ field.name }}" value="{% if record %}{{record[field.name]}}{% endif %}" type="checkbox">
 	{% elif field.field_type=='hasMany' %}
