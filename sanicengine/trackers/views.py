@@ -147,10 +147,13 @@ async def create_from_excel(request,module,slug=None):
             field_names = request.form['field_name']
             field_label = request.form['field_label']
             field_type = request.form['field_type']
+            list_fields = []
             for i,name in enumerate(field_names):
-                tfield = TrackerField(tracker=tracker, name=name, label=field_label[i], field_type=field_type[i])
-                dbsession.add(tfield)
-            tracker.list_fields = ','.join(field_names)
+                if not field_type[i]=='ignore':
+                    tfield = TrackerField(tracker=tracker, name=name, label=field_label[i], field_type=field_type[i])
+                    dbsession.add(tfield)
+                    list_fields.append(name)
+            tracker.list_fields = ','.join(list_fields)
             dbsession.add(tracker)
             try:
                 dbsession.commit()
@@ -187,7 +190,7 @@ async def create_from_excel(request,module,slug=None):
                 if slugify(title)!='id':
                     fields.append({'field_name':slugify(title),'field_type':fieldtypes[i]})
             os.remove(dst)
-        field_types = [('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')]
+        field_types = [('ignore','Ignore'),('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')]
     return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types))
 
 @bp.route('/trackers/editstatus/<module>/<slug>/<id>',methods=['POST','GET'])
