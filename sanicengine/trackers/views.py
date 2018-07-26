@@ -53,6 +53,30 @@ async def runupdate(request,module,slug=None):
         print("Nothing to wait for")
     return redirect(request.app.url_for('trackers.view',id=tracker.id) + '#dataupdates')
 
+@bp.route('/trackers/cleardata/<module>/<slug>',methods=['POST'])
+@authorized(object_type='dataupdate')
+async def cleardata(request,module,slug):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
+    if tracker:
+        for update in tracker.dataupdates:
+            if update.filename and os.path.exists(update.filename):
+                os.remove(update.filename)
+            if os.path.exists(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id))):
+                os.rmdir(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id)))
+            dbsession.delete(update)
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+        try:
+            dbsession.execute("delete from " + tracker.update_table)
+            dbsession.execute("delete from " + tracker.data_table)
+        except:
+            dbsession.rollback()
+        request['session']['flashmessage'] = 'Cleared data for ' + tracker.title
+    return redirect(request.app.url_for('trackers.view',id=tracker.id))
+
+
 @bp.route('/trackers/deleteupdate/<update_id>',methods=['POST'])
 @authorized(object_type='dataupdate')
 async def deleteupdate(request,update_id=None):
@@ -645,10 +669,14 @@ async def delete(request,module,slug=None):
     for trackertransition in tracker.transitions:
         print('deleting transition' + str(trackertransition))
         dbsession.delete(trackertransition)
-    dbsession.execute("drop table if exists " + tracker.data_table + ";")
-    dbsession.execute("drop sequence if exists public." + tracker.data_table + "_id_seq;")
-    dbsession.execute("drop table if exists " + tracker.update_table + ";")
-    dbsession.execute("drop sequence if exists public." + tracker.update_table + "_id_seq;")
+    try:
+        dbsession.execute("drop table if exists " + tracker.data_table + ";")
+        dbsession.execute("drop sequence if exists public." + tracker.data_table + "_id_seq;")
+        dbsession.execute("drop table if exists " + tracker.update_table + ";")
+        dbsession.execute("drop sequence if exists public." + tracker.update_table + "_id_seq;")
+    except Exception as inst:
+        dbsession.rollback()
+
     dbsession.delete(tracker)
     try:
         dbsession.commit()
