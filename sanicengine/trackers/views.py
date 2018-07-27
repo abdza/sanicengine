@@ -769,6 +769,8 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
         transition = dbsession.query(TrackerTransition).get(transition_id)
     if request.method=='POST':
         data = tracker.editrecord(request.form,request,id=record_id)
+        if not data:
+            return redirect(request.app.url_for('trackers.viewlist',module=tracker.module,slug=tracker.slug))
         if transition.postpage:
             ldict = locals()
             try:

@@ -270,70 +270,76 @@ class Tracker(ModelBase):
             del(form['id'])
         data = None
         if transition:
-            for field in transition.edit_fields_list():
-                if field.default and field.name in form and form[field.name][0]=='systemdefault':
-                    output=None
-                    ldict = locals()
-                    exec(field.default,globals(),ldict)
-                    output=ldict['output']
-                    form[field.name][0]=output
-                elif field.field_type in ['file','picture','video']:
-                    if request.files.get(field.name) and request.files.get(field.name).name:
-                        filelink=FileLink()
-                        dfile = request.files.get(field.name)
-                        ext = dfile.type.split('/')[1]
-                        if not os.path.exists(os.path.join('upload',self.module)):
-                            os.makedirs(os.path.join('upload',self.module))
-                        outfilename = str(int(time.time())) + dfile.name
-                        dst = os.path.join('upload',self.module,outfilename)
-                        try:
-                            # extract starting byte from Content-Range header string
-                            range_str = request.headers['Content-Range']
-                            start_bytes = int(range_str.split(' ')[1].split('-')[0])
-                            with open(dst, 'ab') as f:
-                                f.seek(start_bytes)
-                                f.write(dfile.body)
-                        except KeyError:
-                            with open(dst, 'wb') as f:
-                                f.write(dfile.body)
-                        filelink.filename = dfile.name
-                        filelink.filepath = dst
-                        filelink.module = self.module
-                        filelink.slug = outfilename.replace(' ','_').lower()
-                        filelink.title = dfile.name
-                        filelink.published = True
-                        filelink.require_login = False
-                        dbsession.add(filelink)
-                        dbsession.commit()
-                        form[field.name]=[filelink.id,]
-        fieldnames = list(form.keys())
-        if oldrecord:
-            query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
-        try:
-            data = dbsession.execute(query).fetchone()
-            dbsession.commit()
-        except Exception as inst:
-            dbsession.rollback()
-        txtdesc = []
-        if data:
-            for okey,oval in enumerate(oldrecord):
-                if oval!=data[okey]:
-                    print("okey:" + str(okey) + " data:" + str(oldrecord.keys()[okey]))
-                    dfield = dbsession.query(TrackerField).filter_by(name=oldrecord.keys()[okey]).first()
-                    if dfield:
-                        txtdesc.append('Updated ' + dfield.label + ' from ' + str(oval) + ' to ' + str(data[okey]))
-                    else:
-                        print("not found")
-            desc = '<br>'.join(txtdesc)
+            if form['record_status'][0].lower()=='delete':
+                if oldrecord:
+                    request['session']['flashmessage']="Deleted " + self.title + " " + str(oldrecord['id'])
+                    dbsession.execute("delete from " + self.update_table + " where record_id=" + str(oldrecord['id']))
+                    dbsession.execute("delete from " + self.data_table + " where id=" + str(oldrecord['id']))
+                    return None
+            else:
+                for field in transition.edit_fields_list():
+                    if field.default and field.name in form and form[field.name][0]=='systemdefault':
+                        output=None
+                        ldict = locals()
+                        exec(field.default,globals(),ldict)
+                        output=ldict['output']
+                        form[field.name][0]=output
+                    elif field.field_type in ['file','picture','video']:
+                        if request.files.get(field.name) and request.files.get(field.name).name:
+                            filelink=FileLink()
+                            dfile = request.files.get(field.name)
+                            ext = dfile.type.split('/')[1]
+                            if not os.path.exists(os.path.join('upload',self.module)):
+                                os.makedirs(os.path.join('upload',self.module))
+                            outfilename = str(int(time.time())) + dfile.name
+                            dst = os.path.join('upload',self.module,outfilename)
+                            try:
+                                # extract starting byte from Content-Range header string
+                                range_str = request.headers['Content-Range']
+                                start_bytes = int(range_str.split(' ')[1].split('-')[0])
+                                with open(dst, 'ab') as f:
+                                    f.seek(start_bytes)
+                                    f.write(dfile.body)
+                            except KeyError:
+                                with open(dst, 'wb') as f:
+                                    f.write(dfile.body)
+                            filelink.filename = dfile.name
+                            filelink.filepath = dst
+                            filelink.module = self.module
+                            filelink.slug = outfilename.replace(' ','_').lower()
+                            filelink.title = dfile.name
+                            filelink.published = True
+                            filelink.require_login = False
+                            dbsession.add(filelink)
+                            dbsession.commit()
+                            form[field.name]=[filelink.id,]
+                fieldnames = list(form.keys())
+                if oldrecord:
+                    query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
+                try:
+                    data = dbsession.execute(query).fetchone()
+                    dbsession.commit()
+                except Exception as inst:
+                    dbsession.rollback()
+                txtdesc = []
+                if data:
+                    for okey,oval in enumerate(oldrecord):
+                        if oval!=data[okey]:
+                            dfield = dbsession.query(TrackerField).filter_by(name=oldrecord.keys()[okey]).first()
+                            if dfield:
+                                txtdesc.append('Updated ' + dfield.label + ' from ' + str(oval) + ' to ' + str(data[okey]))
+                            else:
+                                print("not found")
+                    desc = '<br>'.join(txtdesc)
 
-            query = """
-                insert into """ + self.update_table + """ (record_id,user_id,record_status,update_date,description) values 
-                ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
-            try:
-                dbsession.execute(query)
-                dbsession.commit()
-            except Exception as inst:
-                dbsession.rollback()
+                    query = """
+                        insert into """ + self.update_table + """ (record_id,user_id,record_status,update_date,description) values 
+                        ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
+                    try:
+                        dbsession.execute(query)
+                        dbsession.commit()
+                    except Exception as inst:
+                        dbsession.rollback()
 
         return data
 
