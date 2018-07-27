@@ -1,3 +1,12 @@
+{% macro transitiondisplay(transition,record=None) -%}
+<dl>
+{% for field in transition.display_fields_list() %}
+<dt>{{ field.label }}</dt>
+<dd>{{ field.disp_value(record[field.name]) }}</dd>
+{% endfor %}
+</dl>
+{% endmacro %}
+
 {% macro transitionform(transition,record=None) -%}
 <form method='POST' id='trackerform' enctype='multipart/form-data'>
 	<input type='hidden' name='transition_id' value='{{transition.id}}'/>
@@ -37,7 +46,7 @@
 	{% elif field.field_type=='text' %}
 	<textarea class="col-sm-10 form-control" id="{{ prependname}}{{ field.name }}" name="{{ prependname}}{{ field.name }}">{% if record %}{% if record[field.name] %}{{record[field.name]}}{% endif %}{% endif %}</textarea>
 	{% elif field.field_type=='boolean' %}
-	<input class="col-sm-10 form-control" id="{{ prependname }}{{ field.name }}" name="{{ prependname }}{{ field.name }}" value="{% if record %}{{record[field.name]}}{% endif %}" type="checkbox">
+	<input class="col-sm-10 form-control" id="{{ prependname }}{{ field.name }}" name="{{ prependname }}{{ field.name }}" {% if record %}{% if record[field.name] %}checked{% endif %}{% endif %} type="checkbox">
 	{% elif field.field_type=='hasMany' %}
 	{% set ff = field.load_foreign_fields() %}
 	<div class='col-sm-10'>

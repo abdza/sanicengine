@@ -1,5 +1,5 @@
 {% extends "formbase.html" %}
-{% from 'trackers/macros.html' import transitionform %}
+{% from 'trackers/macros.html' import transitionform, transitiondisplay %}
 {% block content %}
 {% if record %}
 <h1>Edit {{ tracker.title }}</h1>
@@ -8,6 +8,7 @@
 {% endif %}
 {% if transition %}
 {% if record %}
+{{ transitiondisplay(transition,record) }}
 {{ transitionform(transition,record) }}
 {% else %}
 {{ transitionform(transition) }}

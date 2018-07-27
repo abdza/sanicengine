@@ -284,6 +284,9 @@ class Tracker(ModelBase):
                         exec(field.default,globals(),ldict)
                         output=ldict['output']
                         form[field.name][0]=output
+                    elif field.field_type == 'boolean':
+                        if field.name not in form:
+                            form[field.name]=[0,]
                     elif field.field_type in ['file','picture','video']:
                         if request.files.get(field.name) and request.files.get(field.name).name:
                             filelink=FileLink()
@@ -316,6 +319,7 @@ class Tracker(ModelBase):
                 fieldnames = list(form.keys())
                 if oldrecord:
                     query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
+                    print("q:" + str(query))
                 try:
                     data = dbsession.execute(query).fetchone()
                     dbsession.commit()
@@ -564,6 +568,11 @@ class TrackerField(ModelBase):
                     print("Error running query:" + str(inst))
                     dbsession.rollback()
             
+        if self.field_type=='boolean':
+            if not value:
+                value = 'False'
+            else:
+                value = 'True'
         return value
 
     def queryvalue(self, value,equals=False):
@@ -586,9 +595,9 @@ class TrackerField(ModelBase):
                 return str(value)
             elif self.field_type=='boolean':
                 if value:
-                    return str(1)
+                    return 'true'
                 else:
-                    return str(0)
+                    return 'false'
         else:
             return "null"
         return ''
