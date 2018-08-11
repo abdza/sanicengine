@@ -2,21 +2,25 @@
 """User models."""
 import datetime
 
-from sanicengine.database import ModelBase, dbsession
+from sanicengine.database import ModelBase, dbsession, reference_col
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, UniqueConstraint
+from sqlalchemy.orm import relationship, backref
 from sanicengine.template import render_string
 
 class EmailTemplate(ModelBase):
     __tablename__ = 'emailtemplates'
     id = Column(Integer, primary_key=True)
     module = Column(String(100),default='portal')
-    title = Column(String(200))
+    title = Column(Text())
     sendto = Column(Text())
     sendcc = Column(Text())
     content = Column(Text())
 
     def __str__(self):
         return 'Email:' + self.title
+
+    def rendertitle(self,request,*args,**kwargs):
+        return render_string(request,self.title,*args,**kwargs)
 
     def rendercontent(self,request,*args,**kwargs):
         return render_string(request,self.content,*args,**kwargs)
@@ -26,3 +30,27 @@ class EmailTemplate(ModelBase):
 
     def rendercc(self,request,*args,**kwargs):
         return render_string(request,self.sendcc,*args,**kwargs)
+
+    def renderemail(self,request,*args,**kwargs):
+        email = EmailTrail(module=self.module,created_date=datetime.datetime.today(),status='New',scheduled_date=datetime.datetime.today(),template=self)
+        email.title = self.rendertitle(request,*args,**kwargs)
+        email.sendto = self.renderto(request,*args,**kwargs)
+        email.sendcc = self.rendercc(request,*args,**kwargs)
+        email.content = self.rendercontent(request,*args,**kwargs)
+        dbsession.add(email)
+        dbsession.commit()
+
+class EmailTrail(ModelBase):
+    __tablename__ = 'emailtrail'
+    id = Column(Integer, primary_key=True)
+    module = Column(String(100),default='portal')
+    title = Column(String(200))
+    sendto = Column(Text())
+    sendcc = Column(Text())
+    content = Column(Text())
+    created_date = Column(Date(),nullable=True)
+    scheduled_date = Column(Date(),nullable=True)
+    status = Column(String(20))
+
+    template_id = reference_col('emailtemplates')
+    template = relationship('EmailTemplate',backref='emails')

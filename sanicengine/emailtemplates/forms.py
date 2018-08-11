@@ -3,7 +3,7 @@ from wtforms.validators import Optional
 
 class EmailTemplateForm(Form):
     module = StringField('Module')
-    title = StringField('Title')
+    title = TextAreaField('Title')
     sendto = TextAreaField('Send To')
     sendcc = TextAreaField('Send Cc')
     content = TextAreaField('Content')

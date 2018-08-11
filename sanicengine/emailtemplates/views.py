@@ -11,6 +11,15 @@ from sqlalchemy.exc import IntegrityError
 
 bp = Blueprint('emailtemplates')
 
+@bp.route('/emailtemplates/render/<id>',methods=['POST'])
+@authorized(object_type='emailtemplate')
+async def renderemail(request,id):
+    emailtemplate = dbsession.query(EmailTemplate).get(int(id))
+    if emailtemplate:
+        print("rq:" + str(request['session']))
+        emailtemplate.renderemail(request,data={'name':'kassim','age':34})
+    return redirect(request.app.url_for('emailtemplates.index'))
+
 @bp.route('/emailtemplates/delete/<id>',methods=['POST'])
 @authorized(object_type='emailtemplate',require_admin=True)
 async def delete(request,id):
@@ -68,4 +77,4 @@ async def index(request):
     emailtemplates = dbsession.query(EmailTemplate)
     paginator = Paginator(emailtemplates, 50)
     return html(render(request,
-        'generic/list.html',title='Email Templates',deletelink='emailtemplates.delete',editlink='emailtemplates.edit',addlink='emailtemplates.create',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['emailtemplate'][0]) if 'emailtemplate' in request.args else 1)))
+        'generic/list.html',title='Email Templates',deletelink='emailtemplates.delete',editlink='emailtemplates.edit',actions=[{'label':'Render','actionlink':'emailtemplates.renderemail'},],addlink='emailtemplates.create',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['emailtemplate'][0]) if 'emailtemplate' in request.args else 1)))

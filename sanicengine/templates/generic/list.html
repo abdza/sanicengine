@@ -56,6 +56,11 @@
 		{% endfor %}
 		{% if deletelink %}
 		<td>
+			{% if actions %}
+			{% for action in actions %}
+			<form style='display: inline;' method='post' action='{{ app.url_for(action.actionlink, id=item.id) }}' onsubmit='return confirm("{{action.label}} {{ item }} ?");'><input type='submit' class="btn btn-primary" value='{{action.label}}' ></form>
+			{% endfor %}
+			{% endif %}
 			<form style='display: inline;' method='post' action='{{ app.url_for(deletelink, id=item.id) }}' onsubmit='return confirm("Delete {{ item }} ?");'><input type='submit' class="btn btn-primary" value='Delete' ></form>
 		</td>
 		{% endif %}
