@@ -22,6 +22,7 @@ class Tracker(ModelBase):
     title = Column(String(200))
     slug = Column(String(100))
     module = Column(String(100),default='portal')
+    default_new_transition = Column(String(100))
     list_fields = Column(Text)
     search_fields = Column(Text)
     filter_fields = Column(Text)
@@ -797,6 +798,8 @@ class TrackerTransition(ModelBase):
     __tablename__ = 'tracker_transitions'
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
+    label = Column(String(50))
+    email_ids = Column(Text)
     display_fields = Column(Text)
     edit_fields = Column(Text)
     postpage = Column(Text)

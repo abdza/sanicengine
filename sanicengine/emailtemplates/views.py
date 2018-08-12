@@ -11,6 +11,11 @@ from sqlalchemy.exc import IntegrityError
 
 bp = Blueprint('emailtemplates')
 
+@bp.route('/emailtemplates/<module>/json')
+async def jsonlist(request,module):
+    emailtemplates = dbsession.query(EmailTemplate).filter(EmailTemplate.module==module,EmailTemplate.title.ilike('%' + request.args['q'][0] + '%')).all()
+    return jsonresponse([ {'id':etemp.id,'name':etemp.title} for etemp in emailtemplates ])
+
 @bp.route('/emailtemplates/render/<id>',methods=['POST'])
 @authorized(object_type='emailtemplate')
 async def renderemail(request,id):
@@ -53,7 +58,7 @@ async def form(request,id=None):
             dbsession.commit()
             success = True
         except IntegrityError as inst:
-            form.slug.errors.append('EmailTemplate with slug ' + form.slug.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
+            form.title.errors.append('EmailTemplate with title ' + form.title.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
             dbsession.rollback()
         except Exception as inst:
             dbsession.rollback()

@@ -4,6 +4,7 @@ from sanic.response import html, redirect, json as jsonresponse, file_stream, st
 from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition, TrackerDataUpdate
 from sanicengine.users.models import User
 from sanicengine.pages.models import Page
+from sanicengine.emailtemplates.models import EmailTemplate
 from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
 from sanicengine.database import dbsession
 from sanicengine.template import render
@@ -304,11 +305,13 @@ async def trackerfieldsjson(request,module,slug=None):
     trackerfields = dbsession.query(TrackerField).filter(TrackerField.tracker==tracker,TrackerField.name.ilike('%' + request.args['q'][0] + '%')).all() 
     return jsonresponse([ {'id':field.id,'name':field.name} for field in trackerfields ])
 
+
 @bp.route('/trackers/transition/<module>/<slug>/edit/<id>',methods=['POST','GET'])
 @bp.route('/trackers/transition/<module>/<slug>/edit/',methods=['POST','GET'],name='edittransition')
 @bp.route('/trackers/transition/<module>/<slug>/add',methods=['POST','GET'],name='createtransition')
 @authorized(require_admin=True)
 async def transitionform(request,module,slug=None,id=None):
+
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     title = tracker.title + '-Create Transition'
     form = TrackerTransitionForm(request.form)
@@ -317,6 +320,9 @@ async def transitionform(request,module,slug=None,id=None):
     form.next_status_id.choices = dstatuses
     trackertransition = None
     tokeninput = {
+            'emails': {
+                'url': request.app.url_for('emailtemplates.jsonlist',module=module),
+                },
             'display_fields': {
                 'url': request.app.url_for('trackers.trackerfieldsjson',module=module,slug=slug),
                 },
@@ -344,9 +350,14 @@ async def transitionform(request,module,slug=None,id=None):
             del(form['roles'])
             display_fields = []
             edit_fields = []
+            emails = []
             if form['display_fields'].data:
                 display_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['display_fields'].data + ")") ])
                 del(form['display_fields'])
+            if form['emails'].data:
+                emails = form['emails'].data.split(',')
+                del(form['emails'])
+            print("got emails:" + str(emails))
             if form['edit_fields'].data:
                 edit_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['edit_fields'].data + ")") ])
                 del(form['edit_fields'])
@@ -366,6 +377,12 @@ async def transitionform(request,module,slug=None,id=None):
             dbsession.add(trackertransition)
             try:
                 dbsession.commit()
+                for eid in emails:
+                    curemail = dbsession.query(EmailTemplate).get(int(eid.strip()))
+                    if curemail:
+                        curemail.transition_id = trackertransition.id
+                        dbsession.add(curemail)
+                        dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
             return redirect(request.app.url_for('trackers.view',id=trackertransition.tracker.id) + '#transitions')
@@ -378,6 +395,7 @@ async def transitionform(request,module,slug=None,id=None):
             form.next_status_id.choices = dstatuses
             title = tracker.title + '-Edit Transition'
             tokeninput['display_fields']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.tracker.fields_from_list(trackertransition.display_fields) ]
+            tokeninput['emails']['prePopulate'] = [ {'id':field.id,'name':field.title} for field in trackertransition.emails ]
             tokeninput['edit_fields']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.tracker.fields_from_list(trackertransition.edit_fields) ]
             tokeninput['roles']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.roles ]
     return html(render(request,'generic/form.html',title=title,form=form,tracker=tracker,enctype='multipart/form-data',tokeninput=tokeninput,acefield=['postpage'],acetype={'postpage':'python'}))
@@ -735,7 +753,7 @@ async def listexcel(request,module,slug=None):
 async def addrecord(request,module,slug=None):
     data = []
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name='new').first()
+    newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name=tracker.default_new_transition if len(tracker.default_new_transition) else 'new').first()
     if request.method=='POST':
         data = tracker.addrecord(request.form,request)
         if newtransition.postpage:

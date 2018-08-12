@@ -6,6 +6,7 @@ class TrackerForm(Form):
     module = StringField('Module')
     slug = StringField('Slug')
     title = StringField('Title')
+    default_new_transition = StringField('Default New Transition')
     pagelimit = IntegerField('Page Limit',validators=(Optional(),))
     list_fields = StringField('List Fields')
     search_fields = StringField('Search Fields')
@@ -38,7 +39,9 @@ class TrackerStatusForm(Form):
 
 class TrackerTransitionForm(Form):
     name = StringField('Name')
+    label = StringField('Label')
     roles = StringField('Roles')
+    emails = StringField('Emails')
     display_fields = StringField('Display Fields')
     edit_fields = StringField('Edit Fields')
     prev_status_id = SelectField('Prev Status')

@@ -11,16 +11,24 @@ class EmailTemplate(ModelBase):
     __tablename__ = 'emailtemplates'
     id = Column(Integer, primary_key=True)
     module = Column(String(100),default='portal')
-    title = Column(Text())
+    title = Column(String(200))
+    emailtitle = Column(Text())
     sendto = Column(Text())
     sendcc = Column(Text())
     content = Column(Text())
+
+    __table_args__ = (
+        UniqueConstraint(module, title, name='emailtemplate_module_title_uidx'),
+    )
+
+    transition_id = reference_col('tracker_transitions',True)
+    transition = relationship('TrackerTransition',backref='emails')
 
     def __str__(self):
         return 'Email:' + self.title
 
     def rendertitle(self,request,*args,**kwargs):
-        return render_string(request,self.title,*args,**kwargs)
+        return render_string(request,self.emailtitle,*args,**kwargs)
 
     def rendercontent(self,request,*args,**kwargs):
         return render_string(request,self.content,*args,**kwargs)
@@ -53,4 +61,4 @@ class EmailTrail(ModelBase):
     status = Column(String(20))
 
     template_id = reference_col('emailtemplates')
-    template = relationship('EmailTemplate',backref='emails')
+    template = relationship('EmailTemplate',backref='trails')
