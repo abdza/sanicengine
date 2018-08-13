@@ -794,6 +794,11 @@ transition_roles = Table('transition_roles',ModelBase.metadata,
         Column('role_id',Integer,ForeignKey('tracker_roles.id'))
         )
 
+transition_emails = Table('transition_emails',ModelBase.metadata,
+        Column('transition_id',Integer,ForeignKey('tracker_transitions.id')),
+        Column('emailtemplate_id',Integer,ForeignKey('emailtemplates.id'))
+        )
+
 class TrackerTransition(ModelBase):
     __tablename__ = 'tracker_transitions'
     id = Column(Integer, primary_key=True)
@@ -805,6 +810,8 @@ class TrackerTransition(ModelBase):
     postpage = Column(Text)
 
     roles = relationship('TrackerRole',secondary=transition_roles,backref=backref('transitions',lazy='dynamic'))
+
+    emails = relationship('EmailTemplate',secondary=transition_emails,backref=backref('transitions',lazy='dynamic'))
 
     tracker_id = reference_col('trackers')
     tracker = relationship('Tracker',backref='transitions')

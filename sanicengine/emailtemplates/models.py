@@ -21,9 +21,6 @@ class EmailTemplate(ModelBase):
         UniqueConstraint(module, title, name='emailtemplate_module_title_uidx'),
     )
 
-    transition_id = reference_col('tracker_transitions',True)
-    transition = relationship('TrackerTransition',backref='emails')
-
     def __str__(self):
         return 'Email:' + self.title
 

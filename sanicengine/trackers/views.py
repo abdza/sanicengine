@@ -348,16 +348,18 @@ async def transitionform(request,module,slug=None,id=None):
             else:
                 trackertransition.roles = []
             del(form['roles'])
+            if form['emails'].data:
+                email_ids = form['emails'].data.split(',')
+                emails = [ dbsession.query(EmailTemplate).get(email_id) for email_id in email_ids ]
+                trackertransition.emails = emails
+            else:
+                trackertransition.emails = []
+            del(form['emails'])
             display_fields = []
             edit_fields = []
-            emails = []
             if form['display_fields'].data:
                 display_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['display_fields'].data + ")") ])
                 del(form['display_fields'])
-            if form['emails'].data:
-                emails = form['emails'].data.split(',')
-                del(form['emails'])
-            print("got emails:" + str(emails))
             if form['edit_fields'].data:
                 edit_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['edit_fields'].data + ")") ])
                 del(form['edit_fields'])
