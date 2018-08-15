@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse
-from .models import EmailTemplate
+from .models import EmailTemplate, EmailTrail
 from .forms import EmailTemplateForm
 from sanicengine.database import dbsession, executedb, querydb
 from sanicengine.template import render
@@ -22,8 +22,19 @@ async def jsonlist(request,module):
 async def renderemail(request,id):
     emailtemplate = dbsession.query(EmailTemplate).get(int(id))
     if emailtemplate:
-        print("rq:" + str(request['session']))
         emailtemplate.renderemail(request,scheduled_date = datetime.date(2018,2,3),data={'name':'kassim','age':34})
+    return redirect(request.app.url_for('emailtemplates.index'))
+
+@bp.route('/emailtemplates/sendemails')
+async def sendemails(request):
+    emails = dbsession.query(EmailTrail).filter(EmailTrail.status=='New',EmailTrail.scheduled_date < datetime.datetime.today()).all()
+    if len(emails):
+        from main import send_email
+        for email in emails:
+            await send_email({'email_to':[email.sendto],'email_cc':[email.sendcc],'subject':email.title,'htmlbody':email.content})
+            email.status='Sent'
+            dbsession.add(email)
+            dbsession.commit()
     return redirect(request.app.url_for('emailtemplates.index'))
 
 @bp.route('/emailtemplates/delete/<id>',methods=['POST'])
@@ -83,4 +94,4 @@ async def index(request):
     emailtemplates = dbsession.query(EmailTemplate)
     paginator = Paginator(emailtemplates, 50)
     return html(render(request,
-        'generic/list.html',title='Email Templates',deletelink='emailtemplates.delete',editlink='emailtemplates.edit',actions=[{'label':'Render','actionlink':'emailtemplates.renderemail'},],addlink='emailtemplates.create',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['emailtemplate'][0]) if 'emailtemplate' in request.args else 1)))
+        'generic/list.html',title='Email Templates',deletelink='emailtemplates.delete',editlink='emailtemplates.edit',actions=[{'label':'Render','actionlink':'emailtemplates.renderemail'},],addlink='emailtemplates.create',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'}],paginator=paginator,pagelink=[{'link':'emailtemplates.sendemails','title':'Send Emails'}],curpage=paginator.page(int(request.args['emailtemplate'][0]) if 'emailtemplate' in request.args else 1)))

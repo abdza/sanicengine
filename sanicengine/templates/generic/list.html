@@ -8,6 +8,11 @@
 {% if addlink %}
 <a href='{{ app.url_for(addlink) }}' class='btn btn-primary'>{% if addtitle %}{{addtitle}}{% else %}Add{% endif %}</a>
 {% endif %}
+{% if pagelink %}
+{% for plink in pagelink %}
+<a href='{{ app.url_for(plink.link) }}' class='btn btn-primary'>{{plink.title}}</a>
+{% endfor %}
+{% endif %}
 <table class='table'>
 	<tr>
 		<th>No.</th>
