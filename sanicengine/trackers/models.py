@@ -842,3 +842,8 @@ class TrackerTransition(ModelBase):
             if rfield:
                 rfields.append(rfield)
         return rfields
+
+    def renderemails(self,request,data):
+        if self.emails:
+            for email in self.emails:
+                email.renderemail(request,data=data)

@@ -758,6 +758,8 @@ async def addrecord(request,module,slug=None):
     newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name=tracker.default_new_transition if len(tracker.default_new_transition) else 'new').first()
     if request.method=='POST':
         data = tracker.addrecord(request.form,request)
+        if newtransition.emails:
+            newtransition.renderemails(request,data)
         if newtransition.postpage:
             ldict = locals()
             exec(newtransition.postpage,globals(),ldict)
@@ -789,6 +791,8 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
         transition = dbsession.query(TrackerTransition).get(transition_id)
     if request.method=='POST':
         data = tracker.editrecord(request.form,request,id=record_id)
+        if transition.emails:
+            transition.renderemails(request,data)
         if not data:
             return redirect(request.app.url_for('trackers.viewlist',module=tracker.module,slug=tracker.slug))
         if transition.postpage:
