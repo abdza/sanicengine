@@ -3,7 +3,7 @@
 import datetime
 
 from sanicengine.database import ModelBase, dbsession, reference_col
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, UniqueConstraint, DateTime
 from sqlalchemy.orm import relationship, backref
 from sanicengine.template import render_string
 
@@ -37,7 +37,11 @@ class EmailTemplate(ModelBase):
         return render_string(request,self.sendcc,*args,**kwargs)
 
     def renderemail(self,request,*args,**kwargs):
-        email = EmailTrail(module=self.module,created_date=datetime.datetime.today(),status='New',scheduled_date=datetime.datetime.today(),template=self)
+        scheduled_date = datetime.datetime.today()
+        if 'scheduled_date' in kwargs:
+            scheduled_date = kwargs['scheduled_date']
+
+        email = EmailTrail(module=self.module,created_date=datetime.datetime.today(),status='New',scheduled_date=scheduled_date,template=self)
         email.title = self.rendertitle(request,*args,**kwargs)
         email.sendto = self.renderto(request,*args,**kwargs)
         email.sendcc = self.rendercc(request,*args,**kwargs)
@@ -53,8 +57,8 @@ class EmailTrail(ModelBase):
     sendto = Column(Text())
     sendcc = Column(Text())
     content = Column(Text())
-    created_date = Column(Date(),nullable=True)
-    scheduled_date = Column(Date(),nullable=True)
+    created_date = Column(DateTime(),nullable=True)
+    scheduled_date = Column(DateTime(),nullable=True)
     status = Column(String(20))
 
     template_id = reference_col('emailtemplates')

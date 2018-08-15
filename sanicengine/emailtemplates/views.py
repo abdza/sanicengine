@@ -8,6 +8,7 @@ from sanicengine.template import render
 from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
+import datetime
 
 bp = Blueprint('emailtemplates')
 
@@ -22,7 +23,7 @@ async def renderemail(request,id):
     emailtemplate = dbsession.query(EmailTemplate).get(int(id))
     if emailtemplate:
         print("rq:" + str(request['session']))
-        emailtemplate.renderemail(request,data={'name':'kassim','age':34})
+        emailtemplate.renderemail(request,scheduled_date = datetime.date(2018,2,3),data={'name':'kassim','age':34})
     return redirect(request.app.url_for('emailtemplates.index'))
 
 @bp.route('/emailtemplates/delete/<id>',methods=['POST'])
