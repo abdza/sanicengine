@@ -13,10 +13,13 @@
 	{% if record %}
 	<input type='hidden' name='id' value='{{record['id']}}'/>
 	{% endif %}
-	{% set ns = namespace(displayed=false) %}
+	{% set ns = namespace(displayed=false,gotlocation=false) %}
 {% for field in transition.edit_fields_list() %}
 {% if field.default %}
 <input type='hidden' name='{{field.name}}' value='systemdefault'>
+{% elif field.field_type=='location' %}
+	{{ fieldform(field,record) }}
+	{% set ns.gotlocation = true %}
 {% else %}
 {% set ns.displayed = true %}
 <div class="form-group row" id="div_{{field.name}}">
@@ -27,11 +30,56 @@
 {% endfor %}
 <input type='submit' value='Submit' class='btn btn-primary'>
 </form>
-{% if not ns.displayed %}
-	{% block js %}
+{% if not ns.displayed or ns.gotlocation %}
+
+	{% block js scoped %}
+	{% if ns.gotlocation %}
+		<script>
+			function getLocation() {
+				if(navigator.location){
+					navigator.geolocation.getCurrentPosition(updateLocFields,showGpsError);
+				}
+				else {
+					alert('Browser does not support location');
+				}
+			}
+			function updateLocField(position){
+		{% for field in transition.edit_fields_list() %}
+			{% if field.field_type=='location' %}
+				$('#{{field.name}}').val(position.coords.latitude + ',' + position.coords.longitude);
+			{% endif %}
+		{% endfor %}
+			}
+
+			function showGpsError(error) {
+				switch(error.code) {
+					case error.PERMISSION_DENIED:
+						alert("User denied the request for Geolocation.");
+					break;
+					case error.POSITION_UNAVAILABLE:
+						alert("Location information is unavailable.");
+					break;
+					case error.TIMEOUT:
+						alert("The request to get user location timed out.");
+					break;
+					case error.UNKNOWN_ERROR:
+						alert("An unknown error occurred.");
+					break;
+				}
+			}
+
+			getLocation();
+		</script>
+	{% endif %}
+
+	{% if not ns.displayed %}
 	<script>window.onload = function() { $('#trackerform').submit(); }</script>
+	{% endif %}
+
 	{% endblock %}
+
 {% endif %}
+
 {%- endmacro %}
 
 {% macro fieldform(field,record=None,prependname='') -%}
@@ -45,6 +93,8 @@
 	<input class="col-sm-10 form-control" id="{{ prependname }}{{ field.name }}" name="{{ prependname}}{{ field.name }}" value="{% if record %}{{record[field.name]}}{% endif %}" type="file" accpet="video/*" capture="capture">
 	{% elif field.field_type=='text' %}
 	<textarea class="col-sm-10 form-control" id="{{ prependname}}{{ field.name }}" name="{{ prependname}}{{ field.name }}">{% if record %}{% if record[field.name] %}{{record[field.name]}}{% endif %}{% endif %}</textarea>
+	{% elif field.field_type=='location' %}
+	<input class="col-sm-10 form-control" id="{{ prependname }}{{ field.name }}" name="{{ prependname}}{{ field.name }}" value="{% if record %}{{record[field.name]}}{% endif %}" type="hidden">
 	{% elif field.field_type=='boolean' %}
 	<input class="col-sm-10 form-control" id="{{ prependname }}{{ field.name }}" name="{{ prependname }}{{ field.name }}" {% if record %}{% if record[field.name] %}checked{% endif %}{% endif %} type="checkbox">
 	{% elif field.field_type=='hasMany' %}

@@ -577,7 +577,7 @@ class TrackerField(ModelBase):
         return value
 
     def queryvalue(self, value,equals=False):
-        if self.field_type in ['string','text']:
+        if self.field_type in ['string','text','location']:
             if equals:
                 return self.name + " = '" + str(value) + "'"
             else:
@@ -590,7 +590,7 @@ class TrackerField(ModelBase):
 
     def sqlvalue(self, value):
         if value:
-            if self.field_type in ['string','text','date','datetime']:
+            if self.field_type in ['string','text','date','datetime','location']:
                 return "'" + str(value).replace("'","''") + "'"
             elif self.field_type in ['integer','number','object','user','file','picture','video']:
                 return str(value)
@@ -608,6 +608,8 @@ class TrackerField(ModelBase):
 
     def db_field_type(self):
         if self.field_type=='string':
+            return 'character varying(200)'
+        elif self.field_type=='location':
             return 'character varying(200)'
         elif self.field_type=='text':
             return 'text'
