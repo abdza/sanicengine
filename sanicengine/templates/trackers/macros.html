@@ -36,14 +36,14 @@
 	{% if ns.gotlocation %}
 		<script>
 			function getLocation() {
-				if(navigator.location){
+				if(navigator.geolocation){
 					navigator.geolocation.getCurrentPosition(updateLocFields,showGpsError);
 				}
 				else {
 					alert('Browser does not support location');
 				}
 			}
-			function updateLocField(position){
+			function updateLocFields(position){
 		{% for field in transition.edit_fields_list() %}
 			{% if field.field_type=='location' %}
 				$('#{{field.name}}').val(position.coords.latitude + ',' + position.coords.longitude);
