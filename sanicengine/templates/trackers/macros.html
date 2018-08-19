@@ -40,7 +40,11 @@
 					navigator.geolocation.getCurrentPosition(updateLocFields,showGpsError);
 				}
 				else {
-					alert('Browser does not support location');
+					{% for field in transition.edit_fields_list() %}
+						{% if field.field_type=='location' %}
+					$('#{{field.name}}').val('Error: Browser does not support location');
+						{% endif %}
+					{% endfor %}
 				}
 			}
 			function updateLocFields(position){
@@ -54,16 +58,32 @@
 			function showGpsError(error) {
 				switch(error.code) {
 					case error.PERMISSION_DENIED:
-						alert("User denied the request for Geolocation.");
+					{% for field in transition.edit_fields_list() %}
+						{% if field.field_type=='location' %}
+						$('#{{field.name}}').val("Error: User denied the request for Geolocation");
+						{% endif %}
+					{% endfor %}
 					break;
 					case error.POSITION_UNAVAILABLE:
-						alert("Location information is unavailable.");
+					{% for field in transition.edit_fields_list() %}
+						{% if field.field_type=='location' %}
+						$('#{{field.name}}').val("Error: Location information is unavailable");
+						{% endif %}
+					{% endfor %}
 					break;
 					case error.TIMEOUT:
-						alert("The request to get user location timed out.");
+					{% for field in transition.edit_fields_list() %}
+						{% if field.field_type=='location' %}
+						$('#{{field.name}}').val("Error: The request to get user location timed out");
+						{% endif %}
+					{% endfor %}
 					break;
 					case error.UNKNOWN_ERROR:
-						alert("An unknown error occurred.");
+					{% for field in transition.edit_fields_list() %}
+						{% if field.field_type=='location' %}
+						$('#{{field.name}}').val("Error: An unknown error occurred");
+						{% endif %}
+					{% endfor %}
 					break;
 				}
 			}
