@@ -571,10 +571,16 @@ class TrackerField(ModelBase):
                     dbsession.rollback()
             elif self.field_type=='location':
                 mlat = value.split(',')
-                if len(mlat)>1 and settings.GOOGLE_MAPS_API:
-                    mapstr = "<div id='" + self.name + "_div' style='height: 400px;'></div><script>var " + self.name + "_map; function init_" + self.name + "_map(){ " + self.name + "_map = new google.maps.Map(document.getElementById('" + self.name + "_div'), { center: {lat: " + mlat[0] + ",lng:" + mlat[1] + "}, zoom: 13 }); }</script><script src='https://maps.googleapis.com/maps/api/js?key=" + settings.GOOGLE_MAPS_API + "&callback=init_" + self.name + "_map' async defer></script>"
-                    return mapstr
-                else:
+                try:
+                    if len(mlat)>1 and settings.GOOGLE_MAPS_API:
+                        mapstr = "<div id='" + self.name + "_div' style='height: 400px;'></div>"
+                        mapstr += "<script>var " + self.name + "_map," + self.name + "_marker; "
+                        mapstr += "function init_" + self.name + "_map(){ " + self.name + "_map = new google.maps.Map(document.getElementById('" + self.name + "_div'), { center: {lat: " + mlat[0] + ",lng:" + mlat[1] + "}, zoom: 13 }); " + self.name + "_marker = new google.maps.Marker({ position: {lat:" + mlat[0] + ",lng:" + mlat[1] + " }, map: " + self.name + "_map }); }</script>"
+                        mapstr += "<script src='https://maps.googleapis.com/maps/api/js?key=" + settings.GOOGLE_MAPS_API + "&callback=init_" + self.name + "_map' async defer></script>"
+                        return mapstr
+                    else:
+                        return 'Map failed to render for location: ' + value
+                except exp:
                     return 'Map failed to render for location: ' + value
             
         if self.field_type=='boolean':
