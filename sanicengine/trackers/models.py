@@ -10,6 +10,7 @@ from sanicengine.template import render_string
 from sanicengine.users.models import ModuleRole, User
 from sanicengine.pages.models import Page
 from sanicengine.fileLinks.models import FileLink
+from sanicengine import settings
 from openpyxl import load_workbook
 import json
 import math
@@ -568,6 +569,13 @@ class TrackerField(ModelBase):
                 except Exception as inst:
                     print("Error running query:" + str(inst))
                     dbsession.rollback()
+            elif self.field_type=='location':
+                mlat = value.split(',')
+                if len(mlat)>1 and settings.GOOGLE_MAPS_API:
+                    mapstr = "<div id='" + self.name + "_div' style='height: 400px;'></div><script>var " + self.name + "_map; function init_" + self.name + "_map(){ " + self.name + "_map = new google.maps.Map(document.getElementById('" + self.name + "_div'), { center: {lat: " + mlat[0] + ",lng:" + mlat[1] + "}, zoom: 13 }); }</script><script src='https://maps.googleapis.com/maps/api/js?key=" + settings.GOOGLE_MAPS_API + "&callback=init_" + self.name + "_map' async defer></script>"
+                    return mapstr
+                else:
+                    return 'Map failed to render for location: ' + value
             
         if self.field_type=='boolean':
             if not value:
