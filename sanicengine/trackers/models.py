@@ -569,14 +569,13 @@ class TrackerField(ModelBase):
                 except Exception as inst:
                     print("Error running query:" + str(inst))
                     dbsession.rollback()
-            elif self.field_type=='location':
+            elif self.field_type in ['location','map']:
                 mlat = value.split(',')
                 try:
                     if len(mlat)>1 and settings.GOOGLE_MAPS_API:
                         mapstr = "<div id='" + self.name + "_div' style='height: 400px;'></div>"
                         mapstr += "<script>var " + self.name + "_map," + self.name + "_marker; "
                         mapstr += "function init_" + self.name + "_map(){ " + self.name + "_map = new google.maps.Map(document.getElementById('" + self.name + "_div'), { center: {lat: " + mlat[0] + ",lng:" + mlat[1] + "}, zoom: 13 }); " + self.name + "_marker = new google.maps.Marker({ position: {lat:" + mlat[0] + ",lng:" + mlat[1] + " }, map: " + self.name + "_map }); }</script>"
-                        mapstr += "<script src='https://maps.googleapis.com/maps/api/js?key=" + settings.GOOGLE_MAPS_API + "&callback=init_" + self.name + "_map' async defer></script>"
                         return mapstr
                     else:
                         return 'Map failed to render for location: ' + value
@@ -591,7 +590,7 @@ class TrackerField(ModelBase):
         return value
 
     def queryvalue(self, value,equals=False):
-        if self.field_type in ['string','text','location']:
+        if self.field_type in ['string','text','location','map']:
             if equals:
                 return self.name + " = '" + str(value) + "'"
             else:
@@ -604,7 +603,7 @@ class TrackerField(ModelBase):
 
     def sqlvalue(self, value):
         if value:
-            if self.field_type in ['string','text','date','datetime','location']:
+            if self.field_type in ['string','text','date','datetime','location','map']:
                 return "'" + str(value).replace("'","''") + "'"
             elif self.field_type in ['integer','number','object','user','file','picture','video']:
                 return str(value)
@@ -623,7 +622,7 @@ class TrackerField(ModelBase):
     def db_field_type(self):
         if self.field_type=='string':
             return 'character varying(200)'
-        elif self.field_type=='location':
+        elif self.field_type in ['location','map']:
             return 'character varying(200)'
         elif self.field_type=='text':
             return 'text'
