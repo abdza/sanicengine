@@ -13,8 +13,8 @@ import time
 
 bp = Blueprint('fileLinks')
 
-@bp.route('/files/download/<module>/<slug>')
-@bp.route('/files/download/<module>')
+@bp.route('/download/<module>/<slug>')
+@bp.route('/download/<module>')
 @authorized(object_type='filelink')
 async def download(request, module, slug=None):
     if slug == None:
