@@ -500,7 +500,7 @@ async def fieldform(request,module,slug=None,id=None):
         if trackerfield:
             form = TrackerFieldForm(obj=trackerfield)
             title = tracker.title + '-Edit Field'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default'],acetype={'default':'python'},info="<p>Default will take final value of the output variable. curuser is available if the user is logged in. The form variable is also available to check on the information submitted in other fields.</p>"))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default','options'],acetype={'default':'python','options':'python'},info="<p>Default will take final value of the output variable. curuser is available if the user is logged in. The form variable is also available to check on the information submitted in other fields.</p>"))
 
 @bp.route('/trackers/deletefield/<field_id>',methods=['POST'])
 @authorized(require_admin=True)
@@ -551,19 +551,19 @@ async def createpages(request,id=None):
     tracker = dbsession.query(Tracker).get(int(id))
     page = dbsession.query(Page).filter_by(module=tracker.module,slug=tracker.slug + '_list').first()
     if not page:
-        page = Page(title=tracker.title + ' List',module=tracker.module,slug=tracker.slug + '_list',content=open('templates/trackers/viewlist.html').read())
+        page = Page(title=tracker.title + ' List',module=tracker.module,slug=tracker.slug + '_list',content=open('sanicengine/templates/trackers/viewlist.html').read())
         dbsession.add(page)
     page = dbsession.query(Page).filter_by(module=tracker.module,slug=tracker.slug + '_addrecord').first()
     if not page:
-        page = Page(title=tracker.title + ' Add Record',module=tracker.module,slug=tracker.slug + '_addrecord',content=open('templates/trackers/formrecord.html').read())
+        page = Page(title=tracker.title + ' Add Record',module=tracker.module,slug=tracker.slug + '_addrecord',content=open('sanicengine/templates/trackers/formrecord.html').read())
         dbsession.add(page)
     page = dbsession.query(Page).filter_by(module=tracker.module,slug=tracker.slug + '_editrecord').first()
     if not page:
-        page = Page(title=tracker.title + ' Edit Record',module=tracker.module,slug=tracker.slug + '_editrecord',content=open('templates/trackers/formrecord.html').read())
+        page = Page(title=tracker.title + ' Edit Record',module=tracker.module,slug=tracker.slug + '_editrecord',content=open('sanicengine/templates/trackers/formrecord.html').read())
         dbsession.add(page)
     page = dbsession.query(Page).filter_by(module=tracker.module,slug=tracker.slug + '_view_default').first()
     if not page:
-        page = Page(title=tracker.title + ' View',module=tracker.module,slug=tracker.slug + '_view_default',content=open('templates/trackers/viewrecord.html').read())
+        page = Page(title=tracker.title + ' View',module=tracker.module,slug=tracker.slug + '_view_default',content=open('sanicengine/templates/trackers/viewrecord.html').read())
         dbsession.add(page)
 
     dbsession.commit()

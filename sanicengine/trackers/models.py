@@ -511,9 +511,11 @@ class TrackerField(ModelBase):
     name = Column(String(50))
     label = Column(String(50))
     field_type = Column(String(20))
+    widget = Column(String(20))
     obj_table = Column(String(50))
     obj_field = Column(String(100))
     default = Column(Text())
+    options = Column(Text())
     foreignfields = []
 
     tracker_id = reference_col('trackers')
@@ -548,6 +550,19 @@ class TrackerField(ModelBase):
             print("Error getting filter:" + str(inst))
             dbsession.rollback()
         return values
+
+    def disp_options(self):
+        if self.options:
+            output=None
+            try:
+                ldict = locals()
+                exec(field.options,globals(),ldict)
+                output=ldict['output']
+            except:
+                output=self.options.split(',')
+            return output
+        else:
+            return None
 
     def disp_value(self, value):
         if value:
