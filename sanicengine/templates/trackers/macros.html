@@ -209,7 +209,13 @@
     <select class='form-control' name='filter_{{field.name}}' id='filter_{{field.name}}'>
         <option value='plall' {% if 'filter_'+field.name in request.args and request.args['filter_'+field.name][0]=='plall' %}selected{% endif %}>All</option>
         {% for option in field.filter_options() %}
-        <option value='{{option.val}}' {% if 'filter_'+field.name in request.args and request.args['filter_'+field.name][0]==option.val|string %}selected{% endif %}>{{option.val}}</option>
+        <option value='{{option.val}}' {% if 'filter_'+field.name in request.args and request.args['filter_'+field.name][0]==option.val|string %}selected{% endif %}>
+	{% if option.label %}
+	{{ option.label }}
+	{% else %}
+	{{option.val}}
+	{% endif %}
+	</option>
         {% endfor %}
     </select>
     </div>

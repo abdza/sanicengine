@@ -544,8 +544,15 @@ class TrackerField(ModelBase):
             return self.obj_fields()[0]
 
     def filter_options(self):
+        values = []
         try:
-            values = dbsession.execute("select distinct " + self.name + " as val from " + self.tracker.data_table + " order by " + self.name)
+            if self.field_type == 'object' and self.obj_table and self.obj_field:
+                cobj_field = self.main_obj_field()
+                values = dbsession.execute("select distinct cur." + self.name + " as val, ref." + cobj_field + " as label from " + self.tracker.data_table + " cur, " + self.obj_table + " ref where ref.id=cur." + self.name + " order by " + cobj_field)
+            elif self.field_type == 'user':
+                values = dbsession.execute("select distinct cur." + self.name + " as val, ref.name as label from " + self.tracker.data_table + " cur, users ref where ref.id=cur." + self.name + " order by " + self.name)
+            else:
+                values = dbsession.execute("select distinct " + self.name + " as val from " + self.tracker.data_table + " order by " + self.name)
         except Exception as inst:
             print("Error getting filter:" + str(inst))
             dbsession.rollback()

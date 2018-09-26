@@ -530,7 +530,7 @@ async def fieldjson(request,module,slug=None,field_id=None):
             elif trackerfield.field_type=='object':
                 sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where " + " or ".join([field + " ilike '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ])
             results = dbsession.execute(sqlq)
-            return jsonresponse([ {'id':result.id,'name':result.name} for result in results ])
+            return jsonresponse([ {'id':result.id,'name':result[trackerfield.main_obj_field()]} for result in results ])
 
 
 @bp.route('/trackers/view/<id>')
