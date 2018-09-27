@@ -2,7 +2,7 @@
 from sanic import Sanic
 from sanic.response import html, redirect
 from sanic_session import InMemorySessionInterface
-from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings, emailtemplates
+from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings, emailtemplates, customtemplates
 from sanicengine.template import render
 from sanicengine.database import dbsession, ModelBase, dbengine
 import asyncio
@@ -94,6 +94,7 @@ async def register_bp(app, loop):
     app.blueprint(trees.views.bp)
     app.blueprint(portalsettings.views.bp)
     app.blueprint(emailtemplates.views.bp)
+    app.blueprint(customtemplates.views.bp)
 
 @app.listener('before_server_start')
 async def default_data(app, loop):

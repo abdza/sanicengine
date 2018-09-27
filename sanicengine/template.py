@@ -2,7 +2,7 @@ from jinja2 import Template, Environment, FileSystemLoader
 from sanicengine.database import dbsession, executedb, querydb
 from sanicengine.users.models import User
 
-jinja_env = Environment(loader=FileSystemLoader(['custom_module/templates','sanicengine/templates']))
+jinja_env = Environment(loader=FileSystemLoader(['custom_module/custom_templates','sanicengine/templates']))
 
 def render(request, template_file, *args, **kwargs):
     curuser = None
