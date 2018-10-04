@@ -8,6 +8,7 @@ from sanicengine.template import render
 from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
+import sys
 
 bp = Blueprint('pages')
 
@@ -37,6 +38,7 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         except:
             print("Got error running commands from page:" + str(page))
             print("Page content:" + str(page.content))
+            print("Exception:" + sys.exc_info()[0])
         if 'redirecturl' in ldict:
             redirecturl=ldict['redirecturl']
         if 'results' in ldict:
