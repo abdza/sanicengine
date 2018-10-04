@@ -32,7 +32,12 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         redirecturl=None
         results=None
         ldict = locals()
-        exec(page.content,globals(),ldict)
+        try:
+            exec(page.content,globals(),ldict)
+        except exp:
+            print("Got error running commands from page:" + str(page))
+            print("Page content:" + str(page.content))
+            print("Exception:" + str(exp))
         if 'redirecturl' in ldict:
             redirecturl=ldict['redirecturl']
         if 'results' in ldict:
