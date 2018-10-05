@@ -706,8 +706,11 @@ async def delete(request,module,slug=None):
 
 @bp.route('/system/cleardata/<module>/<slug>',methods=['POST'])
 @authorized(object_type='dataupdate')
-async def clearsystemdata(request,module,slug,returnurl=None):
+async def clearsystemdata(request,module,slug):
+    returnurl = None
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
+    if 'returnurl' in request.form:
+        returnurl = request.form.get('returnurl')
     if tracker:
         for update in tracker.dataupdates:
             if update.filename and os.path.exists(update.filename):
