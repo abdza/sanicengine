@@ -704,6 +704,30 @@ async def delete(request,module,slug=None):
         dbsession.rollback()
     return redirect(request.app.url_for('trackers.index'))
 
+@bp.route('/system/cleardata/<module>/<slug>',methods=['POST'])
+@authorized(object_type='dataupdate')
+async def clearsystemdata(request,module,slug):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
+    if tracker:
+        for update in tracker.dataupdates:
+            if update.filename and os.path.exists(update.filename):
+                os.remove(update.filename)
+            if os.path.exists(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id))):
+                os.rmdir(os.path.join(uploadfolder,tracker.slug,'dataupdate',str(update.id)))
+            dbsession.delete(update)
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+        try:
+            dbsession.execute("delete from " + tracker.update_table)
+            dbsession.execute("delete from " + tracker.data_table)
+        except:
+            dbsession.rollback()
+        request['session']['flashmessage'] = 'Cleared data for ' + tracker.title
+    return redirect(request.app.url_for('trackers.viewlist',module=module,slug=slug))
+
+
 @bp.route('/system/<module>/<slug>/')
 @authorized(object_type='tracker')
 async def viewlist(request,module,slug=None):
