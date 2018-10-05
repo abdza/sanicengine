@@ -706,7 +706,7 @@ async def delete(request,module,slug=None):
 
 @bp.route('/system/cleardata/<module>/<slug>',methods=['POST'])
 @authorized(object_type='dataupdate')
-async def clearsystemdata(request,module,slug):
+async def clearsystemdata(request,module,slug,returnurl=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     if tracker:
         for update in tracker.dataupdates:
@@ -725,7 +725,10 @@ async def clearsystemdata(request,module,slug):
         except:
             dbsession.rollback()
         request['session']['flashmessage'] = 'Cleared data for ' + tracker.title
-    return redirect(request.app.url_for('trackers.viewlist',module=module,slug=slug))
+    if returnurl:
+        return redirect(returnurl)
+    else:
+        return redirect(request.app.url_for('trackers.viewlist',module=module,slug=slug))
 
 
 @bp.route('/system/<module>/<slug>/')
