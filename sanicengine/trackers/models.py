@@ -601,7 +601,7 @@ class TrackerField(ModelBase):
                         return mapstr
                     else:
                         return 'Map failed to render for location: ' + value
-                except exp:
+                except:
                     return 'Map failed to render for location: ' + value
             
         if self.field_type=='boolean':
