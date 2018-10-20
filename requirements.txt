@@ -1,4 +1,3 @@
-uwsgi
 sanic
 Jinja2
 psycopg2-binary
