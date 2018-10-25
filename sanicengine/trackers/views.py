@@ -748,7 +748,7 @@ async def viewlist(request,module,slug=None):
     else:
         return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
 
-@bp.route('/system/<module>/<slug>/excel')
+@bp.route('/system/<module>/<slug>/excel.xlsx')
 @authorized(object_type='tracker')
 async def listexcel(request,module,slug=None):
     if slug==None:
@@ -778,14 +778,14 @@ async def listexcel(request,module,slug=None):
             row+=1
 
     virtual_wb = save_virtual_workbook(wb)
-    return raw(virtual_wb, content_type='application/vnd.ms-excel')
+    return raw(virtual_wb, content_type='application/vnd.ms-excel', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title) + '.xlsx'})
 
 @bp.route('/system/<module>/<slug>/addrecord',methods=['POST','GET'])
 @authorized(object_type='tracker')
 async def addrecord(request,module,slug=None):
     data = []
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name=tracker.default_new_transition if len(tracker.default_new_transition) else 'new').first()
+    newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name=tracker.default_new_transition if tracker.default_new_transition and len(tracker.default_new_transition) else 'new').first()
     if request.method=='POST':
         data = tracker.addrecord(request.form,request)
         if newtransition.emails:
