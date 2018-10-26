@@ -748,7 +748,7 @@ async def viewlist(request,module,slug=None):
     else:
         return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
 
-@bp.route('/system/<module>/<slug>/excel.xlsx')
+@bp.route('/system/<module>/<slug>/excel')
 @authorized(object_type='tracker')
 async def listexcel(request,module,slug=None):
     if slug==None:
@@ -778,7 +778,7 @@ async def listexcel(request,module,slug=None):
             row+=1
 
     virtual_wb = save_virtual_workbook(wb)
-    return raw(virtual_wb, content_type='application/vnd.ms-excel', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title) + '.xlsx'})
+    return raw(virtual_wb, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title)})
 
 @bp.route('/system/<module>/<slug>/addrecord',methods=['POST','GET'])
 @authorized(object_type='tracker')
