@@ -25,8 +25,8 @@
 	</head>
 {% block body %}
 <body>
-	<div class='wrapper'>
 	{% block mainblock %}
+	<div class='wrapper'>
 		<main role='main' class='container'>
 		{% if request.session.flashmessage %}
 			<div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -40,8 +40,8 @@
 			<h1>Sanic Engine</h1>
 		{% endblock %}
 		</main>
-	{% endblock %}
 	</div>
+	{% endblock %}
 	{% block standardjs %}
 	<script src='{{ app.url_for('static', filename='/js/jquery-3.3.1.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/js/popper.min.js')}}'></script>

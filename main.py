@@ -126,13 +126,16 @@ async def returnfunction(request):
     elif croute['type']=='file':
         return await fileLinks.views.download(request,module=croute['module'],slug=croute['slug'])
     elif croute['type']=='tracker':
-        return await trackers.views.viewlist(request,module=croute['module'],slug=croute['slug'])
+        if 'method' in croute and croute['method']=='addrecord':
+            return await trackers.views.addrecord(request,module=croute['module'],slug=croute['slug'])
+        else:
+            return await trackers.views.viewlist(request,module=croute['module'],slug=croute['slug'])
 
 @app.listener('before_server_start')
 async def custom_routes(app, loop):
     custom_routes = portalsettings.models.Setting.namedefault('portal','customurl',[])
     for cr in custom_routes:
-        app.add_route(returnfunction,cr)
+        app.add_route(returnfunction,cr,methods=['GET','POST'])
 
 async def send_email(data):
     scheduler = AsyncIOScheduler()
