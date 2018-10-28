@@ -29,7 +29,8 @@ bp = Blueprint('trackers')
 uploadfolder = 'upload'
 
 def slugify(slug):
-    slug = re.sub('[^0-9a-zA-Z]+', '_', slug.lower())
+    if(slug):
+        slug = re.sub('[^0-9a-zA-Z]+', '_', slug.lower())
     return slug
 
 @bp.route('/trackers/runupdate/<module>/<slug>',methods=['GET'])
@@ -159,7 +160,7 @@ async def data_update(request,module,slug=None):
             columns.append({'field_val':'custom','field_name':'Custom'})
             for row in ws.iter_rows(max_row=1):
                 for cell in row:
-                    if cell.value.lower() != 'id':
+                    if cell.value and cell.value.lower() != 'id':
                         columns.append({'field_val':cell.column,'field_name':cell.value})
     return html(render(request,'/trackers/data_update.html',tracker=tracker,columns=columns,dataupdate=dataupdate))
 
@@ -171,9 +172,10 @@ async def create_from_excel(request,module,slug=None):
         slug=module
         module='portal'
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
+    print('tracker:' + str(tracker) + '--- module:' + module + '--- slug:' + slug + '---')
     fields = []
     field_types = []
-    if request.method=='POST':
+    if tracker and request.method=='POST':
         if request.form.get('field_name'):
             field_names = request.form['field_name']
             field_label = request.form['field_label']
@@ -748,7 +750,7 @@ async def viewlist(request,module,slug=None):
     else:
         return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
 
-@bp.route('/system/<module>/<slug>/excel.xlsx')
+@bp.route('/system/<module>/<slug>/excel')
 @authorized(object_type='tracker')
 async def listexcel(request,module,slug=None):
     if slug==None:
@@ -778,7 +780,7 @@ async def listexcel(request,module,slug=None):
             row+=1
 
     virtual_wb = save_virtual_workbook(wb)
-    return raw(virtual_wb, content_type='application/vnd.ms-excel', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title) + '.xlsx'})
+    return raw(virtual_wb, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title)})
 
 @bp.route('/system/<module>/<slug>/addrecord',methods=['POST','GET'])
 @authorized(object_type='tracker')
