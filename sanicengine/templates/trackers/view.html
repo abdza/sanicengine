@@ -174,7 +174,8 @@
   </div>
 </div>
 {% endblock %}
-{% block endbody %}
+{% block page_js %}
+{{ super() }}
 <script>
 var url = document.location.toString();
 if (url.match('#')) {

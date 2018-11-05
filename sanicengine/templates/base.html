@@ -1,62 +1,74 @@
 <!doctype html>
 <html lang='en' dir='ltr'>
 	<head>
+		{% block head_start %}
+		{% endblock %}
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		{% block layout_css %}
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap.min.css') }}'>
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/fontawesome-all.min.css') }}'>
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.css') }}'>
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/jquery.smartmenus.bootstrap-4.css') }}'>
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/fullcalendar/fullcalendar.min.css') }}'>
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/fullcalendar/fullcalendar.print.min.css') }}' media='print'>
-		{% block formcss %}{% endblock %}
+		{% block form_css %}{% endblock %}
+		{% block page_css %}{% endblock %}
+		{% endblock %}
 		<!-- Mobile Specific Metas -->
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 		<!-- Google Font -->
 		<link href="https://fonts.googleapis.com/css?family=Work+Sans:300,400,500,600,700" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
 		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/custom.css') }}'>
-		{% block headtitle %}
+		{% block head_title %}
 		<title>{% if title %}{{ title }}{% else %}Sanic Engine{% endif %}</title>
 		{% endblock %}
-		{% block endhead %}
+		{% block head_end %}
 		{% endblock %}
 	</head>
-{% block body %}
+{% block layout_body %}
 <body>
-	{% block mainblock %}
-	<div class='wrapper'>
-		<main role='main' class='container'>
-		{% if request.session.flashmessage %}
-			<div class="alert alert-warning alert-dismissible fade show" role="alert">
-				{{ request.session.pop('flashmessage',None) }}
-				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-			</div>
-		{% endif %}
-		{% block content %}
-			<h1>Sanic Engine</h1>
+	{% block body %}
+		{% block body_start %}
 		{% endblock %}
-		</main>
-	</div>
+		{% block mainblock %}
+		<div class='wrapper'>
+			<main role='main' class='container'>
+			{% if request.session.flashmessage %}
+				<div class="alert alert-warning alert-dismissible fade show" role="alert">
+					{{ request.session.pop('flashmessage',None) }}
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+			{% endif %}
+			{% block content %}
+				<h1>Sanic Engine</h1>
+			{% endblock %}
+			</main>
+		</div>
+		{% endblock %}
 	{% endblock %}
-	{% block standardjs %}
-	<script src='{{ app.url_for('static', filename='/js/jquery-3.3.1.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/js/popper.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/js/bootstrap.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery.ui.touch-punch.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/js/jquery.smartmenus.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/js/jquery.smartmenus.bootstrap-4.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/js/fullcalendar/moment.min.js')}}'></script>
-	<script src='{{ app.url_for('static', filename='/js/fullcalendar/fullcalendar.min.js')}}'></script>
-	{% block js %}{% endblock %}
+	{% block layout_js %}
+		<script src='{{ app.url_for('static', filename='/js/jquery-3.3.1.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/js/popper.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/js/bootstrap.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery.ui.touch-punch.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/js/jquery.smartmenus.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/js/jquery.smartmenus.bootstrap-4.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/js/fullcalendar/moment.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/js/fullcalendar/fullcalendar.min.js')}}'></script>
+		{% block form_js %}{% endblock %}
+		{% block page_js %}{% endblock %}
+		{% block custom_js %}
+		<script src='{{ app.url_for('static', filename='/js/custom.js')}}'></script>
+		{% endblock %}
 	{% endblock %}
-	{% block endbody %}
+	{% block body_end %}
 	{% endblock %}
-	<script src='{{ app.url_for('static', filename='/js/custom.js')}}'></script>
 </body>
 {% endblock %}
 </html>

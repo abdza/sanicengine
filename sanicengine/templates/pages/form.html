@@ -1,5 +1,6 @@
 {% extends "formbase.html" %}
-{% block endhead %}
+{% block form_css %}
+	{{ super() }}
     <style type="text/css" media="screen">
     #editorwrap {
 	position: relative;
@@ -55,7 +56,8 @@
 {% endif %}
 </form>
 {% endblock %}
-{% block endbody %}
+{% block form_js %}
+	{{ super() }}
 	<script type='text/javascript'>
 	$(document).ready(function(){
 		var editor = ace.edit("contenteditor");

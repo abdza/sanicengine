@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block formcss %}
+{% block form_css %}
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/timedropper/timedropper.min.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/token-input-facebook.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap-datepicker.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/air-datepicker/css/datepicker.min.css') }}'>
 {% endblock %}
-{% block js %}
+{% block form_js %}
 	<script src='{{ app.url_for('static', filename='/plugins/air-datepicker/js/datepicker.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/plugins/air-datepicker/js/i18n/datepicker.en.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/plugins/timedropper/timedropper.min.js')}}'></script>

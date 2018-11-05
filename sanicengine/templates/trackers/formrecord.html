@@ -15,7 +15,8 @@
 {% endif %}
 {% endif %}
 {% endblock %}
-{% block endbody %}
+{% block form_js %}
+{{ super() }}
 {% set ns = namespace(gotdate = false,gottoken = false) %}
 {% for field in transition.edit_fields_list() %}
 	{% if field.field_type in ['object','user'] %}

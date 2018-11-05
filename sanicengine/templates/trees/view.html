@@ -1,5 +1,6 @@
 {% extends "formbase.html" %}
-{% block endhead %}
+{% block page_css %}
+	{{ super() }}
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/js/jstree/themes/default/jstreestyle.min.css') }}'>
 	<link rel='stylesheet' href='{{ app.url_for('static',filename='/js/jspanel/jquery.jspanel.min.css') }}'>
 {% endblock %}
@@ -29,7 +30,8 @@
 </div>
 <div id='infopanel'></div>
 {% endblock %}
-{% block endbody %}
+{% block page_js %}
+{{ super() }}
 	<script src='{{ app.url_for('static', filename='/js/jstree/jstree.min.js')}}'></script>
 	<script src='{{ app.url_for('static', filename='/js/jspanel/jquery.jspanel.min.js')}}'></script>
 	<script>
