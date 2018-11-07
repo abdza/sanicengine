@@ -28,10 +28,12 @@ def executedb(query):
     try:
         return dbsession.execute(query)
     except Exception as inst:
+        dbsession.rollback()
         print("Error executing query:" + str(inst))
 
 def querydb(query):
     try:
         return dbsession.query(query)
     except Exception as inst:
+        dbsession.rollback()
         print("Error querying:" + str(inst))
