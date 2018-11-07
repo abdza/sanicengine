@@ -37,3 +37,9 @@ def querydb(query):
     except Exception as inst:
         dbsession.rollback()
         print("Error querying:" + str(inst))
+
+def queryobj(obj):
+    try:
+        return dbsession.query(obj)
+    except Exception as inst:
+        print("Error querying obj:" + str(inst))

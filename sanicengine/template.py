@@ -1,5 +1,5 @@
 from jinja2 import Template, Environment, FileSystemLoader
-from sanicengine.database import dbsession, executedb, querydb
+from sanicengine.database import dbsession, executedb, querydb, queryobj
 from sanicengine.users.models import User
 
 jinja_env = Environment(loader=FileSystemLoader(['custom_module/custom_templates','sanicengine/templates']))
@@ -22,6 +22,7 @@ def render(request, template_file, *args, **kwargs):
     app.dbsession = dbsession
     app.executedb = executedb
     app.querydb = querydb
+    app.queryobj = queryobj
     app.pages = pages
     app.settings = Setting
     return jinja_env.get_template(template_file).render(app=app,request=request,curuser=curuser,*args,**kwargs)
@@ -44,6 +45,7 @@ def render_string(request, template_string, *args, **kwargs):
     app.dbsession = dbsession
     app.executedb = executedb
     app.querydb = querydb
+    app.queryobj = queryobj
     app.pages = pages
     app.settings = Setting
     return jinja_env.from_string(template_string).render(app=app,request=request,curuser=curuser,*args,**kwargs)
