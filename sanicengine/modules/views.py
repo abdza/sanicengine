@@ -230,19 +230,20 @@ async def export(request,slug=None):
         filelinks = dbsession.query(FileLink).filter_by(module=slug).all()
         filesarray = []
         for filelink in filelinks:
-            shutil.copy2(filelink.filepath,os.path.join(modulepath,slug,'files',os.path.basename(filelink.filepath)))
-            filesarray.append({
-                'title':filelink.title,
-                'slug':filelink.slug,
-                'module':filelink.module,
-                'published':filelink.published,
-                'filename':filelink.filename,
-                'filepath':filelink.filepath,
-                'require_login':filelink.require_login,
-                'allowed_roles':filelink.allowed_roles,
-                'publish_date':filelink.publish_date.strftime('%Y-%m-%d') if filelink.publish_date else None,
-                'expire_date':filelink.expire_date.strftime('%Y-%m-%d') if filelink.expire_date else None 
-                })
+            if os.path.exists(filelink.filepath):
+                shutil.copy2(filelink.filepath,os.path.join(modulepath,slug,'files',os.path.basename(filelink.filepath)))
+                filesarray.append({
+                    'title':filelink.title,
+                    'slug':filelink.slug,
+                    'module':filelink.module,
+                    'published':filelink.published,
+                    'filename':filelink.filename,
+                    'filepath':filelink.filepath,
+                    'require_login':filelink.require_login,
+                    'allowed_roles':filelink.allowed_roles,
+                    'publish_date':filelink.publish_date.strftime('%Y-%m-%d') if filelink.publish_date else None,
+                    'expire_date':filelink.expire_date.strftime('%Y-%m-%d') if filelink.expire_date else None 
+                    })
         curfile = open(os.path.join(modulepath,slug,'filelist.json'),'w')
         curfile.write(json.dumps(filesarray))
         curfile.close()
