@@ -2,7 +2,7 @@
 <dl>
 {% for field in transition.display_fields_list() %}
 <dt>{{ field.label }}</dt>
-<dd>{{ field.disp_value(record[field.name]) }}</dd>
+<dd>{{ field.disp_value(record[field.name],request) }}</dd>
 {% endfor %}
 </dl>
 {% endmacro %}
@@ -247,7 +247,7 @@
 		{% if list_fields %}
 		{% for field in list_fields %}
 		<td>
-		{{ field.disp_value(record[field.name]) }}
+		{{ field.disp_value(record[field.name],request) }}
 		</td>
 		{% endfor %}
 		{% endif %}
@@ -310,7 +310,7 @@
 		{% set ns.gotlocation = true %}
 	{% endif %}
 <dt>{{ field.label }}</dt>
-<dd>{{ field.disp_value(record[field.name]) }}</dd>
+<dd>{{ field.disp_value(record[field.name],request) }}</dd>
 {% endfor %}
 </dl>
 {% if ns.gotlocation %}

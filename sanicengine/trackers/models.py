@@ -571,8 +571,9 @@ class TrackerField(ModelBase):
         else:
             return None
 
-    def disp_value(self, value):
+    def disp_value(self, value, request=None):
         if value:
+            print('val:' + str(value))
             if self.field_type=='object':
                 sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=" + str(value)
                 try:
@@ -591,6 +592,16 @@ class TrackerField(ModelBase):
                 except Exception as inst:
                     print("Error running query:" + str(inst))
                     dbsession.rollback()
+            elif self.field_type == 'picture' or self.widget== 'picture':
+                filelink = dbsession.query(FileLink).get(value)
+                if filelink:
+                    url=request.app.url_for('fileLinks.download',module=filelink.module,slug=filelink.slug)
+                    value = "<img src='" + url + "'>"
+            elif self.field_type == 'video' or self.widget== 'video':
+                filelink = dbsession.query(FileLink).get(value)
+                if filelink:
+                    url=request.app.url_for('fileLinks.download',module=filelink.module,slug=filelink.slug)
+                    value = "<video controls><source src='" + url + "'></video>"
             elif self.field_type in ['location','map']:
                 mlat = value.split(',')
                 try:
