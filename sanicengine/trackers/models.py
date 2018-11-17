@@ -875,7 +875,9 @@ class TrackerTransition(ModelBase):
         return self.name
 
     def edit_fields_list(self):
-        pfields = self.edit_fields.split(',') if self.edit_fields else []
+        pfields = []
+        if self.edit_fields:
+            pfields = self.edit_fields.split(',') if self.edit_fields else []
         rfields = []
         for pfield in pfields:
             rfield = dbsession.query(TrackerField).filter_by(tracker=self.tracker,name=pfield.strip()).first()
@@ -884,7 +886,9 @@ class TrackerTransition(ModelBase):
         return rfields
 
     def display_fields_list(self):
-        pfields = self.display_fields.split(',')
+        pfields = []
+        if self.display_fields:
+            pfields = self.display_fields.split(',')
         rfields = []
         for pfield in pfields:
             rfield = dbsession.query(TrackerField).filter_by(tracker=self.tracker,name=pfield.strip()).first()

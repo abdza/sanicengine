@@ -579,6 +579,41 @@ async def updatedb(request,id=None):
     tracker.updatedb()
     return redirect(request.app.url_for('trackers.view',id=id))
 
+@bp.route('/trackers/defaulttransitions/<id>')
+@authorized(require_admin=True)
+async def defaulttransitions(request,id=None):
+    tracker = dbsession.query(Tracker).get(int(id))
+    if tracker and tracker.list_fields:
+        newstatus = dbsession.query(TrackerStatus).filter(TrackerStatus.name.ilike("%new%"),TrackerStatus.tracker==tracker).first()
+        adminrole = dbsession.query(TrackerRole).filter(TrackerRole.name.ilike("%admin%"),TrackerRole.tracker==tracker).first()
+
+        newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.name.ilike("%new%"),TrackerTransition.tracker==tracker).first()
+        print('new:' + str(newtransition))
+        if not newtransition:
+            newtransition = TrackerTransition(tracker=tracker,name='New',label='New',edit_fields=tracker.list_fields,roles=[adminrole,],next_status=newstatus)
+            dbsession.add(newtransition)
+
+        edittransition = dbsession.query(TrackerTransition).filter(TrackerTransition.name.ilike("%edit%"),TrackerTransition.tracker==tracker).first()
+        print('edit:' + str(edittransition))
+        if not edittransition:
+            edittransition = TrackerTransition(tracker=tracker,name='Edit',label='Edit',edit_fields=tracker.list_fields,roles=[adminrole,],prev_status=newstatus,next_status=newstatus)
+            dbsession.add(edittransition)
+
+        deletestatus = dbsession.query(TrackerStatus).filter(TrackerStatus.name.ilike("%delete%"),TrackerStatus.tracker==tracker).first()
+        if not deletestatus:
+            deletestatus = TrackerStatus(name='Delete',tracker=tracker)
+            dbsession.add(deletestatus)
+
+        deletetransition = dbsession.query(TrackerTransition).filter(TrackerTransition.name.ilike("%delete%"),TrackerTransition.tracker==tracker).first()
+        print('delete:' + str(deletetransition))
+        if not deletetransition:
+            deletetransition = TrackerTransition(tracker=tracker,name='Delete',label='Delete',roles=[adminrole,],prev_status=newstatus,next_status=deletestatus)
+            dbsession.add(deletetransition)
+
+        dbsession.commit()
+    
+    return redirect(request.app.url_for('trackers.view',id=id))
+
 @bp.route('/trackers/edit/<id>',methods=['POST','GET'])
 @bp.route('/trackers/edit',methods=['POST','GET'],name='edit')
 @bp.route('/trackers/create',methods=['POST','GET'],name='create')
@@ -617,8 +652,6 @@ async def form(request,id=None):
                 dbsession.add(statusfield)
                 idfield = TrackerField(name='id',label='ID',tracker=tracker,field_type='integer')
                 dbsession.add(idfield)
-                newtransition = TrackerTransition(name='new',tracker=tracker,roles=[adminrole],next_status=newstatus)
-                dbsession.add(newtransition)
             success = False
             try:
                 dbsession.commit()
@@ -760,7 +793,6 @@ async def listexcel(request,module,slug=None):
     curuser = None
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
-    print("rcd:" + str(request))
     records = tracker.records(curuser=curuser,request=request)
     wb = Workbook()
     ws = wb.active
@@ -782,12 +814,41 @@ async def listexcel(request,module,slug=None):
     virtual_wb = save_virtual_workbook(wb)
     return raw(virtual_wb, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title)})
 
-@bp.route('/system/<module>/<slug>/addrecord',methods=['POST','GET'])
+@bp.route('/system/<module:string>/<slug:string>/<id:int>',methods=['POST','GET'])
+@authorized(object_type='tracker')
+async def viewrecord(request,module,slug=None,id=None):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
+    curuser = None
+    if 'user_id' in request['session']:
+        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    record = None
+    status = None
+    page = None
+    if request.method=='POST':
+        return redirect(request.app.url_for('tracker.viewrecord',module=module,slug=slug))
+    if(id):
+        record = tracker.records(id,curuser=curuser,request=request)
+        if record:
+            status = tracker.status(record)
+    if status:
+        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
+    if not page:
+        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default').first()
+    title = tracker.title + '-View'
+    if page:
+        return html(page.render(request,tracker=tracker,record=record,title=title))
+    else:
+        return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
+
+@bp.route('/system/<module>/<slug>/add',methods=['POST','GET'])
 @authorized(object_type='tracker')
 async def addrecord(request,module,slug=None):
     data = []
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    newtransition = dbsession.query(TrackerTransition).filter_by(tracker=tracker,name=tracker.default_new_transition if tracker.default_new_transition and len(tracker.default_new_transition) else 'new').first()
+    if tracker.default_new_transition:
+        newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.tracker==tracker,TrackerTransition.name.ilike("%" + tracker.default_new_transition.strip() + "%")).first()
+    else:
+        newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.tracker==tracker,TrackerTransition.name.ilike("%new%")).first()
     if request.method=='POST':
         data = tracker.addrecord(request.form,request)
         if newtransition.emails:
@@ -803,10 +864,14 @@ async def addrecord(request,module,slug=None):
             return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_addrecord').first()
     title = tracker.title + "-Add Record"
-    if page:
-        return html(page.render(request,tracker=tracker,transition=newtransition,title=title))
+    if newtransition:
+        if page:
+            return html(page.render(request,tracker=tracker,transition=newtransition,title=title))
+        else:
+            return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition,title=title))
     else:
-        return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition,title=title))
+        request['session']['flashmessage'] = 'Default new transition not found'
+        return redirect(request.app.url_for('pages.home'))
 
 @bp.route('/system/<module>/<slug>/edit/<transition_id>/<record_id>',methods=['POST','GET'])
 @authorized(object_type='tracker')
@@ -846,28 +911,3 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
     else:
         return html(render(request,'trackers/formrecord.html',tracker=tracker,title=title,transition=transition,record=record))
 
-@bp.route('/system/<module>/<slug>/<id>',methods=['POST','GET'])
-@authorized(object_type='tracker')
-async def viewrecord(request,module,slug=None,id=None):
-    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    curuser = None
-    if 'user_id' in request['session']:
-        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
-    record = None
-    status = None
-    page = None
-    if request.method=='POST':
-        return redirect(request.app.url_for('tracker.viewrecord',module=module,slug=slug))
-    if(id):
-        record = tracker.records(id,curuser=curuser,request=request)
-        if record:
-            status = tracker.status(record)
-    if status:
-        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
-    if not page:
-        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default').first()
-    title = tracker.title + '-View'
-    if page:
-        return html(page.render(request,tracker=tracker,record=record,title=title))
-    else:
-        return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
