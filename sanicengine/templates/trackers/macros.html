@@ -243,7 +243,7 @@
 	</tr>
 	{% for record in tracker.records(curuser=curuser,request=request,offset=(request.args['plo'][0] if 'plo' in request.args else 0),limit=(request.args['pll'][0] if 'pll' in request.args else tracker.pagelimit if tracker.pagelimit else 10)) %}
 	<tr>
-		<td><a href='{{ app.url_for('trackers.viewrecord',id=record.id,module=tracker.module,slug=tracker.slug) }}'>{{loop.index + (curindex*(tracker.pagelimit if tracker.pagelimit else 10)) }}</a></td>
+		<td><a href='{{ app.url_for('trackers.viewdetail',id=record.id,module=tracker.module,slug=tracker.slug) }}'>{{loop.index + (curindex*(tracker.pagelimit if tracker.pagelimit else 10)) }}</a></td>
 		{% if list_fields %}
 		{% for field in list_fields %}
 		<td>

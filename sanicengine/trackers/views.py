@@ -814,9 +814,43 @@ async def listexcel(request,module,slug=None):
     virtual_wb = save_virtual_workbook(wb)
     return raw(virtual_wb, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title)})
 
+@bp.route('/system/<module:string>/<slug:string>/method/<method:string>')
+@authorized(object_type='tracker')
+async def listmethod(request,module,slug,method):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
+    page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_' + method).first()
+    if page:
+        if page and page.runable:
+            redirecturl=None
+            results=None
+            ldict = locals()
+            try:
+                exec(page.content,globals(),ldict)
+            except:
+                print("Got error running commands from page:" + str(page))
+                print("Page content:" + str(page.content))
+                print("Exception:" + str(sys.exc_info()[0]))
+            if 'redirecturl' in ldict:
+                redirecturl=ldict['redirecturl']
+            if 'results' in ldict:
+                results=ldict['results']
+            if redirecturl:
+                return redirect(redirecturl)
+            elif results:
+                return results
+            else:
+                return redirect('/')
+        else:
+            title = tracker.title + '-' + page.title
+            return html(page.render(request,title=title,tracker=tracker))
+    else:
+        title = tracker.title + '- List'
+        request['session']['flashmessage'] = 'Method ' + method + ' was not found for the tracker ' + tracker.title
+        return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
+
 @bp.route('/system/<module:string>/<slug:string>/<id:int>',methods=['POST','GET'])
 @authorized(object_type='tracker')
-async def viewrecord(request,module,slug=None,id=None):
+async def viewdetail(request,module,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     curuser = None
     if 'user_id' in request['session']:
@@ -825,7 +859,7 @@ async def viewrecord(request,module,slug=None,id=None):
     status = None
     page = None
     if request.method=='POST':
-        return redirect(request.app.url_for('tracker.viewrecord',module=module,slug=slug))
+        return redirect(request.app.url_for('tracker.viewdetail',module=module,slug=slug))
     if(id):
         record = tracker.records(id,curuser=curuser,request=request)
         if record:
@@ -838,6 +872,59 @@ async def viewrecord(request,module,slug=None,id=None):
     if page:
         return html(page.render(request,tracker=tracker,record=record,title=title))
     else:
+        return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
+
+@bp.route('/system/<module:string>/<slug:string>/method/<method:string>/<id:int>',methods=['POST','GET'])
+@authorized(object_type='tracker')
+async def detailmethod(request,module,slug,method,id):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
+    curuser = None
+    if 'user_id' in request['session']:
+        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    record = None
+    status = None
+    page = None
+    if request.method=='POST':
+        return redirect(request.app.url_for('tracker.detailmethod',module=module,slug=slug,method=method,id=id))
+    if(id):
+        record = tracker.records(id,curuser=curuser,request=request)
+        if record:
+            status = tracker.status(record)
+    if status:
+        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_' + method + '_' + status.name.lower().replace(' ','_')).first()
+        if not page:
+            page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
+    if not page:
+        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_' + method + '_default').first()
+        if not page:
+            page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default').first()
+    if page:
+        if page and page.runable:
+            redirecturl=None
+            results=None
+            ldict = locals()
+            try:
+                exec(page.content,globals(),ldict)
+            except:
+                print("Got error running commands from page:" + str(page))
+                print("Page content:" + str(page.content))
+                print("Exception:" + str(sys.exc_info()[0]))
+            if 'redirecturl' in ldict:
+                redirecturl=ldict['redirecturl']
+            if 'results' in ldict:
+                results=ldict['results']
+            if redirecturl:
+                return redirect(redirecturl)
+            elif results:
+                return results
+            else:
+                return redirect('/')
+        else:
+            title = tracker.title + '- ' + page.title
+            return html(page.render(request,tracker=tracker,record=record,title=title))
+    else:
+        request['session']['flashmessage'] = 'Method ' + method + ' was not found for the tracker ' + tracker.title
+        title = tracker.title + '- View'
         return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
 
 @bp.route('/system/<module:string>/<slug:string>/add',methods=['POST','GET'])
@@ -859,9 +946,9 @@ async def addrecord(request,module,slug=None):
             if 'output' in ldict and str(ldict['output']):
                 return redirect(str(ldict['output']))
             else:
-                return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
+                return redirect(request.app.url_for('trackers.viewdetail',module=tracker.module,slug=tracker.slug,id=data['id']))
         else:
-            return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
+            return redirect(request.app.url_for('trackers.viewdetail',module=tracker.module,slug=tracker.slug,id=data['id']))
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_addrecord').first()
     title = tracker.title + "-Add Record"
     if newtransition:
@@ -901,9 +988,9 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
             if 'output' in ldict and str(ldict['output']):
                 return redirect(str(ldict['output']))
             else:
-                return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=data['id']))
+                return redirect(request.app.url_for('trackers.viewdetail',module=tracker.module,slug=tracker.slug,id=data['id']))
         else:
-            return redirect(request.app.url_for('trackers.viewrecord',module=tracker.module,slug=tracker.slug,id=record_id))
+            return redirect(request.app.url_for('trackers.viewdetail',module=tracker.module,slug=tracker.slug,id=record_id))
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_editrecord').first()
     title = tracker.title + '-Edit Record'
     if page:
