@@ -739,7 +739,7 @@ async def delete(request,module,slug=None):
         dbsession.rollback()
     return redirect(request.app.url_for('trackers.index'))
 
-@bp.route('/system/cleardata/<module>/<slug>',methods=['POST'])
+@bp.route('/system/cleardata/<module:string>/<slug:string>',methods=['POST'])
 @authorized(object_type='dataupdate')
 async def clearsystemdata(request,module,slug):
     returnurl = None
@@ -769,7 +769,7 @@ async def clearsystemdata(request,module,slug):
         return redirect(request.app.url_for('trackers.viewlist',module=module,slug=slug))
 
 
-@bp.route('/system/<module>/<slug>/')
+@bp.route('/system/<module:string>/<slug:string>/')
 @authorized(object_type='tracker')
 async def viewlist(request,module,slug=None):
     if slug==None:
@@ -783,7 +783,7 @@ async def viewlist(request,module,slug=None):
     else:
         return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
 
-@bp.route('/system/<module>/<slug>/excel')
+@bp.route('/system/<module:string>/<slug:string>/excel')
 @authorized(object_type='tracker')
 async def listexcel(request,module,slug=None):
     if slug==None:
@@ -840,7 +840,7 @@ async def viewrecord(request,module,slug=None,id=None):
     else:
         return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
 
-@bp.route('/system/<module>/<slug>/add',methods=['POST','GET'])
+@bp.route('/system/<module:string>/<slug:string>/add',methods=['POST','GET'])
 @authorized(object_type='tracker')
 async def addrecord(request,module,slug=None):
     data = []
@@ -873,7 +873,7 @@ async def addrecord(request,module,slug=None):
         request['session']['flashmessage'] = 'Default new transition not found'
         return redirect(request.app.url_for('pages.home'))
 
-@bp.route('/system/<module>/<slug>/edit/<transition_id>/<record_id>',methods=['POST','GET'])
+@bp.route('/system/<module:string>/<slug:string>/edit/<transition_id:int>/<record_id:int>',methods=['POST','GET'])
 @authorized(object_type='tracker')
 async def editrecord(request,module,slug=None,transition_id=None,record_id=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
@@ -910,4 +910,3 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
         return html(page.render(request,tracker=tracker,title=title,transition=transition,record=record))
     else:
         return html(render(request,'trackers/formrecord.html',tracker=tracker,title=title,transition=transition,record=record))
-
