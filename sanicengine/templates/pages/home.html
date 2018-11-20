@@ -1,4 +1,4 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h1>Welcome to Sanic Engine</h1>
+<h1>Welcome to {% if app.config.APP_TITLE %}{{ app.config.APP_TITLE }}{% else %}Sanic Engine{% endif %}</h1>
 {% endblock %}
