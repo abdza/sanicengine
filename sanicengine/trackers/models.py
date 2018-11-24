@@ -573,9 +573,17 @@ class TrackerField(ModelBase):
 
     def disp_value(self, value, request=None):
         if value:
-            print('val:' + str(value))
             if self.field_type=='object':
                 sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=" + str(value)
+                try:
+                    result = dbsession.execute(sqlq)
+                    for r in result:
+                        return r[0]
+                except Exception as inst:
+                    print("Error running query:" + str(inst))
+                    dbsession.rollback()
+            elif self.field_type=='treenode':
+                sqlq = "select string_agg(cnode.title,'->' order by cnode.lft) from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where id=" + str(value) + ") nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft,nleaf.rgt,nleaf.id,nleaf.tree_id"
                 try:
                     result = dbsession.execute(sqlq)
                     for r in result:
@@ -628,7 +636,7 @@ class TrackerField(ModelBase):
                 return self.name + " = '" + str(value) + "'"
             else:
                 return self.name + " ilike '%" + str(value) + "%'"
-        elif self.field_type in ['integer','number','object','user','file','picture','video']:
+        elif self.field_type in ['integer','number','object','treenode','user','file','picture','video']:
             return self.name + "=" + str(value)
         elif self.field_type in ['date','datetime']:
             return self.name + "='" + str(value) + "'"
@@ -638,7 +646,7 @@ class TrackerField(ModelBase):
         if value:
             if self.field_type in ['string','text','date','datetime','location','map']:
                 return "'" + str(value).replace("'","''") + "'"
-            elif self.field_type in ['integer','number','object','user','file','picture','video']:
+            elif self.field_type in ['integer','number','object','treenode','user','file','picture','video']:
                 return str(value)
             elif self.field_type=='boolean':
                 if value:
@@ -662,6 +670,8 @@ class TrackerField(ModelBase):
         elif self.field_type=='integer':
             return 'integer'
         elif self.field_type=='object':
+            return 'integer'
+        elif self.field_type=='treenode':
             return 'integer'
         elif self.field_type=='user':
             return 'integer'

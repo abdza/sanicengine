@@ -23,7 +23,7 @@ class TrackerForm(Form):
 class TrackerFieldForm(Form):
     name = StringField('Name')
     label = StringField('Label')
-    field_type = SelectField('Type',choices=[('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object'),('user','User'),('hasMany','Has Many'),('belongsTo','Belongs To'),('file','File'),('picture','Picture'),('video','Video'),('location','Location'),('map','Map')])
+    field_type = SelectField('Type',choices=[('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object'),('treenode','TreeNode'),('user','User'),('hasMany','Has Many'),('belongsTo','Belongs To'),('file','File'),('picture','Picture'),('video','Video'),('location','Location'),('map','Map')])
     widget = SelectField('Widget',choices=[('string','Text'),('text','Text Area'),('number','Number'),('date','Date'),('datetime','Date Time'),('checkbox','Check Box'),('dropdown','Drop Down'),('file','File'),('picture','Picture'),('video','Video'),('location','Location'),('map','Map')])
     obj_table = StringField('Object Table')
     obj_field = StringField('Object Field')

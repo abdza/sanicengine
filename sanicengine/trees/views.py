@@ -15,14 +15,16 @@ bp = Blueprint('trees')
 @authorized(object_type='tree')
 async def view(request, slug):
     tree = dbsession.query(Tree).filter_by(slug=slug).first()
+    title = None
     if tree:
+        title = tree.title + " - Tree"
         if not tree.rootnode:
             tree.create_rootnode()
             try:
                 dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
-        return html(render(request,'trees/view.html',tree=tree))
+        return html(render(request,'trees/view.html',tree=tree,title=title))
     else:
         request['session']['flashmessage'] = 'No tree to view'
         return redirect('/')

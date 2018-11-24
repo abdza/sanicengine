@@ -2,6 +2,7 @@
 from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse, file_stream, stream, raw
 from .models import Tracker, TrackerField, TrackerRole, TrackerStatus, TrackerTransition, TrackerDataUpdate
+from sanicengine.trees.models import Tree
 from sanicengine.users.models import User
 from sanicengine.pages.models import Page
 from sanicengine.emailtemplates.models import EmailTemplate
@@ -12,6 +13,7 @@ from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
+
 import os
 import datetime
 import json
@@ -223,7 +225,7 @@ async def create_from_excel(request,module,slug=None):
                 if slugify(title)!='id':
                     fields.append({'field_name':slugify(title),'field_type':fieldtypes[i]})
             os.remove(dst)
-        field_types = [('ignore','Ignore'),('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object')]
+        field_types = [('ignore','Ignore'),('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object'),('treenode','TreeNode')]
     return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types))
 
 @bp.route('/trackers/editstatus/<module>/<slug>/<id>',methods=['POST','GET'])
@@ -527,12 +529,28 @@ async def fieldjson(request,module,slug=None,field_id=None):
     if field_id:
         trackerfield = dbsession.query(TrackerField).get(int(field_id))
         if(trackerfield):
+            namefield = "name"
             if trackerfield.field_type=='user':
+                namefield = "name"
                 sqlq = "select id,name from users where name ilike '%" + request.args['q'][0] + "%' "
             elif trackerfield.field_type=='object':
+                namefield = trackerfield.main_obj_field()
                 sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where " + " or ".join([field + " ilike '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ])
+            elif trackerfield.field_type=='treenode':
+                namefield = "titleagg"
+                tmodule = trackerfield.tracker.module
+                tslug = trackerfield.tracker.slug
+                tparts = trackerfield.obj_table.split('.')
+                if len(tparts)==2:
+                    tmodule = tparts[0]
+                    tslug = tparts[1]
+                tree = dbsession.query(Tree).filter(Tree.module==tmodule,Tree.slug==tslug).first()
+                if tree:
+                    sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'->' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where rgt-lft=1 and tree_id=" + str(tree.id) + ") nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike '%" + "%".join(request.args['q'][0].replace(" ","")) + "%' limit 20"
+                else:
+                    sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'->' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where rgt-lft=1) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike '%" + "%".join(request.args['q'][0].replace(" ","")) + "%' limit 20"
             results = dbsession.execute(sqlq)
-            return jsonresponse([ {'id':result.id,'name':result[trackerfield.main_obj_field()]} for result in results ])
+            return jsonresponse([ {'id':result.id,'name':result[namefield]} for result in results ])
 
 
 @bp.route('/trackers/view/<id>')

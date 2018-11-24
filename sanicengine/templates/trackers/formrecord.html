@@ -19,7 +19,7 @@
 {{ super() }}
 {% set ns = namespace(gotdate = false,gottoken = false) %}
 {% for field in transition.edit_fields_list() %}
-	{% if field.field_type in ['object','user'] %}
+	{% if field.field_type in ['object','user','treenode'] %}
 		<script> 
 		$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',module=tracker.module,slug=tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
 		</script> 
