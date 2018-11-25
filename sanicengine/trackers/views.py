@@ -361,6 +361,7 @@ async def transitionform(request,module,slug=None,id=None):
             del(form['emails'])
             display_fields = []
             edit_fields = []
+            detail_fields = []
             if form['display_fields'].data:
                 display_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['display_fields'].data + ")") ])
                 del(form['display_fields'])
@@ -370,6 +371,7 @@ async def transitionform(request,module,slug=None,id=None):
             form.populate_obj(trackertransition)
             trackertransition.display_fields = display_fields
             trackertransition.edit_fields = edit_fields
+            trackertransition.detail_fields = detail_fields
             if form.prev_status_id.data=='':
                 trackertransition.prev_status = None
                 trackertransition.prev_status_id = None
@@ -660,6 +662,8 @@ async def form(request,id=None):
                 tracker.filter_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['filter_fields'].data + ")") ])
             if form['excel_fields'].data:
                 tracker.excel_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['excel_fields'].data + ")") ])
+            if form['detail_fields'].data:
+                tracker.detail_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['detail_fields'].data + ")") ])
             dbsession.add(tracker)
             if newtracker:
                 newstatus = TrackerStatus(name='New',tracker=tracker)
@@ -703,6 +707,10 @@ async def form(request,id=None):
                         'excel_fields': {
                             'url': request.app.url_for('trackers.trackerfieldsjson',module=tracker.module,slug=tracker.slug),
                             'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.excel_fields) ]
+                            },
+                        'detail_fields': {
+                            'url': request.app.url_for('trackers.trackerfieldsjson',module=tracker.module,slug=tracker.slug),
+                            'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.fields_from_list(tracker.detail_fields) ]
                             },
                         }
 

@@ -28,6 +28,7 @@ class Tracker(ModelBase):
     search_fields = Column(Text)
     filter_fields = Column(Text)
     excel_fields = Column(Text)
+    detail_fields = Column(Text)
     published = Column(Boolean(),default=False)
     pagelimit = Column(Integer,default=10)
     require_login = Column(Boolean(),default=False)
@@ -70,7 +71,10 @@ class Tracker(ModelBase):
     def display_fields_list(self,record):
         curstatus = self.status(record)
         if curstatus:
-            return self.fields_from_list(curstatus.display_fields)
+            if curstatus.display_fields:
+                return self.fields_from_list(curstatus.display_fields)
+            elif self.detail_fields:
+                return self.fields_from_list(self.detail_fields)
         return []
 
     def fields_from_list(self,field_list=None):
@@ -275,17 +279,26 @@ class Tracker(ModelBase):
             if form['record_status'][0].lower()=='delete':
                 if oldrecord:
                     request['session']['flashmessage']="Deleted " + self.title + " " + str(oldrecord['id'])
-                    dbsession.execute("delete from " + self.update_table + " where record_id=" + str(oldrecord['id']))
-                    dbsession.execute("delete from " + self.data_table + " where id=" + str(oldrecord['id']))
+                    try:
+                        dbsession.execute("delete from " + self.update_table + " where record_id=" + str(oldrecord['id']))
+                    except Exception as inst:
+                        dbsession.rollback()
+                    try:
+                        dbsession.execute("delete from " + self.data_table + " where id=" + str(oldrecord['id']))
+                    except Exception as inst:
+                        dbsession.rollback()
                     return None
             else:
                 for field in transition.edit_fields_list():
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
                         output=None
                         ldict = locals()
-                        exec(field.default,globals(),ldict)
-                        output=ldict['output']
-                        form[field.name][0]=output
+                        try:
+                            exec(field.default,globals(),ldict)
+                            output=ldict['output']
+                            form[field.name][0]=output
+                        except Exception as inst:
+                            print("Error exec:" + str(field.default))
                     elif field.field_type == 'boolean':
                         if field.name not in form:
                             form[field.name]=[0,]
@@ -321,11 +334,11 @@ class Tracker(ModelBase):
                 fieldnames = list(form.keys())
                 if oldrecord:
                     query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
-                    print("q:" + str(query))
                 try:
                     data = dbsession.execute(query).fetchone()
                     dbsession.commit()
                 except Exception as inst:
+                    print("Error query:" + str(query))
                     dbsession.rollback()
                 txtdesc = []
                 if data:
@@ -345,6 +358,7 @@ class Tracker(ModelBase):
                         dbsession.execute(query)
                         dbsession.commit()
                     except Exception as inst:
+                        print("Error query:" + str(query))
                         dbsession.rollback()
 
         return data
