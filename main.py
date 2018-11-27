@@ -118,11 +118,11 @@ async def default_data(app, loop):
 
     dbsession.commit()
 
-async def returnfunction(request):
+async def returnfunction(request,arg1=None,arg2=None,arg3=None,arg4=None,arg5=None):
     custom_routes = portalsettings.models.Setting.namedefault('portal','customurl',[])
     croute = custom_routes[request.uri_template]
     if croute['type']=='page':
-        return await pages.views.view(request,module=croute['module'],slug=croute['slug'])
+        return await pages.views.view(request,module=croute['module'],slug=croute['slug'],arg1=arg1,arg2=arg2,arg3=arg3,arg4=arg4,arg5=arg5)
     elif croute['type']=='file':
         return await fileLinks.views.download(request,module=croute['module'],slug=croute['slug'])
     elif croute['type']=='tracker':
