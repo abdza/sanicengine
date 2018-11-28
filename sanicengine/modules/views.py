@@ -120,6 +120,7 @@ async def importmodule(request,slug=None):
             tracker.search_fields = readarray(ctracker,'search_fields')
             tracker.filter_fields = readarray(ctracker,'filter_fields')
             tracker.excel_fields = readarray(ctracker,'excel_fields')
+            tracker.detail_fields = readarray(ctracker,'detail_fields')
             tracker.published = readarray(ctracker,'published',False)
             tracker.pagelimit = readarray(ctracker,'pagelimit')
             tracker.require_login = readarray(ctracker,'require_login',False)
@@ -296,6 +297,7 @@ async def export(request,slug=None):
                 'search_fields':tracker.search_fields,
                 'filter_fields':tracker.filter_fields,
                 'excel_fields':tracker.excel_fields,
+                'detail_fields':tracker.detail_fields,
                 'published':tracker.published,
                 'pagelimit':tracker.pagelimit,
                 'require_login':tracker.require_login,
