@@ -834,7 +834,7 @@ async def listexcel(request,module,slug=None):
         row=2
         for rec in records:
             for i,f in enumerate(xfields):
-                ws.cell(row=row,column=i+1,value=rec[f.name])
+                ws.cell(row=row,column=i+1,value=str(f.disp_value(rec[f.name],request)))
             row+=1
 
     virtual_wb = save_virtual_workbook(wb)
