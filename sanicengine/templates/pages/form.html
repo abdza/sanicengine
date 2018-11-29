@@ -8,6 +8,8 @@
     }
     #contenteditor { 
 	position: absolute;
+	width: 100%;
+	height: 100%;
 	top: 0;
 	left: 0;
 	right: 0;
@@ -26,7 +28,28 @@
 <form id='pageform' method='POST' {% if enctype %}enctype='{{enctype}}'{% endif %}>
 {% for field in form %}
 	<div class='form-group row'>
+	{% if field.name=='content' %}
+	{{ field.label(class_='col-sm-2 col-form-label',data_html="true",data_toggle="tooltip",title="""Available blocks:
+	head_start
+	layout_css
+		form_css
+		page_css
+	title
+	head_end
+	layout_body
+		body
+			body_start
+			mainblock
+				content
+		layout_js
+			form_js
+			page_js
+			custom_js
+		body_end
+	""") }}
+	{% else %}
 	{{ field.label(class_='col-sm-2 col-form-label') }}
+	{% endif %}
 	{% if field.name!='content' %}
 		{% if field.type=='BooleanField' %}
 			<div class="{{'col-sm-10 is-invalid' if field.errors else 'col-sm-10'}}">
@@ -60,6 +83,7 @@
 	{{ super() }}
 	<script type='text/javascript'>
 	$(document).ready(function(){
+		$('[data-toggle="tootltip"]').tooltip();
 		var editor = ace.edit("contenteditor");
 		editor.setTheme("ace/theme/xcode");
 		{% if page.runable %}
