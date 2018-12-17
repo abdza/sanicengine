@@ -1,5 +1,10 @@
 {% from 'macros.html' import topmenu,sidemenu,adminmenu with context %}
 {% extends "base.html" %}
+{% block head_start %}
+	{% if app.config.GOOGLE_OAUTH_ID %}
+	<meta name="google-signin-client_id" content="{{ app.config.GOOGLE_OAUTH_ID }}">
+	{% endif %}
+{% endblock %}
 {% block body %}
 	<div class='wrapper'>
 	{% block bodyheader %}
@@ -40,6 +45,7 @@
 				<input class='form-control mr-sm-2' placeholder='Password' type='password' name='password' id='password'>
 				<input class='btn my-2 my-sm-0' type='submit' value='Login'/>
 			</form>
+			<div class="g-signin2" data-onsuccess="onSignIn"></div>
 		{% endif %}
 		</div>
 	</nav>
@@ -75,4 +81,10 @@
 		</main>
 	{% endblock %}
 	</div>
+{% endblock %}
+{% block page_js %}
+{{ super() }}
+	{% if app.config.GOOGLE_OAUTH_ID %}
+		<script src="https://apis.google.com/js/platform.js" async defer></script>
+	{% endif %}
 {% endblock %}
