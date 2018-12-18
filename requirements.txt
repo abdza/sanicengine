@@ -10,3 +10,5 @@ openpyxl
 aiosmtplib
 apscheduler
 sqlalchemy_mptt
+google-auth
+requests

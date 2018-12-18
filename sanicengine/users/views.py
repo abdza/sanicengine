@@ -14,7 +14,44 @@ import hashlib
 import json
 import datetime
 
+from google.oauth2 import id_token
+from google.auth.transport import requests as googlerequest
+
 bp = Blueprint('users')
+
+@bp.route('/googlesignin',methods=['GET','POST'])
+async def googlesignin(request):
+    print("Output gsignin")
+    print(str(request))
+    if 'idtoken' in request.form:
+        print("Token:" + str(request.form['idtoken']))
+        try:
+            idinfo = id_token.verify_oauth2_token(request.form['idtoken'][0],googlerequest.Request(), request.app.config.GOOGLE_OAUTH_ID)
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                raise ValueError('Wrong issuer.')
+            userid = idinfo['sub']
+
+            print("idinfo:" + str(userid))
+            print("email:" + str(idinfo['email']))
+            print("name:" + str(idinfo['name']))
+            print("picture:" + str(idinfo['picture']))
+            print("given_name:" + str(idinfo['given_name']))
+            print("family_name:" + str(idinfo['family_name']))
+
+            curuser = dbsession.query(User).filter(User.email==idinfo['email']).first()
+            if curuser:
+                print("Logging in " + str(curuser))
+            else:
+                print("Need to register user")
+                curuser = User(name=idinfo['name'],email=idinfo['email'],avatar=idinfo['picture'])
+                dbsession.add(curuser)
+                dbsession.commit()
+                print("Registered " + str(curuser))
+            if curuser:
+                request['session']['user_id']=curuser.id
+        except Exception as err:
+            print("error:" + str(err))
+    return jsonresponse({'output':'done'})
 
 @bp.route('/login',methods=['GET','POST'])
 async def login(request):

@@ -9,6 +9,7 @@ class User(ModelBase):
     name = Column(String(250), nullable=False)
     username = Column(String(50))
     password = Column(String(300))
+    avatar = Column(String(300))
     email = Column(String(300))
     resethash = Column(String(300))
     resetexpire = Column(DateTime)

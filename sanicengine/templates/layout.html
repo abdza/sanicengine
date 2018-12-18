@@ -32,7 +32,7 @@
 					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="profilelink">
 						<a class="dropdown-item" href="{{ app.url_for('users.profile') }}"><i class="fa fa-user-md" aria-hidden="true"></i> Profile</a>
 						<a class="dropdown-item" href="{{ app.url_for('users.changepassword') }}"><i class="fa fa-key" aria-hidden="true"></i> Password</a>
-						<a class="dropdown-item" href="{{ app.url_for('users.logout') }}"><i class="fa fa-sign-out-alt" aria-hidden="true"></i> Log Out</a>
+						<a id='logout' class="dropdown-item" href="{{ app.url_for('users.logout') }}"><i class="fa fa-sign-out-alt" aria-hidden="true"></i> Log Out</a>
 					</div>
 				</li>
 			</ul>
@@ -85,6 +85,35 @@
 {% block page_js %}
 {{ super() }}
 	{% if app.config.GOOGLE_OAUTH_ID %}
-		<script src="https://apis.google.com/js/platform.js" async defer></script>
+		<script src="https://apis.google.com/js/platform.js?onload=gapiload" async defer></script>
+	<script>
+	function onSignIn(googleUser) {
+		var id_token = googleUser.getAuthResponse().id_token;
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST', '{{ app.config.SERVER_BASE }}/googlesignin');
+		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		xhr.onload = function() {
+			console.log('Signed in as: ' + xhr.responseText);
+			location.reload();
+		};
+		xhr.send('idtoken=' + id_token);
+	}
+	function signOut() {
+	    var auth2 = gapi.auth2.getAuthInstance();
+	    auth2.signOut().then(function () {
+	      console.log('User signed out.');
+	    });
+	}
+	function gapiload() {
+		gapi.load('auth2', function() {
+			gapi.auth2.init();
+		});
+	}
+	$('#logout').on('click',function(){
+		signOut();
+		return true;
+	});
+
+	</script>
 	{% endif %}
 {% endblock %}
