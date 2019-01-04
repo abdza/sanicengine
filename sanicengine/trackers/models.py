@@ -405,7 +405,7 @@ class Tracker(ModelBase):
 
     def queryrules(self,curuser=None,request=None,cleared=False):
         rules = ' where 1=1 '
-        if 'plq' in request.args: # page list query exists
+        if request and 'plq' in request.args: # page list query exists
             if self.search_fields and len(request.args['plq'][0]):
                 sfields = self.fields_from_list(self.search_fields)
                 sqs = []
