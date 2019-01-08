@@ -174,7 +174,6 @@ async def create_from_excel(request,module,slug=None):
         slug=module
         module='portal'
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    print('tracker:' + str(tracker) + '--- module:' + module + '--- slug:' + slug + '---')
     fields = []
     field_types = []
     if tracker and request.method=='POST':
@@ -189,6 +188,7 @@ async def create_from_excel(request,module,slug=None):
                     dbsession.add(tfield)
                     list_fields.append(name)
             tracker.list_fields = ','.join(list_fields)
+            tracker.detail_fields = ','.join(list_fields)
             dbsession.add(tracker)
             try:
                 dbsession.commit()

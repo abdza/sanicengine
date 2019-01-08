@@ -771,7 +771,7 @@ class TrackerDataUpdate(ModelBase):
         if optype == 'insert':
             query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no) values '
             for i,row in enumerate(ws.rows):
-                if i>headerend:
+                if i>=headerend:
                     cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] if datas[f.name + '_column'][0]!='custom' else datas[f.name + '_custom'][0] for f in fields]
                     drowdata = [ f.value if type(f) is not str else f for f in cellrows ]
                     sqlrowdata = [ f.sqlvalue(drowdata[dd]) for dd,f in enumerate(fields) ]
