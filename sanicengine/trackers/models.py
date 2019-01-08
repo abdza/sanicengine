@@ -769,7 +769,12 @@ class TrackerDataUpdate(ModelBase):
         rows = []
         headerend = 1
         if optype == 'insert':
-            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no) values '
+            recstatusq = ''
+            newtransition = None
+            if 'record_status' not in fields:
+                recstatusq = ',record_status'
+                newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.tracker==self.tracker,TrackerTransition.name==self.tracker.default_new_transition).first()
+            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no' + recstatusq + ') values '
             for i,row in enumerate(ws.rows):
                 if i>=headerend:
                     cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] if datas[f.name + '_column'][0]!='custom' else datas[f.name + '_custom'][0] for f in fields]
@@ -778,6 +783,8 @@ class TrackerDataUpdate(ModelBase):
                     drow = '('
                     drow = drow + ','.join(sqlrowdata)
                     drow = drow + ',' + str(self.id)
+                    if 'record_status' not in fields and newtransition and newtransition.next_status:
+                        drow = drow + ",'" + newtransition.next_status.name + "'"
                     drow = drow + ')'
                     rows.append(drow)
             query = query + ','.join(rows)
