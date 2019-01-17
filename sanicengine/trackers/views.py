@@ -217,10 +217,12 @@ async def create_from_excel(request,module,slug=None):
             fieldtypes = []
             for row in ws.iter_rows(max_row=1):
                 for cell in row:
-                    fieldtitles.append(cell.value)
+                    if cell.value!=None:
+                        fieldtitles.append(cell.value)
             for row in ws.iter_rows(max_row=1,row_offset=1):
                 for cell in row:
-                    fieldtypes.append(cell.data_type)
+                    if cell.value!=None:
+                        fieldtypes.append(cell.data_type)
             for i,title in enumerate(fieldtitles):
                 if slugify(title)!='id':
                     fields.append({'field_name':slugify(title),'field_type':fieldtypes[i]})

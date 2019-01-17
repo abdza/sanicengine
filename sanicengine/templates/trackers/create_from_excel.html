@@ -13,7 +13,7 @@
 		<td>
 			<select name='field_type'>
 				{% for v,t in field_types %}
-				<option value='{{v}}' {% if field.field_type=='n' and v=='integer' %}selected{% endif %}>{{t}}</option>
+				<option value='{{v}}' {% if (field.field_type=='n' and v=='integer') or (field.field_type=='s' and v=='string') %}selected{% endif %}>{{t}}</option>
 				{% endfor %}
 			</select>
 		</td>
