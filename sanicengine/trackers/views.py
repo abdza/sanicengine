@@ -722,9 +722,16 @@ async def form(request,id=None):
 @authorized(require_admin=True)
 async def index(request):
     trackers = dbsession.query(Tracker)
-    paginator = Paginator(trackers, 50)
+    modules = []
+    for m in dbsession.query(Tracker.module).distinct():
+        modules.append(m[0])
+        if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
+            trackers = trackers.filter_by(module=m[0])
+    if request.args.get('q'):
+        trackers = trackers.filter(or_(Tracker.title.ilike("%" + request.args.get('q') + "%"),Tracker.slug.ilike("%" + request.args.get('q') + "%")))
+    paginator = Paginator(trackers, 5)
     return html(render(request,
-    'generic/list.html',title='Trackers',editlink='trackers.viewtracker',addlink='trackers.create',maxlength=100,fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'List Fields','name':'list_fields'},{'label':'Require Login','name':'require_login'},{'label':'Allowed Roles','name':'allowed_roles'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    'generic/list.html',title='Trackers',editlink='trackers.viewtracker',addlink='trackers.create',maxlength=100,filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'List Fields','name':'list_fields'},{'label':'Require Login','name':'require_login'},{'label':'Allowed Roles','name':'allowed_roles'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/trackers/delete/<module>/<slug>',methods=['POST'])
 @authorized(require_admin=True)
