@@ -9,6 +9,7 @@ from sanicengine.template import render
 from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 import sys
 import datetime
 
@@ -146,6 +147,13 @@ async def loginrequired(request):
 @authorized(object_type='page',require_admin=True)
 async def index(request):
     pages = dbsession.query(Page)
-    paginator = Paginator(pages, 50)
+    modules = []
+    for m in dbsession.query(Page.module).distinct():
+        modules.append(m[0])
+        if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
+            pages = pages.filter_by(module=m[0])
+    if request.args.get('q'):
+        pages = pages.filter(or_(Page.title.ilike("%" + request.args.get('q') + "%"),Page.slug.ilike("%" + request.args.get('q') + "%")))
+    paginator = Paginator(pages, 5)
     return html(render(request,
-        'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

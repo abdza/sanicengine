@@ -5,6 +5,26 @@
 	{{ title }}
 	</h1>
 {% endif %}
+{% if filter_fields %}
+<form method='GET'>
+<div class='row'>
+<label class='col-sm-2' for='search'>Search:</label>
+<input class='col-sm-6' type='text' value='{% if request.args.get('q') %}{{ request.args.get('q') }}{% endif %}' name='q'/>
+<button class='col-sm-2' type='submit'>Search</button>
+</div>
+{% for ffield in filter_fields %}
+<div class='row'>
+<label class='col-sm-2' for='{{ffield.field}}'>{{ffield.label}}:</label>
+<select class='col-sm-6 filter_field' onchange='submit();' name='{{ffield.field}}_filter'>
+	<option value='all' {% if not request.args.get(ffield.field + '_filter') or request.args.get(ffield.field + '_filter')=='all' %}selected{% endif %}>All</option>
+	{% for foption in ffield.options %}
+	<option value='{{foption}}' {% if request.args.get(ffield.field + '_filter') and request.args.get(ffield.field + '_filter')==foption %}selected{% endif %}>{{foption}}</option>
+	{% endfor %}
+</select>
+</div>
+{% endfor %}
+</form>
+{% endif %}
 {% if addlink %}
 <a href='{{ app.url_for(addlink) }}' class='btn btn-primary'>{% if addtitle %}{{addtitle}}{% else %}Add{% endif %}</a>
 {% endif %}
@@ -27,7 +47,7 @@
 	<tr>
 		<td>
 			{% if editlink %}
-			<a href="{{ app.url_for(editlink) }}/{{item.id}}">{{ loop.index }}</a>
+			<a href="{{ app.url_for(editlink) }}/{{item.id}}">{{ loop.index0 + curpage.start_index }}</a>
 			{% else %}
 			{{ loop.index }}
 			{% endif %}
@@ -72,21 +92,31 @@
 	</tr>
 	{% endfor %}
 </table>
+{% macro pagefilters() -%}
+{% if filter_fields %}
+{% for ffield in filter_fields %}
+{% if request.args.get(ffield.field + '_filter') %}&{{ffield.field}}_filter={{ request.args.get(ffield.field + '_filter') }}{% endif %}
+{% endfor %}
+{% endif %}
+{% if request.args.get('q') %}&q={{request.args.get('q')}}{% endif %}
+{%- endmacro %}
 <ul class="pagination">
 	{% if curpage.has_previous() %}
     <li class="page-item">
-	    <a class="page-link" href="{{ request.path }}?page={{curpage.previous_page_number}}" aria-label="Previous">
+	    <a class="page-link" href="{{ request.path }}?page={{curpage.previous_page_number}}{{ pagefilters() }}" aria-label="Previous">
         <span aria-hidden="true">&laquo;</span>
         <span class="sr-only">Previous</span>
       </a>
     </li>
     {% endif %}
     {% for cpage in paginator %}
-    <li class="page-item"><a class="page-link" href="{{ request.path }}?page={{cpage.number}}">{{cpage.number}}</a></li>
+    <li class="page-item {% if curpage.number == cpage.number %}active{% endif %}">
+	    <a class="page-link" href="{{ request.path }}?page={{cpage.number}}{{ pagefilters() }}">{{cpage.number}}<span class="sr-only">(current)</span></a>
+    </li>
     {% endfor %}
 	{% if curpage.has_next() %}
     <li class="page-item">
-	    <a class="page-link" href="{{ request.path }}?page={{curpage.next_page_number}}" aria-label="Next">
+	    <a class="page-link" href="{{ request.path }}?page={{curpage.next_page_number}}{{ pagefilters() }}" aria-label="Next">
         <span aria-hidden="true">&raquo;</span>
         <span class="sr-only">Next</span>
       </a>
