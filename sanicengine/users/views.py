@@ -64,6 +64,8 @@ async def login(request):
 
     if request.method=='POST':
         curuser = dbsession.query(User).filter(User.username==request.form.get('username')).first()
+        if not curuser:
+            curuser = dbsession.query(User).filter(User.email==request.form.get('username')).first()
         if curuser:
             if curuser.password == curuser.hashpassword(request.form.get('password')):
                 request['session']['user_id']=curuser.id
@@ -72,9 +74,11 @@ async def login(request):
                 else:
                     return redirect('/')
             else:
+                print("wrong password")
                 request['session']['flashmessage']='Wrong username or password'
                 return redirect('/')
         else:
+            print("user not found for:" + request.form.get('username') + "----")
             request['session']['flashmessage']='Wrong username or password'
             return redirect('/')
 
@@ -149,12 +153,66 @@ async def userjson(request):
     users = dbsession.query(User).filter(or_(User.name.ilike("%" + searchval + "%"),User.username.ilike("%" + searchval + "%"))).all()
     return jsonresponse([ {'id':user.id,'name':user.name} for user in users ])
 
+@bp.route('/users/delete/<id>',methods=['POST'])
+@authorized(object_type='setting',require_admin=True)
+async def delete(request,id):
+    user = dbsession.query(User).get(int(id))
+    if user:
+        dbsession.delete(user)
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
+    return redirect(request.app.url_for('users.index'))
+
+@bp.route('/users/edit/<id>',methods=['POST','GET'])
+@bp.route('/users/edit/',methods=['POST','GET'],name='edit')
+@bp.route('/users/create',methods=['POST','GET'],name='create')
+@authorized(object_type='user')
+async def form(request,id=None):
+    title = 'Create User'
+    form = None
+    submitcontinue = False
+    user=None
+    if id:
+        user = dbsession.query(User).get(id)
+    if request.method=='POST':
+        form = UserForm(request.form)
+        if form.validate():
+            if not user:
+                user=User()
+            form.populate_obj(user)
+            if request.form.get('password'):
+                user.password = hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest()
+            dbsession.add(user)
+            success = False
+            try:
+                dbsession.commit()
+                success = True
+            except IntegrityError as inst:
+                form.name.errors.append('User with name ' + form.name.data + ' already exist in module ' + form.module.data + '. It needs to be unique')
+                dbsession.rollback()
+            except Exception as inst:
+                dbsession.rollback()
+            if success:
+                return redirect(request.app.url_for('users.index'))
+    else:
+        if user:
+            form = UserForm(obj=user)
+            title = 'Edit User'
+            submitcontinue = True
+    if not form:
+        form = UserForm()
+
+    return html(render(request,'generic/form.html',title=title,user=user,
+            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
+
 @bp.route('/users')
 @authorized(require_admin=True)
 async def index(request):
     users = dbsession.query(User)
     paginator = Paginator(users, 50)
-    return html(render(request, 'generic/list.html',title='Users',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Users',deletelink='users.delete',editlink='users.edit',addlink='users.create',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
 
 @bp.route('/profile',methods=['GET','POST'])
 @authorized()
