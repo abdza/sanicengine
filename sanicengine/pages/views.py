@@ -7,6 +7,7 @@ from sanicengine.trackers.models import Tracker
 from sanicengine.database import dbsession, executedb, querydb, queryobj
 from sanicengine.template import render
 from sanicengine.decorators import authorized
+from sanicengine.users.models import User
 from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
@@ -124,7 +125,13 @@ async def form(request,id=None):
             title = page.title + '-Edit'
             submitcontinue = True
 
-    return html(render(request,'pages/form.html',title=title,page=page,
+    curuser = User.getuser(request['session']['user_id'])
+    modules = []
+    for m in dbsession.query(Page.module).distinct():
+        if 'Admin' in curuser.moduleroles(m[0]):
+            modules.append(m[0])
+
+    return html(render(request,'pages/form.html',title=title,page=page,modules=modules,
             form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
 
 @bp.route('/')
@@ -146,12 +153,18 @@ async def loginrequired(request):
 @bp.route('/pages')
 @authorized(object_type='page',require_admin=True)
 async def index(request):
+    curuser = User.getuser(request['session']['user_id'])
     pages = dbsession.query(Page)
     modules = []
+    donefilter = False
     for m in dbsession.query(Page.module).distinct():
-        modules.append(m[0])
-        if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
-            pages = pages.filter_by(module=m[0])
+        if 'Admin' in curuser.moduleroles(m[0]):
+            modules.append(m[0])
+            if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
+                pages = pages.filter_by(module=m[0])
+                donefilter = True
+    if not donefilter:
+        pages = pages.filter(Page.module.in_(modules))
     if request.args.get('q'):
         pages = pages.filter(or_(Page.title.ilike("%" + request.args.get('q') + "%"),Page.slug.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(pages, 5)

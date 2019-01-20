@@ -20,7 +20,8 @@ class User(ModelBase):
     def __str__(self):
         return self.name
 
-    def getuser(self, userid):
+    @staticmethod
+    def getuser(userid):
         return dbsession.query(User).get(userid)
 
     def hashpassword(self,passinput):

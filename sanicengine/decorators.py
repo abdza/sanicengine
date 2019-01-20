@@ -13,8 +13,7 @@ def authorized(object_type=None, require_admin=False, require_superuser=False):
             curuser = None
             if 'user_id' in request['session']:
                 from sanicengine.users.models import User
-                curuser = dbsession.query(User).filter(
-                    User.id == request['session']['user_id']).first()
+                curuser = dbsession.query(User).filter(User.id == request['session']['user_id']).first()
 
             if 'slug' in request.args:
                 kwargs['slug'] = request.args['slug'][0]

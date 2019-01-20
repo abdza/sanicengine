@@ -113,6 +113,9 @@
 		{% if 'user' in form %}
 			$('input#user').tokenInput('{{ app.url_for('users.userjson') }}',{tokenLimit:1{% if userdata %},prePopulate:[{id:{{ userdata.id }},name:"{{ userdata.name }}"}]{% endif %}});
 		{% endif %}
+		{% if 'module' in form and modules %}
+		$('input#module').tokenInput([{% for module in modules %}{id:'{{module}}',name:'{{module}}'},{% endfor %}],{tokenLimit:1{% if form.module.data %},prePopulate:[{id:'{{form.module.data}}',name:'{{form.module.data}}'}]{% endif %}});
+		{% endif %}
 		{% if tokeninput %}
 			{% for key,input in tokeninput.items() %}
 				$('input#{{key}}').tokenInput('{{ input.url }}',{ {% if input.prePopulate %}prePopulate:[{% for data in input.prePopulate %}{id:{{ data.id }},name:"{{ data.name }}"},{% endfor %}]{% endif %}});
