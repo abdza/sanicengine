@@ -716,17 +716,28 @@ async def form(request,id=None):
                             },
                         }
 
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',tokeninput=tokeninput))
+    curuser = User.getuser(request['session']['user_id'])
+    modules = []
+    for m in dbsession.query(Page.module).distinct():
+        if 'Admin' in curuser.moduleroles(m[0]):
+            modules.append(m[0])
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',modules=modules,tokeninput=tokeninput))
 
 @bp.route('/trackers')
 @authorized(require_admin=True)
 async def index(request):
+    curuser = User.getuser(request['session']['user_id'])
     trackers = dbsession.query(Tracker)
     modules = []
+    donefilter = False
     for m in dbsession.query(Tracker.module).distinct():
-        modules.append(m[0])
-        if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
-            trackers = trackers.filter_by(module=m[0])
+        if 'Admin' in curuser.moduleroles(m[0]):
+            modules.append(m[0])
+            if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
+                trackers = trackers.filter_by(module=m[0])
+                donefilter = True
+    if not donefilter:
+        trackers = trackers.filter(Tracker.module.in_(modules))
     if request.args.get('q'):
         trackers = trackers.filter(or_(Tracker.title.ilike("%" + request.args.get('q') + "%"),Tracker.slug.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(trackers, 5)
