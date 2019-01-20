@@ -3,11 +3,13 @@ from sanic import Blueprint
 from sanic.response import html, redirect, file_stream
 from .models import FileLink
 from .forms import FileLinkForm
+from sanicengine.users.models import User
 from sanicengine.database import dbsession
 from sanicengine.template import render
 from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 import os
 import time
 
@@ -101,12 +103,27 @@ async def form(request,id=None):
     else:
         if filelink:
             form = FileLinkForm(obj=filelink)
-    return html(render(request, 'generic/form.html', title=title, form=form, enctype='multipart/form-data'))
+    curuser = User.getuser(request['session']['user_id'])
+    modules = curuser.rolemodules('Admin')
+    return html(render(request, 'generic/form.html', title=title, form=form, modules=modules, enctype='multipart/form-data'))
 
 
 @bp.route('/files')
 @authorized(object_type='filelink', require_admin=True)
 async def index(request):
+    curuser = User.getuser(request['session']['user_id'])
     filelinks = dbsession.query(FileLink)
-    paginator = Paginator(filelinks, 50)
-    return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.create', fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    modules = []
+    donefilter = False
+    for m in dbsession.query(FileLink.module).distinct():
+        if 'Admin' in curuser.moduleroles(m[0]):
+            modules.append(m[0])
+            if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
+                filelinks = filelinks.filter_by(module=m[0])
+                donefilter = True
+    if not donefilter:
+        filelinks = filelinks.filter(FileLink.module.in_(modules))
+    if request.args.get('q'):
+        filelinks = filelinks.filter(or_(FileLink.title.ilike("%" + request.args.get('q') + "%"),FileLink.slug.ilike("%" + request.args.get('q') + "%"),FileLink.filename.ilike("%" + request.args.get('q') + "%")))
+    paginator = Paginator(filelinks, 10)
+    return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.create',filter_fields=[{'field':'module','label':'Module','options':modules},], fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

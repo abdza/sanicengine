@@ -384,5 +384,5 @@ async def updatelist(request):
 @authorized(require_superuser=True)
 async def index(request):
     modules = dbsession.query(Module)
-    paginator = Paginator(modules, 5)
+    paginator = Paginator(modules, 10)
     return html(render(request, 'modules/list.html',title='Modules',fields=[{'label':'Title','name':'title'}],addtitle='Update List',addlink=request.app.url_for('modules.updatelist'),paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

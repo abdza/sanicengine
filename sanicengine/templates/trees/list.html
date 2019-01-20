@@ -5,6 +5,26 @@
 	{{ title }}
 	</h1>
 {% endif %}
+{% if filter_fields %}
+<form method='GET'>
+<div class='row'>
+<label class='col-sm-2' for='search'>Search:</label>
+<input class='col-sm-6' type='text' value='{% if request.args.get('q') %}{{ request.args.get('q') }}{% endif %}' name='q'/>
+<button class='col-sm-2' type='submit'>Search</button>
+</div>
+{% for ffield in filter_fields %}
+<div class='row'>
+<label class='col-sm-2' for='{{ffield.field}}'>{{ffield.label}}:</label>
+<select class='col-sm-6 filter_field' onchange='submit();' name='{{ffield.field}}_filter'>
+	<option value='all' {% if not request.args.get(ffield.field + '_filter') or request.args.get(ffield.field + '_filter')=='all' %}selected{% endif %}>All</option>
+	{% for foption in ffield.options %}
+	<option value='{{foption}}' {% if request.args.get(ffield.field + '_filter') and request.args.get(ffield.field + '_filter')==foption %}selected{% endif %}>{{foption}}</option>
+	{% endfor %}
+</select>
+</div>
+{% endfor %}
+</form>
+{% endif %}
 {% if addlink %}
 <a href='{{ app.url_for(addlink) }}' class='btn btn-primary'>{% if addtitle %}{{addtitle}}{% else %}Add{% endif %}</a>
 {% endif %}

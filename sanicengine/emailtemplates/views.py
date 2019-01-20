@@ -3,11 +3,13 @@ from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse
 from .models import EmailTemplate, EmailTrail
 from .forms import EmailTemplateForm
+from sanicengine.users.models import User
 from sanicengine.database import dbsession, executedb, querydb
 from sanicengine.template import render
 from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 import datetime
 
 bp = Blueprint('emailtemplates')
@@ -85,13 +87,28 @@ async def form(request,id=None):
             title = emailtemplate.title + '-Edit'
             submitcontinue = True
 
-    return html(render(request,'generic/form.html',title=title,emailtemplate=emailtemplate,
+    curuser = User.getuser(request['session']['user_id'])
+    modules = curuser.rolemodules('Admin')
+    return html(render(request,'generic/form.html',title=title,emailtemplate=emailtemplate,modules=modules,
             form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
 
 @bp.route('/emailtemplates')
 @authorized(object_type='emailtemplate',require_admin=True)
 async def index(request):
     emailtemplates = dbsession.query(EmailTemplate)
-    paginator = Paginator(emailtemplates, 50)
+    curuser = User.getuser(request['session']['user_id'])
+    modules = []
+    donefilter = False
+    for m in dbsession.query(EmailTemplate.module).distinct():
+        if 'Admin' in curuser.moduleroles(m[0]):
+            modules.append(m[0])
+            if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
+                emailtemplates = emailtemplates.filter_by(module=m[0])
+                donefilter = True
+    if not donefilter:
+        emailtemplates = emailtemplates.filter(EmailTemplate.module.in_(modules))
+    if request.args.get('q'):
+        emailtemplates = emailtemplates.filter(or_(EmailTemplate.title.ilike("%" + request.args.get('q') + "%")))
+    paginator = Paginator(emailtemplates, 10)
     return html(render(request,
-        'generic/list.html',title='Email Templates',deletelink='emailtemplates.delete',editlink='emailtemplates.edit',actions=[{'label':'Render','actionlink':'emailtemplates.renderemail'},],addlink='emailtemplates.create',fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'}],paginator=paginator,pagelink=[{'link':'emailtemplates.sendemails','title':'Send Emails'}],curpage=paginator.page(int(request.args['emailtemplate'][0]) if 'emailtemplate' in request.args else 1)))
+        'generic/list.html',title='Email Templates',deletelink='emailtemplates.delete',editlink='emailtemplates.edit',actions=[{'label':'Render','actionlink':'emailtemplates.renderemail'},],addlink='emailtemplates.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'}],paginator=paginator,pagelink=[{'link':'emailtemplates.sendemails','title':'Send Emails'}],curpage=paginator.page(int(request.args['emailtemplate'][0]) if 'emailtemplate' in request.args else 1)))

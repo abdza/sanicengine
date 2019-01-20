@@ -126,11 +126,7 @@ async def form(request,id=None):
             submitcontinue = True
 
     curuser = User.getuser(request['session']['user_id'])
-    modules = []
-    for m in dbsession.query(Page.module).distinct():
-        if 'Admin' in curuser.moduleroles(m[0]):
-            modules.append(m[0])
-
+    modules = curuser.rolemodules('Admin')
     return html(render(request,'pages/form.html',title=title,page=page,modules=modules,
             form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
 
@@ -167,6 +163,6 @@ async def index(request):
         pages = pages.filter(Page.module.in_(modules))
     if request.args.get('q'):
         pages = pages.filter(or_(Page.title.ilike("%" + request.args.get('q') + "%"),Page.slug.ilike("%" + request.args.get('q') + "%")))
-    paginator = Paginator(pages, 5)
+    paginator = Paginator(pages, 10)
     return html(render(request,
         'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))

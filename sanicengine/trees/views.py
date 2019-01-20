@@ -3,11 +3,13 @@ from sanic import Blueprint
 from sanic.response import html, redirect, json as jsonresponse
 from .models import Tree, TreeNode, TreeNodeUser
 from .forms import TreeForm, TreeNodeForm, TreeNodeUserForm
+from sanicengine.users.models import User
 from sanicengine.database import dbsession
 from sanicengine.template import render
 from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 
 bp = Blueprint('trees')
 
@@ -236,12 +238,27 @@ async def form(request,id=None):
         if tree:
             form = TreeForm(obj=tree)
 
-    return html(render(request,'generic/form.html',title=title,tree=tree, form=form,enctype='multipart/form-data',acefield=['datastr'],acetype={'datastr':'json'}))
+    curuser = User.getuser(request['session']['user_id'])
+    modules = curuser.rolemodules('Admin')
+    return html(render(request,'generic/form.html',title=title,tree=tree, modules=modules, form=form,enctype='multipart/form-data',acefield=['datastr'],acetype={'datastr':'json'}))
 
 @bp.route('/trees')
 @authorized(object_type='tree',require_admin=True)
 async def index(request):
+    curuser = User.getuser(request['session']['user_id'])
     trees = dbsession.query(Tree)
-    paginator = Paginator(trees, 50)
+    modules = []
+    donefilter = False
+    for m in dbsession.query(Tree.module).distinct():
+        if 'Admin' in curuser.moduleroles(m[0]):
+            modules.append(m[0])
+            if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
+                trees = trees.filter_by(module=m[0])
+                donefilter = True
+    if not donefilter:
+        trees = trees.filter(Tree.module.in_(modules))
+    if request.args.get('q'):
+        trees = trees.filter(or_(Tree.title.ilike("%" + request.args.get('q') + "%"),Tree.slug.ilike("%" + request.args.get('q') + "%")))
+    paginator = Paginator(trees, 10)
     return html(render(request,
-        'trees/list.html',title='Trees',deletelink='trees.delete',editlink='trees.edit',addlink='trees.create',fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))
+        'trees/list.html',title='Trees',deletelink='trees.delete',editlink='trees.edit',addlink='trees.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))

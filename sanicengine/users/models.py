@@ -27,6 +27,18 @@ class User(ModelBase):
     def hashpassword(self,passinput):
         return hashlib.sha224(passinput.encode('utf-8')).hexdigest()
 
+    def rolemodules(self,role=None):
+        if role:
+            if role=='Admin' and self.superuser:
+                from sanicengine.Module.models import Module
+                mroles = dbsession.query(Module).all()
+                return [ r.title for r in mroles ]
+            else:
+                mroles = dbsession.query(ModuleRole).filter(ModuleRole.user==self,ModuleRole.role==role).all()
+        else:
+            mroles = dbsession.query(ModuleRole).filter(ModuleRole.user==self).all()
+        return [ r.module for r in mroles ]
+
     def moduleroles(self,module=None):
         if module:
             mroles = dbsession.query(ModuleRole).filter(ModuleRole.user==self,ModuleRole.module==module).all()
