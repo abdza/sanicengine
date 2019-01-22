@@ -64,7 +64,7 @@
 			{% if 'user' in form %}
 			$('input#user').tokenInput('{{ app.url_for('users.userjson') }}',{tokenLimit:1{% if userdata %},prePopulate:[{id:{{ userdata.id }},name:"{{ userdata.name }}"}]{% endif %}});
 			{% endif %}
-			{% if 'module' in form and modules %}
+			{% if 'module' in form and modules and curuser and not curuser.superuser %}
 			$('input#module').tokenInput([{% for module in modules %}{id:'{{module}}',name:'{{module}}'},{% endfor %}],{tokenLimit:1{% if form.module.data %},prePopulate:[{id:'{{form.module.data}}',name:'{{form.module.data}}'}]{% endif %}});
 			{% endif %}
 			{% if tokeninput %}

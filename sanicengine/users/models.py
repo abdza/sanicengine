@@ -30,7 +30,7 @@ class User(ModelBase):
     def rolemodules(self,role=None):
         if role:
             if role=='Admin' and self.superuser:
-                from sanicengine.Module.models import Module
+                from sanicengine.modules.models import Module
                 mroles = dbsession.query(Module).all()
                 return [ r.title for r in mroles ]
             else:
