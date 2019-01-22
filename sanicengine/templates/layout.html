@@ -43,11 +43,21 @@
 				<input class='form-control mr-sm-2' placeholder='Username' type='text' name='username' id='username'>
 				<label for='password' class='sr-only'>Password</label>
 				<input class='form-control mr-sm-2' placeholder='Password' type='password' name='password' id='password'>
-				<input class='btn my-2 my-sm-0' type='submit' value='Login'/>
+				<input class='btn btn-primary my-2 my-sm-0' type='submit' value='Login'/>
 			</form>
 			{% if app.config.GOOGLE_OAUTH_ID %}
 			<div class="g-signin2" data-onsuccess="onSignIn"></div>
 			{% endif %}
+			<div class="dropdown">
+				<button class="btn btn-secondary dropdown-toggle" type="button" id="logindropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					Forgot Password 
+				</button>
+
+				<div class="dropdown-menu" aria-labelledby="logindropdown">
+					<a class="dropdown-item" href="{{ app.url_for('users.forgotpassword')}}">Forgot Password</a>
+					<a class="dropdown-item" href="{{ app.url_for('users.register')}}">Register</a>
+				</div>
+			</div>
 		{% endif %}
 		</div>
 	</nav>
