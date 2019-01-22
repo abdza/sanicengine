@@ -89,6 +89,12 @@
 			<span class="mtext">Users</span>
 		</a>
 	</li>
+	<li>
+		<a href='{{ app.url_for('customtemplates.index') }}' class="no-arrow">
+			<span class="fa fa-envelope"></span>
+			<span class="mtext">Custom Templates</span>
+		</a>
+	</li>
 	{% endif %}
 	<li>
 		<a href='{{ app.url_for('users.module_roles') }}' class="no-arrow">
@@ -130,12 +136,6 @@
 		<a href='{{ app.url_for('emailtemplates.index') }}' class="no-arrow">
 			<span class="fa fa-envelope"></span>
 			<span class="mtext">E-mail</span>
-		</a>
-	</li>
-	<li>
-		<a href='{{ app.url_for('customtemplates.index') }}' class="no-arrow">
-			<span class="fa fa-envelope"></span>
-			<span class="mtext">Custom Templates</span>
 		</a>
 	</li>
 	<li>

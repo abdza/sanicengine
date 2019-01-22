@@ -45,7 +45,9 @@
 				<input class='form-control mr-sm-2' placeholder='Password' type='password' name='password' id='password'>
 				<input class='btn my-2 my-sm-0' type='submit' value='Login'/>
 			</form>
+			{% if app.config.GOOGLE_OAUTH_ID %}
 			<div class="g-signin2" data-onsuccess="onSignIn"></div>
+			{% endif %}
 		{% endif %}
 		</div>
 	</nav>
