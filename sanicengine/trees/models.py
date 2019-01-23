@@ -36,6 +36,12 @@ class Tree(ModelBase):
     def __str__(self):
         return 'Tree: ' + self.title
 
+    def load(slug,module=None):
+        tree = dbsession.query(Tree).filter_by(slug=slug)
+        if module:
+            tree = tree.filter_by(module=module)
+        return tree.first()
+
     @property
     def data(self):
         if self.datastr:

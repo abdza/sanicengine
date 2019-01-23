@@ -2,7 +2,7 @@
 """User models."""
 import datetime
 
-from sanicengine.database import ModelBase, dbsession, reference_col
+from sanicengine.database import ModelBase, dbsession, reference_col, executedb
 from sqlalchemy import column, Column, ForeignKey, Integer, String, Text, Boolean, DateTime, Date, Table, MetaData, select, UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
@@ -44,6 +44,12 @@ class Tracker(ModelBase):
 
     def __repr__(self):
         return self.title
+
+    def load(slug,module=None):
+        tracker = dbsession.query(Tracker).filter_by(slug=slug)
+        if module:
+            tracker = tracker.filter_by(module=module)
+        return tracker.first()
 
     @property
     def is_published(self):
@@ -162,7 +168,7 @@ class Tracker(ModelBase):
             field.updatedb()
 
     def first(self, query):
-        return dbsession.execute("select * from " + self.data_table + " where " + query).first()
+        return executedb("select * from " + self.data_table + " where " + query).first()
 
     def saverecord(self, record, request=None):
         curuser = None

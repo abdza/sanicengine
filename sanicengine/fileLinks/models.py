@@ -23,6 +23,12 @@ class FileLink(ModelBase):
     def __str__(self):
         return 'File: ' + self.title
 
+    def load(slug,module=None):
+        filelink = dbsession.query(FileLink).filter_by(slug=slug)
+        if module:
+            filelink = filelink.filter_by(module=module)
+        return filelink.first()
+
     @property
     def is_published(self):
         if not self.published:

@@ -30,6 +30,12 @@ class Page(ModelBase):
     def render(self,request,*args,**kwargs):
         return render_string(request,self.content,*args,**kwargs)
 
+    def load(slug,module=None):
+        page = dbsession.query(Page).filter_by(slug=slug)
+        if module:
+            page = page.filter_by(module=module)
+        return page.first()
+
     @property
     def is_published(self):
         if not self.published:
