@@ -64,9 +64,9 @@ async def form(request,id=None):
             if request.files.get('filename') and request.files.get('filename').name:
                 dfile = request.files.get('filename')
                 ext = dfile.type.split('/')[1]
-                if not os.path.exists(os.path.join('upload',request.form.get('module'))):
-                    os.makedirs(os.path.join('upload',request.form.get('module')))
-                dst = os.path.join('upload',request.form.get('module'),str(int(time.time())) + dfile.name)
+                if not os.path.exists(os.path.join('uploads',request.form.get('module'))):
+                    os.makedirs(os.path.join('uploads',request.form.get('module')))
+                dst = os.path.join('uploads',request.form.get('module'),str(int(time.time())) + dfile.name)
                 try:
                     # extract starting byte from Content-Range header string
                     range_str = request.headers['Content-Range']
