@@ -213,10 +213,10 @@ class Tracker(ModelBase):
                             filelink=FileLink()
                             dfile = request.files.get(field.name)
                             ext = dfile.type.split('/')[1]
-                            if not os.path.exists(os.path.join('upload',self.module)):
-                                os.makedirs(os.path.join('upload',self.module))
+                            if not os.path.exists(os.path.join('uploads',self.module)):
+                                os.makedirs(os.path.join('uploads',self.module))
                             outfilename = str(int(time.time())) + dfile.name
-                            dst = os.path.join('upload',self.module,outfilename)
+                            dst = os.path.join('uploads',self.module,outfilename)
                             try:
                                 # extract starting byte from Content-Range header string
                                 range_str = request.headers['Content-Range']
@@ -313,10 +313,10 @@ class Tracker(ModelBase):
                             filelink=FileLink()
                             dfile = request.files.get(field.name)
                             ext = dfile.type.split('/')[1]
-                            if not os.path.exists(os.path.join('upload',self.module)):
-                                os.makedirs(os.path.join('upload',self.module))
+                            if not os.path.exists(os.path.join('uploads',self.module)):
+                                os.makedirs(os.path.join('uploads',self.module))
                             outfilename = str(int(time.time())) + dfile.name
-                            dst = os.path.join('upload',self.module,outfilename)
+                            dst = os.path.join('uploads',self.module,outfilename)
                             try:
                                 # extract starting byte from Content-Range header string
                                 range_str = request.headers['Content-Range']
