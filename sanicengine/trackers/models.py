@@ -720,7 +720,7 @@ class TrackerField(ModelBase):
                     IF not EXISTS (SELECT column_name 
                         FROM information_schema.columns 
                         WHERE table_schema='public' and table_name='""" + self.tracker.data_table + """' and column_name='""" + self.name + """') THEN
-                            alter table public.""" + self.tracker.data_table + """ add column """ + self.name + " " + self.db_field_type() + """ null ;
+                            alter table public.""" + self.tracker.data_table + ' add column "' + self.name + '" ' + self.db_field_type() + """ null ;
                     end if;
                 end$$;
             """
@@ -780,7 +780,7 @@ class TrackerDataUpdate(ModelBase):
             if 'record_status' not in fields:
                 recstatusq = ',record_status'
                 newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.tracker==self.tracker,TrackerTransition.name==self.tracker.default_new_transition).first()
-            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no' + recstatusq + ') values '
+            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ '"' + f.name + '"' for f in fields ]) + ',batch_no' + recstatusq + ') values '
             for i,row in enumerate(ws.rows):
                 if i>=headerend:
                     cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] if datas[f.name + '_column'][0]!='custom' else datas[f.name + '_custom'][0] for f in fields]
@@ -789,8 +789,11 @@ class TrackerDataUpdate(ModelBase):
                     drow = '('
                     drow = drow + ','.join(sqlrowdata)
                     drow = drow + ',' + str(self.id)
-                    if 'record_status' not in fields and newtransition and newtransition.next_status:
-                        drow = drow + ",'" + newtransition.next_status.name + "'"
+                    if 'record_status' not in fields:
+                        if newtransition and newtransition.next_status:
+                            drow = drow + ",'" + newtransition.next_status.name + "'"
+                        else:
+                            drow = drow + ",''"
                     drow = drow + ')'
                     rows.append(drow)
             query = query + ','.join(rows)
