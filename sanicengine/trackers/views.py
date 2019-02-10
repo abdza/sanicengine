@@ -824,16 +824,17 @@ async def viewlist(request,module,slug=None):
         module='portal'
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     if 'accept' in request.headers and request.headers['accept']=='application/json':
-        print("git json")
         page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_json_list').first()
         if page:
             title = page.title
-            return jsonresponse(page.render(request,title=title,tracker=tracker))
+            ldict = locals()
+            finalout = 'output=' + page.render(request,title=title,tracker=tracker).strip()
+            exec(finalout,globals(),ldict)
+            return jsonresponse(ldict['output'])
         else:
             title = tracker.title + '-List'
             ldict = locals()
             finalout = 'output=' + render(request,'trackers/viewlist.json',title=title,tracker=tracker).strip()
-            print(finalout)
             exec(finalout,globals(),ldict)
             return jsonresponse(ldict['output'])
     else:
