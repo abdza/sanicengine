@@ -927,15 +927,33 @@ async def viewdetail(request,module,slug=None,id=None):
         record = tracker.records(id,curuser=curuser,request=request)
         if record:
             status = tracker.status(record)
-    if status:
-        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
-    if not page:
-        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default').first()
-    title = tracker.title + '-View'
-    if page:
-        return html(page.render(request,tracker=tracker,record=record,title=title))
+    if 'accept' in request.headers and request.headers['accept']=='application/json':
+        if status:
+            page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_') + '_json').first()
+        if not page:
+            page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default_json').first()
+        if page:
+            title = page.title
+            ldict = locals()
+            finalout = 'output=' + page.render(request,record=record,title=title,tracker=tracker).strip()
+            exec(finalout,globals(),ldict)
+            return jsonresponse(ldict['output'])
+        else:
+            title = tracker.title + '-View'
+            ldict = locals()
+            finalout = 'output=' + render(request,'trackers/viewrecord.json',title=title,tracker=tracker,record=record).strip()
+            exec(finalout,globals(),ldict)
+            return jsonresponse(ldict['output'])
     else:
-        return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
+        if status:
+            page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_' + status.name.lower().replace(' ','_')).first()
+        if not page:
+            page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default').first()
+        title = tracker.title + '-View'
+        if page:
+            return html(page.render(request,tracker=tracker,record=record,title=title))
+        else:
+            return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
 
 @bp.route('/system/<module:string>/<slug:string>/method/<method:string>/<id:int>',methods=['POST','GET'])
 @authorized(object_type='tracker')

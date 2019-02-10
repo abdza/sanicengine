@@ -1,0 +1,8 @@
+{% from 'trackers/macros.json' import displayrecord, transitionbuttons, updatetrail with context %}
+
+{
+
+{{ displayrecord(tracker, record) }}
+
+}
+

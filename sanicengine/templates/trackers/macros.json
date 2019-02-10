@@ -26,3 +26,22 @@
 
 {% macro listform(tracker) -%}
 {% endmacro %}
+
+{% macro displayrecord(tracker,record) -%}
+"record" : [
+{% for field in tracker.display_fields_list(record) %}
+{
+"name":"{{field.name}}",
+"label":"{{field.label}}",
+"data":"{{field.disp_value(record[field.name],request)|trim }}"
+}
+{{ "," if not loop.last }}
+{% endfor %}
+]
+{% endmacro %}
+
+{% macro transitionbuttons(tracker,record, curuser) -%}
+{% endmacro %}
+
+{% macro updatetrail(tracker,record,curuser) -%}
+{% endmacro %}
