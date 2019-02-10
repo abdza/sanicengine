@@ -819,12 +819,27 @@ async def viewlist(request,module,slug=None):
         slug=module
         module='portal'
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
-    page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_list').first()
-    title = tracker.title + '-List'
-    if page:
-        return html(page.render(request,title=title,tracker=tracker))
+    if 'accept' in request.headers and request.headers['accept']=='application/json':
+        print("git json")
+        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_json_list').first()
+        if page:
+            title = page.title
+            return jsonresponse(page.render(request,title=title,tracker=tracker))
+        else:
+            title = tracker.title + '-List'
+            ldict = locals()
+            finalout = 'output=' + render(request,'trackers/viewlist.json',title=title,tracker=tracker).strip()
+            print(finalout)
+            exec(finalout,globals(),ldict)
+            return jsonresponse(ldict['output'])
     else:
-        return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
+        page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_list').first()
+        if page:
+            title = page.title
+            return html(page.render(request,title=title,tracker=tracker))
+        else:
+            title = tracker.title + '-List'
+            return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
 
 @bp.route('/system/<module:string>/<slug:string>/excel')
 @authorized(object_type='tracker')

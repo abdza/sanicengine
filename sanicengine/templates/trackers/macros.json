@@ -1,0 +1,28 @@
+{% macro recordslist(tracker,curuser,curindex=None,links=None) -%} {% if not links %} {% set curindex,links = tracker.pagelinks(curuser=curuser,request=request) %} {% endif %}
+{% set list_fields = tracker.list_fields_list() %}
+"listfields" : [
+{% for field in list_fields %}
+	{ "name": "{{field.name}}" , "label": "{{ field.label }}" , "type": "{{ field.field_type }}" }
+	{{ "," if not loop.last }}
+{% endfor %}
+],
+
+"records" : [
+	{% for record in tracker.records(curuser=curuser,request=request,offset=(request.args['plo'][0] if 'plo' in request.args else 0),limit=(request.args['pll'][0] if 'pll' in request.args else tracker.pagelimit if tracker.pagelimit else 10)) %}
+	{
+		{% for field in list_fields %}
+			"{{ field.name }}":"{{field.disp_value(record[field.name],request)|trim}}"
+			{{ "," if not loop.last }}
+		{% endfor %}
+	}
+	{{ "," if not loop.last }}
+	{% endfor %}
+]
+
+{% endmacro %}
+
+{% macro recordspage(tracker,curuser,curindex=None,links=None) -%}
+{% endmacro %}
+
+{% macro listform(tracker) -%}
+{% endmacro %}

@@ -1,0 +1,5 @@
+{% from 'trackers/macros.json' import recordslist,recordspage,listform with context %}
+
+{
+	{{ recordslist(tracker,curuser,curindex=curindex,links=links) }}
+}
