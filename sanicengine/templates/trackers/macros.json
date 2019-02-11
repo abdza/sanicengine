@@ -10,6 +10,7 @@
 "records" : [
 	{% for record in tracker.records(curuser=curuser,request=request,offset=(request.args['plo'][0] if 'plo' in request.args else 0),limit=(request.args['pll'][0] if 'pll' in request.args else tracker.pagelimit if tracker.pagelimit else 10)) %}
 	{
+		"id":"{{record['id']}}",
 		{% for field in list_fields %}
 			"{{ field.name }}":"{{field.disp_value(record[field.name],request)|trim}}"
 			{{ "," if not loop.last }}
@@ -28,16 +29,26 @@
 {% endmacro %}
 
 {% macro displayrecord(tracker,record) -%}
-"record" : [
+"listfields" : [
 {% for field in tracker.display_fields_list(record) %}
 {
+"name":"{{field.name}}",
+"label":"{{field.label}}",
+"type":"{{field.field_type }}"
+}
+{{ "," if not loop.last }}
+{% endfor %}
+],
+"record" : { 
+{% for field in tracker.display_fields_list(record) %}
+"{{field.name}}": {
 "name":"{{field.name}}",
 "label":"{{field.label}}",
 "data":"{{field.disp_value(record[field.name],request)|trim }}"
 }
 {{ "," if not loop.last }}
 {% endfor %}
-]
+}
 {% endmacro %}
 
 {% macro transitionbuttons(tracker,record, curuser) -%}
