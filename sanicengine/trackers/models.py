@@ -663,7 +663,7 @@ class TrackerField(ModelBase):
         return "1=1"
 
     def sqlvalue(self, value):
-        if value:
+        if value is not None:
             if self.field_type in ['string','text','date','datetime','location','map']:
                 return "'" + str(value).replace("'","''") + "'"
             elif self.field_type in ['integer','number','object','treenode','user','file','picture','video']:
