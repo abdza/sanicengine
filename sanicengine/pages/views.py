@@ -34,6 +34,23 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         module = 'portal'
     page = dbsession.query(Page).filter_by(module=module,slug=slug).first()
     if page and page.runable:
+
+        def formvalue(field,default=None):
+            if field in request.form:
+                return request.form[field][0]
+            elif default is not None:
+                return default
+            else:
+                ''
+
+        def argvalue(field,default=None):
+            if field in request.args:
+                return request.args[field][0]
+            elif default is not None:
+                return default
+            else:
+                ''
+
         redirecturl=None
         results=None
         ldict = locals()
