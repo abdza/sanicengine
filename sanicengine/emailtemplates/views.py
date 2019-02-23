@@ -90,7 +90,7 @@ async def form(request,id=None):
     curuser = User.getuser(request['session']['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request,'generic/form.html',title=title,emailtemplate=emailtemplate,modules=modules,
-            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
+            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/emailtemplates')
 @authorized(object_type='emailtemplate',require_admin=True)
@@ -111,4 +111,4 @@ async def index(request):
         emailtemplates = emailtemplates.filter(or_(EmailTemplate.title.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(emailtemplates, 10)
     return html(render(request,
-        'generic/list.html',title='Email Templates',deletelink='emailtemplates.delete',editlink='emailtemplates.edit',actions=[{'label':'Render','actionlink':'emailtemplates.renderemail'},],addlink='emailtemplates.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'}],paginator=paginator,pagelink=[{'link':'emailtemplates.sendemails','title':'Send Emails'}],curpage=paginator.page(int(request.args['emailtemplate'][0]) if 'emailtemplate' in request.args else 1)))
+        'generic/list.html',title='Email Templates',deletelink='emailtemplates.delete',editlink='emailtemplates.edit',actions=[{'label':'Render','actionlink':'emailtemplates.renderemail'},],addlink='emailtemplates.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Title','name':'title'}],paginator=paginator,pagelink=[{'link':'emailtemplates.sendemails','title':'Send Emails'}],curpage=paginator.page(int(request.args['emailtemplate'][0]) if 'emailtemplate' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

@@ -105,7 +105,7 @@ async def form(request,id=None):
             form = FileLinkForm(obj=filelink)
     curuser = User.getuser(request['session']['user_id'])
     modules = curuser.rolemodules('Admin')
-    return html(render(request, 'generic/form.html', title=title, form=form, modules=modules, enctype='multipart/form-data'))
+    return html(render(request, 'generic/form.html', title=title, form=form, modules=modules, enctype='multipart/form-data'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 
 @bp.route('/files')
@@ -126,4 +126,4 @@ async def index(request):
     if request.args.get('q'):
         filelinks = filelinks.filter(or_(FileLink.title.ilike("%" + request.args.get('q') + "%"),FileLink.slug.ilike("%" + request.args.get('q') + "%"),FileLink.filename.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(filelinks, 10)
-    return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.create',filter_fields=[{'field':'module','label':'Module','options':modules},], fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html', title='Files', deletelink='fileLinks.delete', editlink='fileLinks.edit', addlink='fileLinks.create',filter_fields=[{'field':'module','label':'Module','options':modules},], fields=[{'label': 'Module', 'name': 'module'}, {'label': 'Slug', 'name': 'slug'}, {'label': 'Title', 'name': 'title'}, {'label': 'File', 'name': 'filename'}], paginator=paginator, curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

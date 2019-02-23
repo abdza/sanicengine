@@ -65,7 +65,7 @@ async def form(request,id=None):
     curuser = User.getuser(request['session']['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request,'generic/form.html',title=title,setting=setting,modules=modules,
-            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
+            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/settings')
 @authorized(object_type='setting',require_admin=True)
@@ -86,4 +86,4 @@ async def index(request):
         settings = settings.filter(or_(Setting.name.ilike("%" + request.args.get('q') + "%"),Setting.txtdata.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(settings, 10)
     return html(render(request,
-        'generic/list.html',title='Settings',deletelink='settings.delete',editlink='settings.edit',addlink='settings.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Name','name':'name'},{'label':'Type','name':'setting_type'},{'label':'Value','name':'value'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Settings',deletelink='settings.delete',editlink='settings.edit',addlink='settings.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Name','name':'name'},{'label':'Type','name':'setting_type'},{'label':'Value','name':'value'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

@@ -18,7 +18,7 @@ bp = Blueprint('pages')
 
 @bp.route('/terms')
 async def terms(request):
-    return html(render(request,'terms.html'))
+    return html(render(request,'terms.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>/<arg5>',methods=['GET','POST'],name='run5args')
 @bp.route('/run/<module>/<slug>/<arg1>/<arg2>/<arg3>/<arg4>',methods=['GET','POST'],name='run4args')
@@ -71,7 +71,7 @@ async def view(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4
         module = 'portal'
     page = dbsession.query(Page).filter_by(module=module,slug=slug).first()
     if page:
-        return html(page.render(request,title=page.title,arg1=arg1,arg2=arg2,arg3=arg3,arg4=arg4,arg5=arg5))
+        return html(page.render(request,title=page.title,arg1=arg1,arg2=arg2,arg3=arg3,arg4=arg4,arg5=arg5),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         print("No page to view")
         request['session']['flashmessage'] = 'Sorry but page was not found'
@@ -128,14 +128,14 @@ async def form(request,id=None):
     curuser = User.getuser(request['session']['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request,'pages/form.html',title=title,page=page,modules=modules,
-            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
+            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/')
 async def home(request):
     home = dbsession.query(Page).filter_by(module='portal',slug='home').first()
     if home:
-        return html(home.render(request))
-    return html(render(request,'pages/home.html'))
+        return html(home.render(request),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    return html(render(request,'pages/home.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/loginrequired')
 async def loginrequired(request):
@@ -143,8 +143,8 @@ async def loginrequired(request):
         return jsonresponse({'message':'Login required'},status=401)
     loginrequired = dbsession.query(Page).filter_by(module='portal',slug='loginrequired').first()
     if loginrequired:
-        return html(loginrequired.render(request))
-    return html(render(request,'pages/loginrequired.html',targeturl=request['session'].pop('targeturl',None)))
+        return html(loginrequired.render(request),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    return html(render(request,'pages/loginrequired.html',targeturl=request['session'].pop('targeturl',None)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/pages')
 @authorized(object_type='page',require_admin=True)
@@ -165,4 +165,4 @@ async def index(request):
         pages = pages.filter(or_(Page.title.ilike("%" + request.args.get('q') + "%"),Page.slug.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(pages, 10)
     return html(render(request,
-        'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+        'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

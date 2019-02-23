@@ -26,7 +26,7 @@ async def view(request, slug):
                 dbsession.commit()
             except Exception as inst:
                 dbsession.rollback()
-        return html(render(request,'trees/view.html',tree=tree,title=title))
+        return html(render(request,'trees/view.html',tree=tree,title=title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         request['session']['flashmessage'] = 'No tree to view'
         return redirect('/')
@@ -38,7 +38,7 @@ async def nodeview(request,node_id=None):
     node = None
     if node_id and not node_id=='null':
         node = dbsession.query(TreeNode).get(node_id)
-    return html(render(request,'trees/nodeview.html',node=node))
+    return html(render(request,'trees/nodeview.html',node=node),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trees/nodejson/<module>/<slug>/<node_id>',methods=['GET'])
 @bp.route('/trees/nodejson/<module>/<slug>',methods=['GET'],name='treenodejson')
@@ -72,7 +72,7 @@ async def editnode(request, node_id):
     else:
         form = TreeNodeForm(obj=curnode)
 
-    return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode))
+    return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trees/deletenodeuser/<node_id>/<nodeuser_id>',methods=['GET','POST'])
 @bp.route('/trees/deletenodeuser',name='treedeletenodeuser')
@@ -117,7 +117,7 @@ async def nodeuserform(request, node_id=None, nodeuser_id=None):
     else:
         form = TreeNodeUserForm(obj=nodeuser)
 
-    return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode,nodeuser=nodeuser))
+    return html(render(request,'trees/nodeform.html',node=curnode,form=form,parentnode=parentnode,nodeuser=nodeuser),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trees/addnode/<parent_id>',methods=['GET','POST'])
 @bp.route('/trees/addnode',name='treeaddnode')
@@ -136,7 +136,7 @@ async def addnode(request, parent_id):
         except BaseException as exp:
             dbsession.rollback()
         return jsonresponse([{ 'id':treenode.id , 'title':treenode.title }])
-    return html(render(request,'trees/nodeform.html',form=form,parentnode=parentnode))
+    return html(render(request,'trees/nodeform.html',form=form,parentnode=parentnode),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trees/renamenode/<node_id>',methods=['POST'])
 @bp.route('/trees/renamenode',name='treerenamenode')
@@ -240,7 +240,7 @@ async def form(request,id=None):
 
     curuser = User.getuser(request['session']['user_id'])
     modules = curuser.rolemodules('Admin')
-    return html(render(request,'generic/form.html',title=title,tree=tree, modules=modules, form=form,enctype='multipart/form-data',acefield=['datastr'],acetype={'datastr':'json'}))
+    return html(render(request,'generic/form.html',title=title,tree=tree, modules=modules, form=form,enctype='multipart/form-data',acefield=['datastr'],acetype={'datastr':'json'}),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trees')
 @authorized(object_type='tree',require_admin=True)
@@ -261,4 +261,4 @@ async def index(request):
         trees = trees.filter(or_(Tree.title.ilike("%" + request.args.get('q') + "%"),Tree.slug.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(trees, 10)
     return html(render(request,
-        'trees/list.html',title='Trees',deletelink='trees.delete',editlink='trees.edit',addlink='trees.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)))
+        'trees/list.html',title='Trees',deletelink='trees.delete',editlink='trees.edit',addlink='trees.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'}],paginator=paginator,curpage=paginator.page(int(request.args['tree'][0]) if 'tree' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

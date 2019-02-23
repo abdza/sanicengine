@@ -82,7 +82,7 @@ async def login(request):
             request['session']['flashmessage']='Wrong username or password'
             return redirect('/')
 
-    return html(render(request,'users/login.html'))
+    return html(render(request,'users/login.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/logout')
 async def logout(request):
@@ -142,7 +142,7 @@ async def module_role_form(request,module_role_id=None):
         if 'Admin' in curuser.moduleroles(m[0]):
             modules.append(m[0])
 
-    return html(render(request,'generic/form.html',title=title,form=form,userdata=userdata,modules=modules,enctype='multipart/form-data'))
+    return html(render(request,'generic/form.html',title=title,form=form,userdata=userdata,modules=modules,enctype='multipart/form-data'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/module_roles')
 @authorized(require_admin=True)
@@ -162,7 +162,7 @@ async def module_roles(request):
     if request.args.get('q'):
         module_roles = module_roles.filter(or_(ModuleRole.role.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(module_roles, 10)
-    return html(render(request, 'generic/list.html',title='Module Roles',deletelink='users.module_role_delete',editlink='users.module_role_edit',addlink='users.module_role_create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Module Roles',deletelink='users.module_role_delete',editlink='users.module_role_edit',addlink='users.module_role_create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'User','name':'user'},{'label':'Module','name':'module'},{'label':'Role','name':'role'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/users/json/')
 async def userjson(request):
@@ -224,14 +224,14 @@ async def form(request,id=None):
         form = UserForm()
 
     return html(render(request,'generic/form.html',title=title,user=user,
-            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
+            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/users')
 @authorized(require_admin=True)
 async def index(request):
     users = dbsession.query(User)
     paginator = Paginator(users, 10)
-    return html(render(request, 'generic/list.html',title='Users',deletelink='users.delete',editlink='users.edit',addlink='users.create',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'generic/list.html',title='Users',deletelink='users.delete',editlink='users.edit',addlink='users.create',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/profile',methods=['GET','POST'])
 @authorized()
@@ -248,7 +248,7 @@ async def profile(request):
     else:
         form.name.data = curuser.name
         form.email.data = curuser.email
-    return html(render(request,'users/profile.html',form=form))
+    return html(render(request,'users/profile.html',form=form),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/user/register',methods=['GET','POST'])
 async def register(request):
@@ -261,7 +261,7 @@ async def register(request):
         dbsession.add(user)
         dbsession.commit()
         return redirect('/')
-    return html(render(request,'users/register.html',form=form))
+    return html(render(request,'users/register.html',form=form),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/changepassword',methods=['GET','POST'])
 async def changepassword(request):
@@ -275,7 +275,7 @@ async def changepassword(request):
         else:
             request['session']['flashmessage']='Repeated password need to be the same password'
             return redirect(request.app.url_for('users.changepassword'))
-    return html(render(request,'users/changepassword.html',user=user))
+    return html(render(request,'users/changepassword.html',user=user),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/resetpassword/<resethash>',methods=['GET','POST'])
 async def resetpassword(request,resethash=None):
@@ -294,7 +294,7 @@ async def resetpassword(request,resethash=None):
             request['session']['flashmessage']='Repeated password need to be the same password'
             return redirect(request.app.url_for('users.resetpassword',resethash=resethash))
 
-    return html(render(request,'users/resetpassword.html',user=user))
+    return html(render(request,'users/resetpassword.html',user=user),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/forgot-password',methods=['GET','POST'])
 async def forgotpassword(request):
@@ -311,4 +311,4 @@ async def forgotpassword(request):
                 await send_email({'email_to':[user.email],'subject':resetemail.title,'htmlbody':resetemail.render(request,user=user)})
             else:
                 await send_email({'email_to':[user.email],'subject':'Reset password link','htmlbody':render(request,'users/reset_email.html',user=user)})
-    return html(render(request,'users/forgot-password.html'))
+    return html(render(request,'users/forgot-password.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

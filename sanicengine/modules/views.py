@@ -385,4 +385,4 @@ async def updatelist(request):
 async def index(request):
     modules = dbsession.query(Module)
     paginator = Paginator(modules, 10)
-    return html(render(request, 'modules/list.html',title='Modules',fields=[{'label':'Title','name':'title'}],addtitle='Update List',addlink=request.app.url_for('modules.updatelist'),paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    return html(render(request, 'modules/list.html',title='Modules',fields=[{'label':'Title','name':'title'}],addtitle='Update List',addlink=request.app.url_for('modules.updatelist'),paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

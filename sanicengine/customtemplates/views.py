@@ -59,10 +59,10 @@ async def form(request,id=None):
             submitcontinue = True
 
     return html(render(request,'generic/form.html',title=title,customtemplate=customtemplate,
-            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue))
+            form=form,enctype='multipart/form-data',submitcontinue=submitcontinue),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/customtemplates')
 @authorized(object_type='customtemplate',require_admin=True)
 async def index(request):
     return html(render(request,
-        'customtemplates/index.html'))
+        'customtemplates/index.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

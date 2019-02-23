@@ -164,7 +164,7 @@ async def data_update(request,module,slug=None):
                 for cell in row:
                     if cell.value and cell.value.lower() != 'id':
                         columns.append({'field_val':cell.column,'field_name':cell.value})
-    return html(render(request,'/trackers/data_update.html',tracker=tracker,columns=columns,dataupdate=dataupdate))
+    return html(render(request,'/trackers/data_update.html',tracker=tracker,columns=columns,dataupdate=dataupdate),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers/create_from_excel/<module>/<slug>',methods=['POST','GET'])
 @bp.route('/trackers/create_from_excel/<module>',methods=['POST','GET'])
@@ -232,7 +232,7 @@ async def create_from_excel(request,module,slug=None):
                     fields.append({'field_name':slugify(title),'field_type':fieldtypes[i]})
             os.remove(dst)
         field_types = [('ignore','Ignore'),('string','String'),('text','Text'),('integer','Integer'),('number','Number'),('date','Date'),('datetime','Date Time'),('boolean','Boolean'),('object','Object'),('treenode','TreeNode')]
-    return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types))
+    return html(render(request,'/trackers/create_from_excel.html',tracker=tracker,fields=fields,field_types=field_types),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers/editstatus/<module>/<slug>/<id>',methods=['POST','GET'])
 @bp.route('/trackers/editstatus/<module>/<slug>/',methods=['POST','GET'],name='editstatus')
@@ -278,7 +278,7 @@ async def statusform(request,module,slug,id=None):
                         'prePopulate':[ {'id':field.id,'name':field.name} for field in trackerstatus.tracker.fields_from_list(trackerstatus.display_fields) ]
                         },
                     }
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',tokeninput=tokeninput))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',tokeninput=tokeninput),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers/deletestatus/<status_id>',methods=['POST'])
 @authorized(require_admin=True)
@@ -412,7 +412,7 @@ async def transitionform(request,module,slug=None,id=None):
             tokeninput['emails']['prePopulate'] = [ {'id':field.id,'name':field.title} for field in trackertransition.emails ]
             tokeninput['edit_fields']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.tracker.fields_from_list(trackertransition.edit_fields) ]
             tokeninput['roles']['prePopulate'] = [ {'id':field.id,'name':field.name} for field in trackertransition.roles ]
-    return html(render(request,'generic/form.html',title=title,form=form,tracker=tracker,enctype='multipart/form-data',tokeninput=tokeninput,acefield=['postpage'],acetype={'postpage':'python'}))
+    return html(render(request,'generic/form.html',title=title,form=form,tracker=tracker,enctype='multipart/form-data',tokeninput=tokeninput,acefield=['postpage'],acetype={'postpage':'python'}),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers/deletetransition/<transition_id>',methods=['POST'])
 @authorized(require_admin=True)
@@ -462,7 +462,7 @@ async def roleform(request,module,slug=None,id=None):
         if trackerrole:
             form = TrackerRoleForm(obj=trackerrole)
             title = tracker.title + '-Edit Role'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['compare'],acetype={'compare':'python'}))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['compare'],acetype={'compare':'python'}),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers/deleterole/<role_id>',methods=['POST'])
 @authorized(require_admin=True)
@@ -512,7 +512,7 @@ async def fieldform(request,module,slug=None,id=None):
         if trackerfield:
             form = TrackerFieldForm(obj=trackerfield)
             title = tracker.title + '-Edit Field'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default','options'],acetype={'default':'python','options':'python'},info="<p>Default will take final value of the output variable. curuser is available if the user is logged in. The form variable is also available to check on the information submitted in other fields.</p>"))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default','options'],acetype={'default':'python','options':'python'},info="<p>Default will take final value of the output variable. curuser is available if the user is logged in. The form variable is also available to check on the information submitted in other fields.</p>"),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers/deletefield/<field_id>',methods=['POST'])
 @authorized(require_admin=True)
@@ -569,7 +569,7 @@ async def view(request,id=None):
         tracker = dbsession.query(Tracker).get(int(id))
         dataupdates = dbsession.query(TrackerDataUpdate).filter(TrackerDataUpdate.tracker==tracker)
         updatespaginator = Paginator(dataupdates, 10)
-        return html(render(request,'trackers/view.html',title=tracker.title,tracker=tracker,updatespaginator=updatespaginator,curupdatepage=updatespaginator.page(int(request.args['updatepage'][0]) if 'updatepage' in request.args else 1)))
+        return html(render(request,'trackers/view.html',title=tracker.title,tracker=tracker,updatespaginator=updatespaginator,curupdatepage=updatespaginator.page(int(request.args['updatepage'][0]) if 'updatepage' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         return redirect('/')
 
@@ -722,7 +722,7 @@ async def form(request,id=None):
 
     curuser = User.getuser(request['session']['user_id'])
     modules = curuser.rolemodules('Admin')
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',modules=modules,tokeninput=tokeninput))
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',modules=modules,tokeninput=tokeninput),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers')
 @authorized(require_admin=True)
@@ -743,7 +743,7 @@ async def index(request):
         trackers = trackers.filter(or_(Tracker.title.ilike("%" + request.args.get('q') + "%"),Tracker.slug.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(trackers, 10)
     return html(render(request,
-    'generic/list.html',title='Trackers',editlink='trackers.viewtracker',addlink='trackers.create',maxlength=100,filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'List Fields','name':'list_fields'},{'label':'Require Login','name':'require_login'},{'label':'Allowed Roles','name':'allowed_roles'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)))
+    'generic/list.html',title='Trackers',editlink='trackers.viewtracker',addlink='trackers.create',maxlength=100,filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'List Fields','name':'list_fields'},{'label':'Require Login','name':'require_login'},{'label':'Allowed Roles','name':'allowed_roles'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers/delete/<module>/<slug>',methods=['POST'])
 @authorized(require_admin=True)
@@ -841,10 +841,10 @@ async def viewlist(request,module,slug=None):
         page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_list').first()
         if page:
             title = page.title
-            return html(page.render(request,title=title,tracker=tracker))
+            return html(page.render(request,title=title,tracker=tracker),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
         else:
             title = tracker.title + '-List'
-            return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
+            return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/excel')
 @authorized(object_type='tracker')
@@ -905,11 +905,11 @@ async def listmethod(request,module,slug,method):
                 return redirect('/')
         else:
             title = tracker.title + '-' + page.title
-            return html(page.render(request,title=title,tracker=tracker))
+            return html(page.render(request,title=title,tracker=tracker),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         title = tracker.title + '- List'
         request['session']['flashmessage'] = 'Method ' + method + ' was not found for the tracker ' + tracker.title
-        return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker))
+        return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/<id:int>',methods=['POST','GET'])
 @authorized(object_type='tracker')
@@ -951,9 +951,9 @@ async def viewdetail(request,module,slug=None,id=None):
             page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_view_default').first()
         title = tracker.title + '-View'
         if page:
-            return html(page.render(request,tracker=tracker,record=record,title=title))
+            return html(page.render(request,tracker=tracker,record=record,title=title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
         else:
-            return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
+            return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/method/<method:string>/<id:int>',methods=['POST','GET'])
 @authorized(object_type='tracker')
@@ -1002,11 +1002,11 @@ async def detailmethod(request,module,slug,method,id):
                 return redirect('/')
         else:
             title = tracker.title + '- ' + page.title
-            return html(page.render(request,tracker=tracker,record=record,title=title))
+            return html(page.render(request,tracker=tracker,record=record,title=title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         request['session']['flashmessage'] = 'Method ' + method + ' was not found for the tracker ' + tracker.title
         title = tracker.title + '- View'
-        return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record))
+        return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/add',methods=['POST','GET'])
 @authorized(object_type='tracker')
@@ -1034,9 +1034,9 @@ async def addrecord(request,module,slug=None):
     title = tracker.title + "-Add Record"
     if newtransition:
         if page:
-            return html(page.render(request,tracker=tracker,transition=newtransition,title=title))
+            return html(page.render(request,tracker=tracker,transition=newtransition,title=title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
         else:
-            return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition,title=title))
+            return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition,title=title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         request['session']['flashmessage'] = 'Default new transition not found'
         return redirect(request.app.url_for('pages.home'))
@@ -1075,6 +1075,6 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_editrecord').first()
     title = tracker.title + '-Edit Record'
     if page:
-        return html(page.render(request,tracker=tracker,title=title,transition=transition,record=record))
+        return html(page.render(request,tracker=tracker,title=title,transition=transition,record=record),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
-        return html(render(request,'trackers/formrecord.html',tracker=tracker,title=title,transition=transition,record=record))
+        return html(render(request,'trackers/formrecord.html',tracker=tracker,title=title,transition=transition,record=record),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
