@@ -110,8 +110,10 @@
             $body = $('body');
         }
 
-	if(el.value){
-	    this.opts.startDate = new Date(el.value);
+	var formdate = new Date(el.value);
+
+	if(formdate.toString()!='Invalid Date'){
+	    this.opts.startDate = formdate;
  	}
 
         if (!this.opts.startDate) {
@@ -1253,7 +1255,7 @@
         },
 
         _onTimeChange: function (e, h, m) {
-            var date = new Date(),
+            var date = new Date(e.currentTarget.value),
                 selectedDates = this.selectedDates,
                 selected = false;
 
@@ -1558,7 +1560,7 @@
 
         _getCellContents: function (date, type) {
             var classes = "datepicker--cell datepicker--cell-" + type,
-                currentDate = new Date(),
+		currentDate = this.d.currentDate;
                 parent = this.d,
                 minRange = dp.resetTime(parent.minRange),
                 maxRange = dp.resetTime(parent.maxRange),
@@ -1983,7 +1985,7 @@
     datepicker.Timepicker.prototype = {
         init: function () {
             var input = 'input';
-            this._setTime(this.d.date);
+            this._setTime(new Date(this.d.el.value));
             this._buildHTML();
 
             if (navigator.userAgent.match(/trident/gi)) {
@@ -1999,7 +2001,6 @@
 
         _setTime: function (date) {
             var _date = dp.getParsedDate(date);
-
             this._handleDate(date);
             this.hours = _date.hours < this.minHours ? this.minHours : _date.hours;
             this.minutes = _date.minutes < this.minMinutes ? this.minMinutes : _date.minutes;
@@ -2211,13 +2212,12 @@
             this[name] = $target.val();
             this._updateCurrentTime();
             this.d._trigger('timeChange', [this.hours, this.minutes]);
-
             this._handleDate(this.d.lastSelectedDate);
             this.update()
         },
 
         _onSelectDate: function (e, data) {
-            this._handleDate(data);
+            this._handleDate(e.currentTarget.value);
             this.update();
         },
 
