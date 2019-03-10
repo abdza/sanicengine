@@ -1258,7 +1258,9 @@
             var date = new Date(e.currentTarget.value),
                 selectedDates = this.selectedDates,
                 selected = false;
-
+	     if(date.toString()=='Invalid Date'){
+		     date = new Date();
+	     };
             if (selectedDates.length) {
                 selected = true;
                 date = this.lastSelectedDate;
@@ -1985,7 +1987,18 @@
     datepicker.Timepicker.prototype = {
         init: function () {
             var input = 'input';
-            this._setTime(new Date(this.d.el.value));
+	    if(this.d.el.value.toString()!='Invalid Date'){
+		    var curdate = new Date(this.d.el.value);
+		    if(curdate.toString()!='Invalid Date'){
+			    this._setTime(new Date(this.d.el.value));
+		    }
+		    else{
+			    this._setTime(new Date());
+		    }
+	    }
+	    else{
+		    this._setTime(new Date());
+	    }
             this._buildHTML();
 
             if (navigator.userAgent.match(/trident/gi)) {
