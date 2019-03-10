@@ -103,15 +103,19 @@
     var Datepicker  = function (el, options) {
         this.el = el;
         this.$el = $(el);
-
+	   
         this.opts = $.extend(true, {}, defaults, options, this.$el.data());
 
         if ($body == undefined) {
             $body = $('body');
         }
 
+	if(el.value){
+	    this.opts.startDate = new Date(el.value);
+ 	}
+
         if (!this.opts.startDate) {
-            this.opts.startDate = new Date();
+	    this.opts.startDate = new Date();
         }
 
         if (this.el.nodeName == 'INPUT') {
