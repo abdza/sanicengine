@@ -21,7 +21,6 @@ import re
 import asyncio
 import io
 from openpyxl import load_workbook, Workbook
-from openpyxl.compat import range
 from openpyxl.utils import get_column_letter
 from openpyxl.writer.excel import save_virtual_workbook
 
@@ -610,6 +609,11 @@ async def updatedb(request,id=None):
 async def defaulttransitions(request,id=None):
     tracker = dbsession.query(Tracker).get(int(id))
     if tracker and tracker.list_fields:
+
+        if len(tracker.detail_fields)==0:
+            tracker.detail_fields = tracker.list_fields
+            dbsession.add(tracker)
+
         newstatus = dbsession.query(TrackerStatus).filter(TrackerStatus.name.ilike("%new%"),TrackerStatus.tracker==tracker).first()
         adminrole = dbsession.query(TrackerRole).filter(TrackerRole.name.ilike("%admin%"),TrackerRole.tracker==tracker).first()
 
@@ -618,6 +622,8 @@ async def defaulttransitions(request,id=None):
         if not newtransition:
             newtransition = TrackerTransition(tracker=tracker,name='New',label='New',edit_fields=tracker.list_fields,roles=[adminrole,],next_status=newstatus)
             dbsession.add(newtransition)
+            tracker.default_new_transition = 'New'
+            dbsession.add(tracker)
 
         edittransition = dbsession.query(TrackerTransition).filter(TrackerTransition.name.ilike("%edit%"),TrackerTransition.tracker==tracker).first()
         print('edit:' + str(edittransition))
