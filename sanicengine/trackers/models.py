@@ -761,7 +761,6 @@ class TrackerDataUpdate(ModelBase):
     async def run(self):
         wb = load_workbook(filename = self.filename)
         ws = wb.active
-        print('data:' + str(self.data_params))
         datas = json.loads(self.data_params)
         fields = []
         optype = 'insert'

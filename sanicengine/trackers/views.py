@@ -881,7 +881,7 @@ async def listexcel(request,module,slug=None):
             row+=1
 
     virtual_wb = save_virtual_workbook(wb)
-    return raw(virtual_wb, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title)})
+    return raw(virtual_wb, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title) + '.xlsx'})
 
 @bp.route('/system/<module:string>/<slug:string>/method/<method:string>')
 @authorized(object_type='tracker')
