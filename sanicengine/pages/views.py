@@ -4,6 +4,7 @@ from sanic.response import html, redirect, json as jsonresponse
 from .models import Page
 from .forms import PageForm
 from sanicengine.trackers.models import Tracker
+from sanicengine.portalsettings.models import Setting
 from sanicengine.database import dbsession, executedb, querydb, queryobj
 from sanicengine.template import render
 from sanicengine.decorators import authorized
