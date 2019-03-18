@@ -308,7 +308,11 @@ async def forgotpassword(request):
             dbsession.commit()
             resetemail = dbsession.query(Page).filter_by(slug='resetemail').first()
             if resetemail:
+                request['session']['flashmessage']='Password reset email sent to ' + user.email
                 await send_email({'email_to':[user.email],'subject':resetemail.title,'htmlbody':resetemail.render(request,user=user)})
             else:
+                request['session']['flashmessage']='Password reset email sent to ' + user.email
                 await send_email({'email_to':[user.email],'subject':'Reset password link','htmlbody':render(request,'users/reset_email.html',user=user)})
+        else:
+            request['session']['flashmessage']='User with email ' + request.form.get('email') + ' was not found'
     return html(render(request,'users/forgot-password.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
