@@ -3,20 +3,15 @@ from sanic import Sanic
 from sanic.response import html, redirect
 from sanic_session import InMemorySessionInterface
 from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings, emailtemplates, customtemplates
+from sanicengine import settings
 from sanicengine.template import render
 from sanicengine.database import dbsession, ModelBase, dbengine
-import asyncio
-import aiosmtplib
-import os
-import json
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from email.mime.text import MIMEText
 from email.message import EmailMessage
 from email.utils import make_msgid
-from sanicengine import settings
-import hashlib
-import base64
-import datetime
+import asyncio, aiosmtplib, os, json, sys, getopt
+import hashlib, base64, datetime
 
 from sqlalchemy import MetaData
 
@@ -174,6 +169,7 @@ async def _send_email(data):
     await send_a_message()
 
 if __name__ == "__main__":
+    startserver = True
     try:
         host = settings.LISTEN_ON
     except:
@@ -186,4 +182,32 @@ if __name__ == "__main__":
         workers = settings.WORKERS
     except:
         workers = 1
-    app.run(host=host, port=port, workers=workers)
+    if len(sys.argv)>1:
+        try:
+            opts, args = getopt.getopt(sys.argv[1:],"h:p:w:",["host=","port=","workers=","setpassword="])
+        except getopt.GetoptError:
+            print('main.py -h <host> -p <port> -w <workers> --setpassword <user email>')
+            sys.exit(2)
+        for opt, arg in opts:
+            if opt in ('-h','--host'):
+                host = arg
+            elif opt in ('-p','--port'):
+                port = arg
+            elif opt in ('-w','--workers'):
+                workers = arg
+            elif opt in ('-w','--workers'):
+                workers = arg
+            elif opt == "--setpassword":
+                startserver = False
+                curuser = dbsession.query(users.models.User).filter_by(email=arg).first()
+                if curuser:
+                    cpass = input('Please key in the new password for ' + curuser.name + ':')
+                    curuser.password = hashlib.sha224(cpass.encode('utf-8')).hexdigest()
+                    dbsession.add(curuser)
+                    dbsession.commit()
+                    print('Updated the user password')
+                else:
+                    print('User with email:' + arg + ' was not found')
+
+    if startserver:
+        app.run(host=host, port=port, workers=workers)
