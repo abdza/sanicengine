@@ -10,7 +10,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from email.mime.text import MIMEText
 from email.message import EmailMessage
 from email.utils import make_msgid
-import asyncio, aiosmtplib, os, json, sys, getopt
+import asyncio, aiosmtplib, os, json, sys, getopt, getpass
 import hashlib, base64, datetime
 
 from sqlalchemy import MetaData
@@ -201,7 +201,7 @@ if __name__ == "__main__":
                 startserver = False
                 curuser = dbsession.query(users.models.User).filter_by(email=arg).first()
                 if curuser:
-                    cpass = input('Please key in the new password for ' + curuser.name + ':')
+                    cpass = getpass.getpass('Please key in the new password for ' + curuser.name + ':')
                     curuser.password = hashlib.sha224(cpass.encode('utf-8')).hexdigest()
                     dbsession.add(curuser)
                     dbsession.commit()
