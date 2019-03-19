@@ -2,6 +2,7 @@ sanic
 Jinja2
 psycopg2-binary
 sqlalchemy
+GeoAlchemy2
 wtforms
 -e git://github.com/miki725/sqlalchemy-paginator.git#egg=sqlalchemy-paginator
 sanic_session
