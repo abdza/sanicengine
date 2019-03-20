@@ -110,4 +110,6 @@ ENV/
 *.swn
 
 upload/
+uploads/
 custom_module/
+custom_modules/

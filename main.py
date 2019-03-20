@@ -109,7 +109,9 @@ async def default_data(app, loop):
             super_user = users.models.User(name='Admin Dude',username='admin',email='admin@sanicengine.com',superuser=True)
             super_user.password = hashlib.sha224('admin123'.encode('utf-8')).hexdigest()
 
+        adminmodulerole = users.models.ModuleRole(user=super_user,role='Admin',module='portal')
         dbsession.add(super_user)
+        dbsession.add(adminmodulerole)
 
     dbsession.commit()
 
