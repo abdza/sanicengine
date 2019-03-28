@@ -3,7 +3,7 @@ from sanicengine.database import dbsession, executedb, querydb, queryobj
 from sanicengine.users.models import User
 import datetime
 
-jinja_env = Environment(loader=FileSystemLoader(['custom_module/custom_templates','sanicengine/templates']))
+jinja_env = Environment(loader=FileSystemLoader(['custom_modules/custom_templates','sanicengine/templates']))
 
 def render(request, template_file, *args, **kwargs):
     curuser = None

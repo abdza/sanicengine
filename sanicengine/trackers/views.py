@@ -618,7 +618,7 @@ async def defaulttransitions(request,id=None):
         adminrole = dbsession.query(TrackerRole).filter(TrackerRole.name.ilike("%admin%"),TrackerRole.tracker==tracker).first()
 
         newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.name.ilike("%new%"),TrackerTransition.tracker==tracker).first()
-        print('new:' + str(newtransition))
+
         if not newtransition:
             newtransition = TrackerTransition(tracker=tracker,name='New',label='New',edit_fields=tracker.list_fields,roles=[adminrole,],next_status=newstatus)
             dbsession.add(newtransition)
@@ -626,7 +626,6 @@ async def defaulttransitions(request,id=None):
             dbsession.add(tracker)
 
         edittransition = dbsession.query(TrackerTransition).filter(TrackerTransition.name.ilike("%edit%"),TrackerTransition.tracker==tracker).first()
-        print('edit:' + str(edittransition))
         if not edittransition:
             edittransition = TrackerTransition(tracker=tracker,name='Edit',label='Edit',edit_fields=tracker.list_fields,roles=[adminrole,],prev_status=newstatus,next_status=newstatus)
             dbsession.add(edittransition)
@@ -637,12 +636,14 @@ async def defaulttransitions(request,id=None):
             dbsession.add(deletestatus)
 
         deletetransition = dbsession.query(TrackerTransition).filter(TrackerTransition.name.ilike("%delete%"),TrackerTransition.tracker==tracker).first()
-        print('delete:' + str(deletetransition))
         if not deletetransition:
             deletetransition = TrackerTransition(tracker=tracker,name='Delete',label='Delete',roles=[adminrole,],prev_status=newstatus,next_status=deletestatus)
             dbsession.add(deletetransition)
 
-        dbsession.commit()
+        try:
+            dbsession.commit()
+        except Exception as inst:
+            dbsession.rollback()
     
     return redirect(request.app.url_for('trackers.view',id=id))
 

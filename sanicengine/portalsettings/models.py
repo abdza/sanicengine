@@ -29,7 +29,10 @@ class Setting(ModelBase):
         if self.setting_type == 'text':
             return self.txtdata
         elif self.setting_type == 'json':
-            return json.loads(self.txtdata)
+            try:
+                return json.loads(self.txtdata)
+            except:
+                return None
         elif self.setting_type == 'integer':
             return self.intdata
         elif self.setting_type == 'float':

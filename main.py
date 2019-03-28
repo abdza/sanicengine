@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from sanic import Sanic
 from sanic.response import html, redirect
+from sanic.exceptions import NotFound
 from sanic_session import InMemorySessionInterface
 from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings, emailtemplates, customtemplates
 from sanicengine import settings
@@ -20,6 +21,14 @@ app.static('/static','./sanicengine/static')
 app.config.from_object(settings)
 
 session_interface = InMemorySessionInterface()
+
+@app.exception(NotFound)
+async def pagenotfound(request,exception):
+    notpage = dbsession.query(pages.models.Page).filter_by(module='portal',slug='error_404').first()
+    if notpage:
+        return html(notpage.render(request,title=notpage.title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    else:
+        return html(render(request,'errors/404.html',title='Page not found'))
 
 @app.middleware('request')
 async def add_session_to_request(request):
@@ -133,6 +142,16 @@ async def custom_routes(app, loop):
     custom_routes = portalsettings.models.Setting.namedefault('portal','customurl',[])
     for cr in custom_routes:
         app.add_route(returnfunction,cr,methods=['GET','POST'])
+
+@app.listener('before_server_start')
+async def custom_static(app, loop):
+    custom_static = portalsettings.models.Setting.namedefault('portal','customstatic',[])
+    if custom_static:
+        print(str(custom_static))
+        for cr in custom_static:
+            print(str(cr))
+            if os.path.exists(custom_static[cr]['path']):
+                app.static(cr,custom_static[cr]['path'])
 
 async def send_email(data):
     scheduler = AsyncIOScheduler()
