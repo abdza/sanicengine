@@ -74,13 +74,14 @@ async def login(request):
                 else:
                     return redirect('/')
             else:
-                print("wrong password")
                 request['session']['flashmessage']='Wrong username or password'
-                return redirect('/')
         else:
-            print("user not found for:" + request.form.get('username') + "----")
             request['session']['flashmessage']='Wrong username or password'
+        if 'currentpage' in request.form:
+            return redirect(request.form['currentpage'][0])
+        else:
             return redirect('/')
+        return redirect('/')
 
     return html(render(request,'users/login.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
