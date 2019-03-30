@@ -232,7 +232,7 @@ async def form(request,id=None):
 async def index(request):
     users = dbsession.query(User)
     paginator = Paginator(users, 10)
-    return html(render(request, 'generic/list.html',title='Users',deletelink='users.delete',editlink='users.edit',addlink='users.create',fields=[{'label':'Name','name':'name'},],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    return html(render(request, 'generic/list.html',title='Users',deletelink='users.delete',editlink='users.edit',addlink='users.create',fields=[{'label':'Name','name':'name'},{'label':'Email','name':'email'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/profile',methods=['GET','POST'])
 @authorized()

@@ -7,7 +7,7 @@ from sanicengine.users.models import User
 from sanicengine.pages.models import Page
 from sanicengine.emailtemplates.models import EmailTemplate
 from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
-from sanicengine.database import dbsession
+from sanicengine.database import dbsession, executedb
 from sanicengine.template import render
 from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
@@ -55,6 +55,32 @@ async def runupdate(request,module,slug=None):
     except:
         print("Nothing to wait for")
     return redirect(request.app.url_for('trackers.view',id=tracker.id) + '#dataupdates')
+
+@bp.route('/trackers/fixstatus/<module>/<slug>',methods=['POST'])
+@authorized(object_type='dataupdate')
+async def fixstatus(request,module,slug):
+    tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
+    if tracker:
+
+        newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.name.ilike("%new%"),TrackerTransition.tracker==tracker).first()
+
+        if not newtransition:
+            newtransition = TrackerTransition(tracker=tracker,name='New',label='New',edit_fields=tracker.list_fields,roles=[adminrole,],next_status=newstatus)
+            dbsession.add(newtransition)
+            tracker.default_new_transition = 'New'
+            dbsession.add(tracker)
+
+        statuses = []
+        for status in tracker.statuses:
+            statuses.append(status.name)
+        
+        fixquery = "select * from " + tracker.data_table + " where record_status not in ('" + "','".join(statuses) + "') or record_status is null"
+        brokendatas = executedb(fixquery)
+        for broken in brokendatas:
+            tracker.saverecord({'id':broken.id,'record_status':newtransition.next_status})
+        
+    request['session']['flashmessage'] = 'Fixed record status for ' + tracker.title
+    return redirect(request.app.url_for('trackers.view',id=tracker.id))
 
 @bp.route('/trackers/cleardata/<module>/<slug>',methods=['POST'])
 @authorized(object_type='dataupdate')

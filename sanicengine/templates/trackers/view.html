@@ -23,6 +23,7 @@
     <a href='{{ app.url_for('trackers.defaulttransitions',id=tracker.id) }}' class='btn btn-primary'>Default Transitions</a>
     <a href='{{ app.url_for('trackers.runupdate',module=tracker.module,slug=tracker.slug) }}' class='btn btn-primary'>Run Update</a>
     <form style='display: inline;' method='post' action='{{ app.url_for('trackers.cleardata', module=tracker.module,slug=tracker.slug) }}' onsubmit='return confirm("Clear data for tracker {{ tracker.title }}");'><input type='submit' class="btn btn-primary" value='Clear Data' ></form>
+    <form style='display: inline;' method='post' action='{{ app.url_for('trackers.fixstatus', module=tracker.module,slug=tracker.slug) }}' onsubmit='return confirm("Fix record status for tracker {{ tracker.title }}");'><input type='submit' class="btn btn-primary" value='Fix Status' ></form>
     <form style='display: inline;' method='post' action='{{ app.url_for('trackers.delete', module=tracker.module,slug=tracker.slug) }}' onsubmit='return confirm("Delete tracker {{ tracker.title }}");'><input type='submit' class="btn btn-primary" value='Delete' ></form>
 	<dl class='row'>
 		<dt class='col-2'>Title</dt>
