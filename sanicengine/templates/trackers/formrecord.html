@@ -1,5 +1,5 @@
 {% extends "formbase.html" %}
-{% from 'trackers/macros.html' import transitionform, transitiondisplay with context %}
+{% from 'trackers/macros.html' import transitionformjs, transitionform, transitiondisplay with context %}
 {% block content %}
 {% if record %}
 <h1>Edit {{ tracker.title }}</h1>
@@ -17,17 +17,9 @@
 {% endblock %}
 {% block form_js %}
 {{ super() }}
-{% set ns = namespace(gotdate = false,gottoken = false) %}
-{% for field in transition.edit_fields_list() %}
-	{% if field.field_type in ['object','user','treenode'] %}
-		<script> 
-		$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',module=tracker.module,slug=tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
-		</script> 
-	{% endif %}
-{% endfor %}
-{% if transition.edit_fields and transition.edit_fields|length == 0 %}
-<script>
-$('#trackerform').submit();
-</script>
+{% if record %}
+{{ transitionformjs(transition,record) }}
+{% else %}
+{{ transitionformjs(transition) }}
 {% endif %}
 {% endblock %}

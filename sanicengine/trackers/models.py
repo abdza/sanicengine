@@ -52,6 +52,11 @@ class Tracker(ModelBase):
         return tracker.first()
 
     @property
+    def newtransition(self):
+        newtransition = dbsession.query(TrackerTransition).filter_by(tracker=self, name='New').first()
+        return newtransition
+
+    @property
     def is_published(self):
         if not self.published:
             return False
@@ -201,7 +206,7 @@ class Tracker(ModelBase):
             if transition:
                 if transition.next_status:
                     form['record_status'] = [transition.next_status.name,]
-                for field in transition.edit_fields_list():
+                for field in transition.edit_fields_list:
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
                         output=None
                         ldict = locals()
@@ -295,7 +300,7 @@ class Tracker(ModelBase):
                         dbsession.rollback()
                     return None
             else:
-                for field in transition.edit_fields_list():
+                for field in transition.edit_fields_list:
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
                         output=None
                         ldict = locals()
@@ -913,6 +918,7 @@ class TrackerTransition(ModelBase):
     def __repr__(self):
         return self.name
 
+    @property
     def edit_fields_list(self):
         pfields = []
         if self.edit_fields:

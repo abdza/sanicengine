@@ -7,6 +7,22 @@
 </dl>
 {% endmacro %}
 
+{% macro transitionformjs(transition,record=None) -%}
+{% set ns = namespace(gotdate = false,gottoken = false) %}
+{% for field in transition.edit_fields_list %}
+	{% if field.field_type in ['object','user','treenode'] %}
+		<script> 
+		$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',module=transition.tracker.module,slug=transition.tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
+		</script> 
+	{% endif %}
+{% endfor %}
+{% if transition.edit_fields and transition.edit_fields|length == 0 %}
+<script>
+$('#trackerform').submit();
+</script>
+{% endif %}
+{% endmacro %}
+
 {% macro transitionform(transition,record=None) -%}
 <form method='POST' id='trackerform' enctype='multipart/form-data'>
 	<input type='hidden' name='transition_id' value='{{transition.id}}'/>
@@ -14,7 +30,7 @@
 	<input type='hidden' name='id' value='{{record['id']}}'/>
 	{% endif %}
 	{% set ns = namespace(displayed=false,gotlocation=false,gotmap=false) %}
-{% for field in transition.edit_fields_list() %}
+{% for field in transition.edit_fields_list %}
 {% if field.default %}
 <input type='hidden' name='{{field.name}}' value='systemdefault'>
 {% elif field.field_type in ['location','map'] %}
@@ -39,7 +55,7 @@
 	{% block js scoped %}
 	{% if ns.gotlocation %}
 		<script>
-		{% for field in transition.edit_fields_list() %}
+		{% for field in transition.edit_fields_list %}
 			{% if field.field_type=='map' %}
 			{% set ns.gotmap = true %}
 			var {{field.name}}_map,{{field.name}}_marker;
@@ -64,7 +80,7 @@
 					navigator.geolocation.getCurrentPosition(updateLocFields,showGpsError);
 				}
 				else {
-					{% for field in transition.edit_fields_list() %}
+					{% for field in transition.edit_fields_list %}
 						{% if field.field_type=='location' %}
 					$('#{{field.name}}').val('Error: Browser does not support location');
 						{% endif %}
@@ -72,7 +88,7 @@
 				}
 			}
 			function updateLocFields(position){
-		{% for field in transition.edit_fields_list() %}
+		{% for field in transition.edit_fields_list %}
 			{% if field.field_type in ['location','map'] %}
 				$('#{{field.name}}').val(position.coords.latitude + ',' + position.coords.longitude);
 				{% if field.field_type == 'map' and not record[field.name] %}
@@ -86,28 +102,28 @@
 			function showGpsError(error) {
 				switch(error.code) {
 					case error.PERMISSION_DENIED:
-					{% for field in transition.edit_fields_list() %}
+					{% for field in transition.edit_fields_list %}
 						{% if field.field_type=='location' %}
 						$('#{{field.name}}').val("Error: User denied the request for Geolocation");
 						{% endif %}
 					{% endfor %}
 					break;
 					case error.POSITION_UNAVAILABLE:
-					{% for field in transition.edit_fields_list() %}
+					{% for field in transition.edit_fields_list %}
 						{% if field.field_type=='location' %}
 						$('#{{field.name}}').val("Error: Location information is unavailable");
 						{% endif %}
 					{% endfor %}
 					break;
 					case error.TIMEOUT:
-					{% for field in transition.edit_fields_list() %}
+					{% for field in transition.edit_fields_list %}
 						{% if field.field_type=='location' %}
 						$('#{{field.name}}').val("Error: The request to get user location timed out");
 						{% endif %}
 					{% endfor %}
 					break;
 					case error.UNKNOWN_ERROR:
-					{% for field in transition.edit_fields_list() %}
+					{% for field in transition.edit_fields_list %}
 						{% if field.field_type=='location' %}
 						$('#{{field.name}}').val("Error: An unknown error occurred");
 						{% endif %}
@@ -120,7 +136,7 @@
 			
 			{% if ns.gotmap %}
 			function init_maps() {
-			{% for field in transition.edit_fields_list() %}
+			{% for field in transition.edit_fields_list %}
 				{% if field.field_type=='map' %}
 				init_{{field.name}}_map();
 				{% endif %}
