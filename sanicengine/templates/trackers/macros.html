@@ -23,8 +23,8 @@ $('#trackerform').submit();
 {% endif %}
 {% endmacro %}
 
-{% macro transitionform(transition,record=None) -%}
-<form method='POST' id='trackerform' enctype='multipart/form-data'>
+{% macro transitionform(transition,record=None,target=None) -%}
+<form method='POST' id='trackerform' enctype='multipart/form-data' {% if target %}action="{{target}}"{% endif %}>
 	<input type='hidden' name='transition_id' value='{{transition.id}}'/>
 	{% if record %}
 	<input type='hidden' name='id' value='{{record['id']}}'/>
