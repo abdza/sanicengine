@@ -171,16 +171,22 @@ async def index(request):
     pages = dbsession.query(Page)
     modules = []
     donefilter = False
+    runables = ['True','False']
     for m in dbsession.query(Page.module).distinct():
         if 'Admin' in curuser.moduleroles(m[0]):
             modules.append(m[0])
             if(request.args.get('module_filter') and request.args.get('module_filter')==m[0]):
                 pages = pages.filter_by(module=m[0])
                 donefilter = True
+    if request.args.get('runable_filter'):
+        if request.args.get('runable_filter')=='True':
+            pages = pages.filter(Page.runable == True)
+        elif request.args.get('runable_filter')=='False':
+            pages = pages.filter(Page.runable == False)
     if not donefilter:
         pages = pages.filter(Page.module.in_(modules))
     if request.args.get('q'):
         pages = pages.filter(or_(Page.title.ilike("%" + request.args.get('q') + "%"),Page.slug.ilike("%" + request.args.get('q') + "%")))
     paginator = Paginator(pages, 10)
     return html(render(request,
-        'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',filter_fields=[{'field':'module','label':'Module','options':modules},],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+        'generic/list.html',title='Pages',linktitle=True,deletelink='pages.delete',editlink='pages.edit',addlink='pages.create',filter_fields=[{'field':'module','label':'Module','options':modules},{'field':'runable','label':'Runable','options':runables}],fields=[{'label':'Module','name':'module'},{'label':'Slug','name':'slug'},{'label':'Title','name':'title'},{'label':'Runable','name':'runable'},{'label':'Login','name':'require_login'},{'label':'Published','name':'is_published'}],paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
