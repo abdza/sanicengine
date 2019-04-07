@@ -213,6 +213,8 @@ class Tracker(ModelBase):
                         exec(field.default,globals(),ldict)
                         output=ldict['output']
                         form[field.name][0]=output
+                    elif field.session_override and field.session_override in request['session']:
+                        form[field.name][0]=request['session'][field.session_override]
                     elif field.field_type in ['file','picture','video']:
                         if request.files.get(field.name) and request.files.get(field.name).name:
                             filelink=FileLink()
@@ -539,6 +541,7 @@ class TrackerField(ModelBase):
     widget = Column(String(20))
     obj_table = Column(String(50))
     obj_field = Column(String(100))
+    session_override = Column(String(100))
     default = Column(Text())
     options = Column(Text())
     foreignfields = []

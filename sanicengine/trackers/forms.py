@@ -28,6 +28,7 @@ class TrackerFieldForm(Form):
     widget = SelectField('Widget',choices=[('string','Text'),('text','Text Area'),('number','Number'),('date','Date'),('datetime','Date Time'),('checkbox','Check Box'),('dropdown','Drop Down'),('file','File'),('picture','Picture'),('video','Video'),('location','Location'),('map','Map')])
     obj_table = StringField('Object Table')
     obj_field = StringField('Object Field')
+    session_override = StringField('Session Override')
     default = TextAreaField('Default')
     options = TextAreaField('Options')
 
