@@ -23,9 +23,12 @@ $('#trackerform').submit();
 {% endif %}
 {% endmacro %}
 
-{% macro transitionform(transition,record=None,target=None) -%}
-<form method='POST' id='trackerform' enctype='multipart/form-data' {% if target %}action="{{target}}"{% endif %}>
+{% macro transitionform(transition,record=None,target=None,on_success=None) -%}
+<form method='POST' id='trackerform' enctype='multipart/form-data' {% if target %}action="{{target}}"{% elif on_success %}action="{{app.url_for('trackers.addrecord',module=transition.tracker.module,slug=transition.tracker.slug)}}"{% endif %}>
 	<input type='hidden' name='transition_id' value='{{transition.id}}'/>
+	{% if on_success %}
+	<input type='hidden' name='on_success' value='{{ on_success }}'/>
+	{% endif %}
 	{% if record %}
 	<input type='hidden' name='id' value='{{record['id']}}'/>
 	{% endif %}

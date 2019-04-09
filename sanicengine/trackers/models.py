@@ -214,7 +214,7 @@ class Tracker(ModelBase):
                         output=ldict['output']
                         form[field.name][0]=output
                     elif field.session_override and field.session_override in request['session']:
-                        form[field.name][0]=request['session'][field.session_override]
+                        form[field.name]=[request['session'][field.session_override]]
                     elif field.field_type in ['file','picture','video']:
                         if request.files.get(field.name) and request.files.get(field.name).name:
                             filelink=FileLink()
@@ -245,6 +245,8 @@ class Tracker(ModelBase):
                             dbsession.commit()
                             form[field.name]=[filelink.id,]
         fieldnames = list(form.keys())
+        if 'on_success' in fieldnames:
+            fieldnames.remove('on_success')
         query = """
             insert into """ + self.data_table + """ ( """ + ",".join(fieldnames) + """) values 
             (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """) returning *

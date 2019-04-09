@@ -49,9 +49,15 @@ def authorized(object_type=None, require_admin=False, require_superuser=False):
                             is_authorized = True
                     if not is_authorized and curobj.is_published:
                         if not curobj.require_login:
+                            # no need to login so no need to check whether curuser is set
                             is_authorized = True
                         else:
-                            if not require_admin and curobj.allowed_roles and len(curobj.allowed_roles) and any(r in [ar.strip() for ar in curobj.allowed_roles.split(',')] for r in mroles):
+                            if not require_admin and curobj.allowed_roles and len(curobj.allowed_roles):
+                                if any(r in [ar.strip() for ar in curobj.allowed_roles.split(',')] for r in mroles):
+                                    # allowed roles is set, check the role exists in collection of user roles we collected earlier
+                                    is_authorized = True
+                            elif curuser:
+                                # does require login but not any specific roles (allowed roles is empty), allow it
                                 is_authorized = True
             elif require_admin:
                 if curuser:

@@ -1062,7 +1062,10 @@ async def addrecord(request,module,slug=None):
             else:
                 return redirect(request.app.url_for('trackers.viewdetail',module=tracker.module,slug=tracker.slug,id=data['id']))
         else:
-            return redirect(request.app.url_for('trackers.viewdetail',module=tracker.module,slug=tracker.slug,id=data['id']))
+            if 'on_success' in request.form:
+                return redirect(request.form['on_success'][0])
+            else:
+                return redirect(request.app.url_for('trackers.viewdetail',module=tracker.module,slug=tracker.slug,id=data['id']))
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_addrecord').first()
     title = tracker.title + "-Add Record"
     if newtransition:
