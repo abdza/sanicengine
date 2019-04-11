@@ -533,6 +533,12 @@ class Tracker(ModelBase):
                 dbsession.rollback()
         return updates
 
+    def recordvalue(self,record,field):
+        ftags = field.split('.')
+        if len(ftags)==1:
+            dfield = dbsession.query(TrackerField).filter(TrackerField.tracker==self,TrackerField.name==ftags[0]).first()
+            if dfield:
+                return dfield.disp_value(record[ftags[0]])
 
 class TrackerField(ModelBase):
     __tablename__ = 'tracker_fields'
