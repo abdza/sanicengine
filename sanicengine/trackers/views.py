@@ -8,7 +8,7 @@ from sanicengine.pages.models import Page
 from sanicengine.emailtemplates.models import EmailTemplate
 from .forms import TrackerForm, TrackerFieldForm, TrackerRoleForm, TrackerStatusForm, TrackerTransitionForm
 from sanicengine.database import dbsession, executedb
-from sanicengine.template import render
+from sanicengine.template import render, render_string
 from sanicengine.decorators import authorized
 from sqlalchemy_paginator import Paginator
 from sqlalchemy import or_
@@ -568,7 +568,13 @@ async def fieldjson(request,module,slug=None,field_id=None):
                 sqlq = "select id,name from users where name ilike '%" + request.args['q'][0] + "%' "
             elif trackerfield.field_type=='object':
                 namefield = trackerfield.main_obj_field()
-                sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where " + " or ".join([field + " ilike '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ])
+                qfield = None
+                if trackerfield.obj_filter:
+                    try:
+                        qfield = render_string(request,trackerfield.obj_filter)
+                    except:
+                        print("Error rendering query filter:" + str(trackerfield.obj_filter))
+                sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where (" + " or ".join([field + " ilike '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ]) + ") " + (" and " + qfield) if qfield else + ""
             elif trackerfield.field_type=='treenode':
                 namefield = "titleagg"
                 tmodule = trackerfield.tracker.module

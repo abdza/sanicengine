@@ -36,6 +36,8 @@ $('#trackerform').submit();
 {% for field in transition.edit_fields_list %}
 {% if field.default %}
 <input type='hidden' name='{{field.name}}' value='systemdefault'>
+{% elif field.get_override and field.get_override in request.args %}
+<input type='hidden' name='{{field.name}}' value='{{ request.args[field.get_override][0] }}'>
 {% elif field.session_override and field.session_override in request['session'] %}
 {% elif field.field_type in ['location','map'] %}
 	{% if field.field_type == 'map' %}

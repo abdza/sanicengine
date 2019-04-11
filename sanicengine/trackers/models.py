@@ -549,7 +549,9 @@ class TrackerField(ModelBase):
     widget = Column(String(20))
     obj_table = Column(String(50))
     obj_field = Column(String(100))
+    obj_filter = Column(String(200))
     session_override = Column(String(100))
+    get_override = Column(String(100))
     default = Column(Text())
     options = Column(Text())
     foreignfields = []
