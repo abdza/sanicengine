@@ -77,6 +77,18 @@ class Tree(ModelBase):
         rootnode.expire_date = self.expire_date
         dbsession.add(rootnode)
 
+    def addnodes(self, titles, node=None):
+        for title in titles:
+            self.addnode(title,node)
+
+    def addnode(self, title, node=None):
+        if node:
+            node.addnode(title)
+        else:
+            if not self.rootnode:
+                self.create_rootnode()
+            self.rootnode.addnode(title)
+
 class TreeNode(ModelBase, BaseNestedSets):
     __tablename__ = 'tree_nodes'
     id = Column(Integer, primary_key=True)
@@ -176,6 +188,18 @@ class TreeNode(ModelBase, BaseNestedSets):
             return json.loads(self.datastr)
         else:
             return []
+
+    def addnodes(self, titles):
+        for title in titles:
+            self.addnode(title)
+
+    def addnode(self, title):
+        newchild = TreeNode(sanictree=self.sanictree,title=title,parent=self)
+        dbsession.add(newchild)
+        try:
+            dbsession.commit()
+        except BaseException as exp:
+            dbsession.rollback()
 
     def getdata(self,key=None,default=None):
         dat = json.loads(self.datastr)

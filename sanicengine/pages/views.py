@@ -4,6 +4,7 @@ from sanic.response import html, redirect, json as jsonresponse
 from .models import Page
 from .forms import PageForm
 from sanicengine.trackers.models import Tracker
+from sanicengine.trees.models import Tree
 from sanicengine.portalsettings.models import Setting
 from sanicengine.database import dbsession, executedb, querydb, queryobj
 from sanicengine.template import render
@@ -57,7 +58,7 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         ldict = locals()
         try:
             exec(page.content,globals(),ldict)
-        except:
+        except Exception as e:
             print("Got error running commands from page:" + str(page))
             print("Page content:" + str(page.content))
             print("Exception:" + str(sys.exc_info()[0]))
