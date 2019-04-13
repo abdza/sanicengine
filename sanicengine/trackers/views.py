@@ -574,7 +574,7 @@ async def fieldjson(request,module,slug=None,field_id=None):
                         qfield = render_string(request,trackerfield.obj_filter)
                     except:
                         print("Error rendering query filter:" + str(trackerfield.obj_filter))
-                sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where (" + " or ".join([field + " ilike '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ]) + ") " + (" and " + qfield) if qfield else + ""
+                sqlq = "select id," + trackerfield.main_obj_field() + " from " + trackerfield.obj_table + " where (" + " or ".join([field + " ilike '%" + request.args['q'][0] + "%' " for field in trackerfield.obj_fields() ]) + ") " + (" and " + qfield if qfield else "")
             elif trackerfield.field_type=='treenode':
                 namefield = "titleagg"
                 tmodule = trackerfield.tracker.module

@@ -182,14 +182,16 @@ class Tracker(ModelBase):
             if 'user_id' in request['session']:
                 curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'id' in record:
-            query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(record[formfield]) for formfield in record.keys()  ]) + """ where id=""" + str(record['id']) + " returning *"
+            query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=:" + formfield for formfield in record.keys()  ]) + """ where id=:record_id returning *"""
+            qparams = { k:record[k] for k in record.keys() } + { 'record_id':record['id'] }
         else:
             query = """
                 insert into """ + self.data_table + """ ( """ + ",".join(record.keys()) + """) values 
-                (""" + ",".join([ self.field(formfield).sqlvalue(record[formfield]) for formfield in record.keys()  ]) + """) returning *
+                (""" + ",".join([ ":" + formfield for formfield in record.keys()]) + """) returning *
             """
+            qparams = { k:record[k] for k in record.keys() }
         try:
-            data = dbsession.execute(query).fetchone()
+            data = dbsession.execute(query,qparams).fetchone()
             dbsession.commit()
         except Exception as inst:
             dbsession.rollback()
@@ -249,10 +251,11 @@ class Tracker(ModelBase):
             fieldnames.remove('on_success')
         query = """
             insert into """ + self.data_table + """ ( """ + ",".join(fieldnames) + """) values 
-            (""" + ",".join([ self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """) returning *
+            (""" + ",".join([ ":" + formfield for formfield in fieldnames  ]) + """) returning *
         """
+        qparams = { k:form[k][0] for k in fieldnames }
         try:
-            data = dbsession.execute(query).fetchone()
+            data = dbsession.execute(query,qparams).fetchone()
             dbsession.commit()
         except Exception as inst:
             dbsession.rollback()
@@ -265,8 +268,9 @@ class Tracker(ModelBase):
         try:
             query = """
                 insert into """ + self.update_table + """ (record_id,user_id,record_status,update_date,description) values 
-                ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
-            dbsession.execute(query)
+                ( :record_id,:user_id,:rec_status,now(),:desc) """
+            qparams = { 'record_id':data['id'],'user_id': curuser.id if curuser else None,'rec_status':data['record_status'],'desc':desc }
+            dbsession.execute(query,qparams)
             dbsession.commit()
         except Exception as inst:
             dbsession.rollback()
