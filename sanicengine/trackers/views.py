@@ -244,7 +244,7 @@ async def create_from_excel(request,module,slug=None):
                 for cell in row:
                     if cell.value!=None:
                         fieldtitles.append(cell.value)
-            for row in ws.iter_rows(max_row=1,row_offset=1):
+            for row in ws.iter_rows(max_row=2,min_row=2):
                 currow = 0
                 for cell in row:
                     if cell.value!=None and currow<len(fieldtitles):

@@ -799,27 +799,20 @@ class TrackerDataUpdate(ModelBase):
             if 'record_status' not in fields:
                 recstatusq = ',record_status'
                 newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.tracker==self.tracker,TrackerTransition.name==self.tracker.default_new_transition).first()
-            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ '"' + f.name + '"' for f in fields ]) + ',batch_no' + recstatusq + ') values '
-            for i,row in enumerate(ws.rows):
-                if i>=headerend:
-                    cellrows = [ws[datas[f.name + '_column'][0] + str(i+1)] if datas[f.name + '_column'][0]!='custom' else datas[f.name + '_custom'][0] for f in fields]
-                    drowdata = [ f.value if type(f) is not str else f for f in cellrows ]
-                    sqlrowdata = [ f.sqlvalue(drowdata[dd]) for dd,f in enumerate(fields) ]
-                    drow = '('
-                    drow = drow + ','.join(sqlrowdata)
-                    drow = drow + ',' + str(self.id)
+            query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ '"' + f.name + '"' for f in fields ]) + ',batch_no' + recstatusq + ') values (' + ','.join([ ':' + f.name for f in fields ]) + ',:batch_no' + ( ',:record_status' if newtransition else '') + ')'
+            qparams = []
+            for i in range(headerend+1,ws.max_row+1):
+                if i>headerend:
+                    cellrows = {f.name:(ws.cell(column=int(datas[f.name + '_column'][0]),row=i).value if datas[f.name + '_column'][0]!='custom' else datas[f.name + '_custom'][0]) for f in fields }
+                    cellrows.update( { 'batch_no':self.id } )
                     if 'record_status' not in fields:
                         if newtransition and newtransition.next_status:
-                            drow = drow + ",'" + newtransition.next_status.name + "'"
-                        else:
-                            drow = drow + ",''"
-                    drow = drow + ')'
-                    rows.append(drow)
-            query = query + ','.join(rows)
+                            cellrows.update( {'record_status':newtransition.next_status.name })
+                    qparams.append(cellrows)
             try:
-                dbsession.execute(query)
+                dbsession.execute(query,qparams)
                 dbsession.commit()
-                self.status = 'Uploaded ' + str(len(rows)) + ' rows'
+                self.status = 'Uploaded ' + str(len(qparams)) + ' rows'
                 dbsession.add(self)
                 dbsession.commit()
             except Exception as inst:
