@@ -299,11 +299,11 @@ class Tracker(ModelBase):
                 if oldrecord:
                     request['session']['flashmessage']="Deleted " + self.title + " " + str(oldrecord['id'])
                     try:
-                        dbsession.execute("delete from " + self.update_table + " where record_id=" + str(oldrecord['id']))
+                        dbsession.execute("delete from " + self.update_table + " where record_id=:record_id",{'record_id':oldrecord['id']})
                     except Exception as inst:
                         dbsession.rollback()
                     try:
-                        dbsession.execute("delete from " + self.data_table + " where id=" + str(oldrecord['id']))
+                        dbsession.execute("delete from " + self.data_table + " where id=:record_id",{'record_id':oldrecord['id']})
                     except Exception as inst:
                         dbsession.rollback()
                     return None
@@ -352,12 +352,15 @@ class Tracker(ModelBase):
                             form[field.name]=[filelink.id,]
                 fieldnames = list(form.keys())
                 if oldrecord:
-                    query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=" + self.field(formfield).sqlvalue(form[formfield][0]) for formfield in fieldnames  ]) + """ where id=""" + str(oldrecord['id']) + " returning *"
+                    query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in fieldnames  ]) + " where id=:record_id returning *"
                 try:
-                    data = dbsession.execute(query).fetchone()
+                    ddata = { 'record_id':oldrecord['id'] }
+                    fdata = { field:form[field][0] for field in fieldnames }
+                    ddata.update(fdata)
+                    data = dbsession.execute(query,ddata).fetchone()
                     dbsession.commit()
                 except Exception as inst:
-                    print("Error query:" + str(query))
+                    print("Error query:" + str(query) + " \n with data:" + str(ddata))
                     dbsession.rollback()
                 txtdesc = []
                 if data:
@@ -370,11 +373,9 @@ class Tracker(ModelBase):
                                 print("not found")
                     desc = '<br>'.join(txtdesc)
 
-                    query = """
-                        insert into """ + self.update_table + """ (record_id,user_id,record_status,update_date,description) values 
-                        ( """ + str(data['id']) + "," + (str(curuser.id) + "," if curuser else 'null,') + "'" + data['record_status'] + "',now(),'" + desc + "') "
+                    query = " insert into " + self.update_table + " (record_id,user_id,record_status,update_date,description) values (:record_id,:user_id,:rec_status,now(),:desc) "
                     try:
-                        dbsession.execute(query)
+                        dbsession.execute(query,{'record_id':data['id'],'user_id':curuser.id if curuser else None,'rec_status':data['record_status'],'desc':desc})
                         dbsession.commit()
                     except Exception as inst:
                         print("Error query:" + str(query))
