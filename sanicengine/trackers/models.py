@@ -182,13 +182,10 @@ class Tracker(ModelBase):
             if 'user_id' in request['session']:
                 curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'id' in record:
-            query = """update """ + self.data_table + """ set """ + ",".join([ formfield + "=:" + formfield for formfield in record.keys()  ]) + """ where id=:record_id returning *"""
+            query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in record.keys()  ]) + " where id=:record_id returning *"
             qparams = { k:record[k] for k in record.keys() } + { 'record_id':record['id'] }
         else:
-            query = """
-                insert into """ + self.data_table + """ ( """ + ",".join(record.keys()) + """) values 
-                (""" + ",".join([ ":" + formfield for formfield in record.keys()]) + """) returning *
-            """
+            query = "insert into " + self.data_table + "(" + ",".join(record.keys()) + ") values (" + ",".join([ ":" + formfield for formfield in record.keys()]) + ") returning *"
             qparams = { k:record[k] for k in record.keys() }
         try:
             data = dbsession.execute(query,qparams).fetchone()
@@ -249,10 +246,7 @@ class Tracker(ModelBase):
         fieldnames = list(form.keys())
         if 'on_success' in fieldnames:
             fieldnames.remove('on_success')
-        query = """
-            insert into """ + self.data_table + """ ( """ + ",".join(fieldnames) + """) values 
-            (""" + ",".join([ ":" + formfield for formfield in fieldnames  ]) + """) returning *
-        """
+        query = "insert into " + self.data_table + " ( " + ",".join(fieldnames) + ") values (" + ",".join([ ":" + formfield for formfield in fieldnames  ]) + ") returning * "
         qparams = { k:form[k][0] for k in fieldnames }
         try:
             data = dbsession.execute(query,qparams).fetchone()
@@ -266,9 +260,7 @@ class Tracker(ModelBase):
             desc = 'Updated by anonymous'
 
         try:
-            query = """
-                insert into """ + self.update_table + """ (record_id,user_id,record_status,update_date,description) values 
-                ( :record_id,:user_id,:rec_status,now(),:desc) """
+            query = "insert into " + self.update_table + " (record_id,user_id,record_status,update_date,description) values ( :record_id,:user_id,:rec_status,now(),:desc) "
             qparams = { 'record_id':data['id'],'user_id': curuser.id if curuser else None,'rec_status':data['record_status'],'desc':desc }
             dbsession.execute(query,qparams)
             dbsession.commit()
