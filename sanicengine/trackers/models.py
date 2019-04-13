@@ -387,7 +387,8 @@ class Tracker(ModelBase):
         # pll : page list limit
         pageamount = 0
         try:
-            recordamount = dbsession.execute("select count(*) as num from " + self.data_table + self.queryrules(curuser=curuser, request=request)).first()['num']
+            qtext, qparams = self.queryrules(curuser=curuser, request=request)
+            recordamount = dbsession.execute("select count(*) as num from " + self.data_table + qtext,qparams).first()['num']
             pageamount = int(math.ceil(recordamount/(self.pagelimit if self.pagelimit else 10)))
         except Exception as inst:
             print("Exception getting record amount:" + str(inst))
@@ -424,20 +425,26 @@ class Tracker(ModelBase):
 
     def queryrules(self,curuser=None,request=None,cleared=False):
         rules = ' where 1=1 '
+        qparams = {}
         if request and 'plq' in request.args: # page list query exists
             if self.search_fields and len(request.args['plq'][0]):
                 sfields = self.fields_from_list(self.search_fields)
                 sqs = []
                 for sfield in sfields:
-                    sqs.append(sfield.queryvalue(request.args['plq'][0]))
-                rules += ' and (' + ' or '.join(sqs) + ')'
+                    qrule,qparam = sfield.queryvalue(request.args['plq'][0])
+                    sqs.append(qrule)
+                    qparams.update(qparam)
+                if len(sqs):
+                    rules += ' and (' + ' or '.join(sqs) + ')'
 
         if self.filter_fields:
             ffields = self.fields_from_list(self.filter_fields)
             fqs = []
             for ffield in ffields:
                 if 'filter_' + ffield.name in request.args and request.args['filter_'+ffield.name][0]!='plall':
-                    fqs.append(ffield.queryvalue(request.args['filter_'+ffield.name][0],equals=True))
+                    qrule,qparam = ffield.queryvalue(request.args['filter_'+ffield.name][0],equals=True)
+                    fqs.append(qrule)
+                    qparams.update(qparam)
             if len(fqs):
                 rules += ' and (' + ' and '.join(fqs) + ')'
 
@@ -445,10 +452,11 @@ class Tracker(ModelBase):
             rrules = self.rolesrule(curuser,request)
             if rrules:
                 rules += ' and (' + rrules + ') '
-        return rules
+        return rules, qparams
 
     def records(self,id=None,curuser=None,request=None,cleared=False,offset=None,limit=None):
         results = []
+        qparams = {}
         if id:
             if cleared:
                 sqltext = text("select * from " + self.data_table +  " where id=:id")
@@ -462,9 +470,10 @@ class Tracker(ModelBase):
                 limitstr = ' limit ' + str(limit)
             if offset:
                 offsetstr = ' offset ' + str(offset)
-            sqltext = text("select * from " + self.data_table + self.queryrules(curuser=curuser,request=request,cleared=cleared) + limitstr + offsetstr)
+            qtext, qparams = self.queryrules(curuser=curuser,request=request,cleared=cleared)
+            sqltext = text("select * from " + self.data_table + qtext + limitstr + offsetstr)
         try:
-            results = dbsession.execute(sqltext)
+            results = dbsession.execute(sqltext,qparams)
         except Exception as inst:
             dbsession.rollback()
         if id:
@@ -503,9 +512,9 @@ class Tracker(ModelBase):
                     croles.append(role)
             elif record:
                 rolesrule = render_string(request,role.compare)
-                sqltext = "select id from " + self.data_table + " where id=" + str(record['id']) + " and " + rolesrule
+                sqltext = "select id from " + self.data_table + " where id=:record_id and " + rolesrule
                 try:
-                    results = dbsession.execute(sqltext)
+                    results = dbsession.execute(sqltext,{"record_id":record['id']})
                     if results:
                         for row in results:
                             croles.append(role)
@@ -531,7 +540,7 @@ class Tracker(ModelBase):
         updates = []
         if record:
             try:
-                updates = dbsession.execute("select * from " + self.update_table + " where record_id=" + str(record['id']) + " order by update_date desc")
+                updates = dbsession.execute("select * from " + self.update_table + " where record_id=:record_id order by update_date desc",{"record_id":record['id']})
             except Exception as inst:
                 print("Error updating record:" + str(inst))
                 dbsession.rollback()
@@ -590,9 +599,9 @@ class TrackerField(ModelBase):
         try:
             if self.field_type == 'object' and self.obj_table and self.obj_field:
                 cobj_field = self.main_obj_field()
-                values = dbsession.execute("select distinct cur." + self.name + " as val, ref." + cobj_field + " as label from " + self.tracker.data_table + " cur, " + self.obj_table + " ref where ref.id=cur." + self.name + " order by " + cobj_field)
+                values = dbsession.execute("select distinct cur." + self.name + " as val, ref." + cobj_field + " as label from " + self.tracker.data_table + " cur, " + self.obj_table + " ref where ref.id=cur." + self.name + " order by ref." + cobj_field)
             elif self.field_type == 'user':
-                values = dbsession.execute("select distinct cur." + self.name + " as val, ref.name as label from " + self.tracker.data_table + " cur, users ref where ref.id=cur." + self.name + " order by " + self.name)
+                values = dbsession.execute("select distinct cur." + self.name + " as val, ref.name as label from " + self.tracker.data_table + " cur, users ref where ref.id=cur." + self.name + " order by ref." + self.name)
             else:
                 values = dbsession.execute("select distinct " + self.name + " as val from " + self.tracker.data_table + " order by " + self.name)
         except Exception as inst:
@@ -616,27 +625,27 @@ class TrackerField(ModelBase):
     def disp_value(self, value, request=None):
         if value:
             if self.field_type=='object':
-                sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=" + str(value)
+                sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=:obj_id"
                 try:
-                    result = dbsession.execute(sqlq)
+                    result = dbsession.execute(sqlq,{'obj_id':value})
                     for r in result:
                         return r[0]
                 except Exception as inst:
                     print("Error running query:" + str(inst))
                     dbsession.rollback()
             elif self.field_type=='treenode':
-                sqlq = "select string_agg(cnode.title,'->' order by cnode.lft) from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where id=" + str(value) + ") nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft,nleaf.rgt,nleaf.id,nleaf.tree_id"
+                sqlq = "select string_agg(cnode.title,'->' order by cnode.lft) from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where id=:node_id) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft,nleaf.rgt,nleaf.id,nleaf.tree_id"
                 try:
-                    result = dbsession.execute(sqlq)
+                    result = dbsession.execute(sqlq,{'node_id':value})
                     for r in result:
                         return r[0]
                 except Exception as inst:
                     print("Error running query:" + str(inst))
                     dbsession.rollback()
             elif self.field_type=='user':
-                sqlq = "select name from users where id=" + str(value)
+                sqlq = "select name from users where id=:user_id"
                 try:
-                    result = dbsession.execute(sqlq)
+                    result = dbsession.execute(sqlq,{'user_id':value})
                     for r in result:
                         return r[0]
                 except Exception as inst:
@@ -673,16 +682,12 @@ class TrackerField(ModelBase):
         return value
 
     def queryvalue(self, value,equals=False):
-        if self.field_type in ['string','text','location','map']:
-            if equals:
-                return self.name + " = '" + str(value) + "'"
-            else:
-                return self.name + " ilike '%" + str(value) + "%'"
-        elif self.field_type in ['integer','number','object','treenode','user','file','picture','video']:
-            return self.name + "=" + str(value)
-        elif self.field_type in ['date','datetime']:
-            return self.name + "='" + str(value) + "'"
-        return "1=1"
+        toret = self.name + "=:" + self.name
+        qparams = { self.name: value }
+        if self.field_type in ['string','text','location','map'] and not equals:
+            qparams = { self.name: "%" + str(value) + "%" }
+            toret = self.name + " ilike :" + self.name
+        return toret, qparams
 
     def sqlvalue(self, value):
         if value is not None:
