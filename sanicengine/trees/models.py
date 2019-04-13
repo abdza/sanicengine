@@ -89,6 +89,40 @@ class Tree(ModelBase):
                 self.create_rootnode()
             self.rootnode.addnode(title)
 
+    def findnode(self, q, fromnode=None):
+        if not fromnode and self.rootnode:
+            fromnode = self.rootnode
+        if fromnode:
+            sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'/' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where rgt<=:right and lft>=:left and sanictree_id=:tree_id) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike :qq limit 1"
+            qparam = {"right":fromnode.right,"left":fromnode.left,"tree_id":self.id,"qq":qq}
+        else:
+            sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'/' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where sanictree_id=:tree_id) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike :qq limit 1"
+            qparam = {"tree_id":self.id,"qq":qq}
+        return dbsession.query(TreeNode).get(dbsession.execute(sqlq,qparam).first()['id'])
+
+    def allnodesleaf(self, q, fromnode=None):
+        if not fromnode and self.rootnode:
+            fromnode = self.rootnode
+        if fromnode:
+            sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'/' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where rgt-lft=1 and sanictree_id=:tree_id and lft>=:left and rgt<=:right) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike :qq"
+            qparam = {"right":fromnode.right,"left":fromnode.left,"tree_id":self.id,"qq":qq}
+        else:
+            sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'/' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where rgt-lft=1 and sanictree_id=:tree_id) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike :qq"
+            qparam = {"tree_id":self.id,"qq":qq}
+        return [ dbsession.query(TreeNode).get(result['id']) for result in dbsession.execute(sqlq,qparam) ]
+
+    def allnodes(self, q, fromnode=None):
+        if not fromnode and self.rootnode:
+            fromnode = self.rootnode
+        qq = "%" + "%".join(q.replace(" ","")) + "%"
+        if fromnode:
+            sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'/' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where rgt<=:right and lft>=:left and sanictree_id=:tree_id) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike :qq"
+            qparam = {"right":fromnode.right,"left":fromnode.left,"tree_id":self.id,"qq":qq}
+        else:
+            sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'/' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where sanictree_id=:tree_id) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike :qq"
+            qparam = {"tree_id":self.id,"qq":qq}
+        return [ dbsession.query(TreeNode).get(result['id']) for result in dbsession.execute(sqlq,qparam) ]
+
 class TreeNode(ModelBase, BaseNestedSets):
     __tablename__ = 'tree_nodes'
     id = Column(Integer, primary_key=True)
@@ -212,6 +246,9 @@ class TreeNode(ModelBase, BaseNestedSets):
                 return None
         else:
             return dat
+
+    def childquery(self):
+        return dbsession.query(TreeNode).filter(TreeNode.rgt>=self.rgt,TreeNode.lft<=self.lft,TreeNode.sanictree==self.sanictree)
 
 class TreeNodeUser(ModelBase):
     __tablename__ = 'tree_node_users'
