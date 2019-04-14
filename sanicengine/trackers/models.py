@@ -172,8 +172,8 @@ class Tracker(ModelBase):
         for field in self.fields:
             field.updatedb()
 
-    def first(self, query):
-        return executedb("select * from " + self.data_table + " where " + query).first()
+    def first(self, query, qparams={}):
+        return executedb("select * from " + self.data_table + " where " + query,qparams).first()
 
     def saverecord(self, record, request=None):
         curuser = None
