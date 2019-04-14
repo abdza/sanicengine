@@ -820,17 +820,19 @@ class TrackerDataUpdate(ModelBase):
                 dbsession.rollback()
         else:
             allresults = []
-            for i,row in enumerate(ws.rows):
+            for i in range(headerend+1,ws.max_row+1):
                 if i>headerend:
                     fieldupdates = []
+                    wquery = {}
                     for f in searchfield:
-                        cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
-                        fieldupdates.append( f.name + '=' + f.sqlvalue(cellrow.value) )
-                    queryrow = ' where ' + 'and'.join(fieldupdates)
+                        cellrow = ws.cell(column=int(datas[f.name + '_column'][0]),row=i)
+                        fieldupdates.append( f.name + '=:' + f.name )
+                        wquery.update( { f.name: cellrow.value } )
+                    queryrow = ' where ' + ' and '.join(fieldupdates)
 
                     sqltext = text("select id from " + self.tracker.data_table + queryrow)
                     try:
-                        result = dbsession.execute(sqltext)
+                        result = dbsession.execute(sqltext,wquery)
                         gotdata = False
                         for r in result:
                             gotdata = True
@@ -841,17 +843,20 @@ class TrackerDataUpdate(ModelBase):
                     if gotdata:
                         query = 'update ' + self.tracker.data_table + ' set ' 
                         fieldinfos = []
+                        uquery = {}
                         for f in fields:
                             if not f in searchfield:
+                                fieldinfos.append( f.name + '=:' + f.name )
                                 if datas[f.name + '_column'][0]!='custom':
-                                    cellrow = ws[datas[f.name + '_column'][0] + str(i+1)]
-                                    fieldinfos.append( f.name + '=' + f.sqlvalue(cellrow.value) )
+                                    cellrow = ws.cell(column=int(datas[f.name + '_column'][0]),row=i)
+                                    uquery.update({ f.name:cellrow.value })
                                 else:
                                     cellrow = datas[f.name + '_custom'][0]
-                                    fieldinfos.append( f.name + '=' + f.sqlvalue(cellrow) )
+                                    uquery.update({ f.name:cellrow })
+                        uquery.update(wquery)
                         query += ','.join(fieldinfos) + queryrow + ' returning *'
                         try:
-                            result = dbsession.execute(query)
+                            result = dbsession.execute(query,uquery)
                         except Exception as inst:
                             print("Error runing query:" + str(inst))
                             dbsession.rollback()
@@ -859,12 +864,13 @@ class TrackerDataUpdate(ModelBase):
                         celldatas = {}
                         for f in fields:
                             if datas[f.name + '_column'][0]!='custom':
-                                celldatas[f.name] = ws[datas[f.name + '_column'][0] + str(i+1)].value
+                                celldatas[f.name] = ws.cell(column=int(datas[f.name + '_column'][0]),row=i).value
                             else:
                                 celldatas[f.name] = datas[f.name + '_custom'][0]
-                        query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no) values (' + ','.join([ f.sqlvalue(celldatas[f.name]) for f in fields ]) + ',' + str(self.id) + ')'
+                        celldatas['batch_no'] = self.id
+                        query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no) values (' + ','.join([ ':' + f.name for f in fields ]) + ',:batch_no)'
                         query += ' returning *'
-                        result = dbsession.execute(query)
+                        result = dbsession.execute(query,celldatas)
                     try:
                         dbsession.commit()
                         allresults.append('Uploaded ' + str(result.first()))
