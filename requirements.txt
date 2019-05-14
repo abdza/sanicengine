@@ -3,6 +3,8 @@ Jinja2
 psycopg2-binary
 sqlalchemy
 GeoAlchemy2
+databases[postgresql]
+alembic
 wtforms
 -e git://github.com/miki725/sqlalchemy-paginator.git#egg=sqlalchemy-paginator
 sanic_session
@@ -13,3 +15,4 @@ apscheduler
 sqlalchemy_mptt
 google-auth
 requests
+pillow
