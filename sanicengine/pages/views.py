@@ -14,6 +14,7 @@ from sqlalchemy_paginator import Paginator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
 import sys
+import traceback
 import datetime
 
 bp = Blueprint('pages')
@@ -61,7 +62,8 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
         except Exception as e:
             print("Got error running commands from page:" + str(page))
             print("Page content:" + str(page.content))
-            print("Exception:" + str(sys.exc_info()[0]))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(exc_type,exc_value,exc_traceback)
         if 'redirecturl' in ldict:
             redirecturl=ldict['redirecturl']
         if 'results' in ldict:
