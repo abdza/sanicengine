@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from sanic import Sanic
 from sanic.response import html, redirect
-from sanic.exceptions import NotFound
+from sanic.exceptions import NotFound,ServerError
 from sanic_session import InMemorySessionInterface
 from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings, emailtemplates, customtemplates
 from sanicengine import settings
@@ -29,6 +29,14 @@ async def pagenotfound(request,exception):
         return html(notpage.render(request,title=notpage.title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         return html(render(request,'errors/404.html',title='Page not found'))
+
+@app.exception(ServerError)
+async def servererror(request,exception):
+    notpage = dbsession.query(pages.models.Page).filter_by(module='portal',slug='error_500').first()
+    if notpage:
+        return html(notpage.render(request,title=notpage.title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    else:
+        return html(render(request,'errors/500.html',title='Server Error'))
 
 @app.middleware('request')
 async def add_session_to_request(request):

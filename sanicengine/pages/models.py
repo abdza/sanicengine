@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """User models."""
+import traceback
 import datetime
+import sys
+from sanic.exceptions import NotFound,ServerError
 
 from sanicengine.database import ModelBase, dbsession
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, Boolean, Date, UniqueConstraint
@@ -28,7 +31,12 @@ class Page(ModelBase):
         return 'Page:' + self.title
 
     def render(self,request,*args,**kwargs):
-        return render_string(request,self.content,*args,**kwargs)
+        try:
+            return render_string(request,self.content,*args,**kwargs)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(exc_type,exc_value,exc_traceback)
+            raise ServerError("Something bad happened", status_code=500)
 
     def load(slug,module=None):
         page = dbsession.query(Page).filter_by(slug=slug)
