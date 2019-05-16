@@ -16,3 +16,4 @@ sqlalchemy_mptt
 google-auth
 requests
 pillow
+selenium
