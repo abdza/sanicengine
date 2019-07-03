@@ -170,7 +170,7 @@ $('#trackerform').submit();
 		{% if field.widget=='dropdown' and field.disp_options %}
 		<select class="col-sm-10 form-control" name="{{ prependname }}{{ field.name }}">
 			{% for option in field.disp_options() %}
-			<option value='{{option}}' {% if record and record[field.name]==option %}selected{% endif %}>{{ option }}</option>
+			<option value="{{option}}" {% if record and record[field.name]==option %}selected{% endif %}>{{ option }}</option>
 			{% endfor %}
 		</select>
 		{% else %}

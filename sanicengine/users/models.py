@@ -22,7 +22,9 @@ class User(ModelBase):
 
     @staticmethod
     def getuser(userid):
-        return dbsession.query(User).get(userid)
+        if userid:
+            return dbsession.query(User).get(userid)
+        return None
 
     def hashpassword(self,passinput):
         return hashlib.sha224(passinput.encode('utf-8')).hexdigest()
