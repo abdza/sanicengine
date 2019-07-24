@@ -19,7 +19,9 @@ def render(request, template_file, *args, **kwargs):
     app.users = users
     app.fileLinks = fileLinks
     app.trackers = trackers
+    app.Tracker = trackers.Tracker
     app.trees = trees
+    app.Tree = trees.Tree
     app.dbsession = dbsession
     app.executedb = executedb
     app.querydb = querydb
@@ -42,7 +44,9 @@ def render_string(request, template_string, *args, **kwargs):
     app.users = users
     app.fileLinks = fileLinks
     app.trackers = trackers
+    app.Tracker = trackers.Tracker
     app.trees = trees
+    app.Tree = trees.Tree
     app.dbsession = dbsession
     app.executedb = executedb
     app.querydb = querydb

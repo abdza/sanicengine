@@ -3,7 +3,7 @@ from sanic import Sanic
 from sanic.response import html, redirect
 from sanic.exceptions import NotFound,ServerError
 from sanic_session import InMemorySessionInterface
-from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings, emailtemplates, customtemplates
+from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings, emailtemplates, customtemplates, portalerrors
 from sanicengine import settings
 from sanicengine.template import render
 from sanicengine.database import dbsession, ModelBase, dbengine
@@ -13,6 +13,7 @@ from email.message import EmailMessage
 from email.utils import make_msgid
 import asyncio, aiosmtplib, os, json, sys, getopt, getpass
 import hashlib, base64, datetime
+import sys,traceback
 
 from sqlalchemy import MetaData
 
@@ -32,6 +33,11 @@ async def pagenotfound(request,exception):
 
 @app.exception(ServerError)
 async def servererror(request,exception):
+    print("Error is")
+    print(str(dir(exception)))
+    print("Tb")
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
     notpage = dbsession.query(pages.models.Page).filter_by(module='portal',slug='error_500').first()
     if notpage:
         return html(notpage.render(request,title=notpage.title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
@@ -105,6 +111,7 @@ async def register_bp(app, loop):
     app.blueprint(modules.views.bp)
     app.blueprint(trees.views.bp)
     app.blueprint(portalsettings.views.bp)
+    app.blueprint(portalerrors.views.bp)
     app.blueprint(emailtemplates.views.bp)
     app.blueprint(customtemplates.views.bp)
 

@@ -92,6 +92,7 @@ class Tree(ModelBase):
     def findnode(self, q, fromnode=None):
         if not fromnode and self.rootnode:
             fromnode = self.rootnode
+        qq = "%" + "%".join(q.replace(" ","")) + "%"
         if fromnode:
             sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'/' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where rgt<=:right and lft>=:left and sanictree_id=:tree_id) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike :qq limit 1"
             qparam = {"right":fromnode.right,"left":fromnode.left,"tree_id":self.id,"qq":qq}
@@ -103,6 +104,7 @@ class Tree(ModelBase):
     def allnodesleaf(self, q, fromnode=None):
         if not fromnode and self.rootnode:
             fromnode = self.rootnode
+        qq = "%" + "%".join(q.replace(" ","")) + "%"
         if fromnode:
             sqlq = "select id,titleagg from (select nleaf.id,nleaf.lft,nleaf.rgt,string_agg(cnode.title,'/' order by cnode.lft) titleagg from tree_nodes cnode,(select id,lft,rgt,tree_id from tree_nodes where rgt-lft=1 and sanictree_id=:tree_id and lft>=:left and rgt<=:right) nleaf where cnode.lft<=nleaf.lft and cnode.rgt>=nleaf.rgt and cnode.tree_id=nleaf.tree_id group by nleaf.lft, nleaf.rgt, nleaf.id) combtitle where titleagg ilike :qq"
             qparam = {"right":fromnode.right,"left":fromnode.left,"tree_id":self.id,"qq":qq}

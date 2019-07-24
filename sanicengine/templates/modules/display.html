@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>{{module.title}}</h1>
+<ul class="nav nav-tabs">
+  <li class="nav-item active"><a class="nav-link active" data-toggle="tab" href="#pages">Pages</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#files">Files</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#trees">Trees</a></li>
+  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#trackers">Trackers</a></li>
+</ul>
+<div class="tab-content">
+  <div id="pages" class="tab-pane fade in show active">
+	  <h2>Pages</h2>
+	  <table class='table'>
+		  <tr><th>Title</th><th>Slug</th><th>Runable</th><th>Login</th><th>Published</th></tr>
+		  {% for page in pages %}
+		  <tr>
+			  <td>{{page.title}}</td>
+			  <td>{{page.slug}}</td>
+			  <td>{{page.runable}}</td>
+			  <td>{{page.require_login}}</td>
+			  <td>{{page.is_published}}</td>
+		  </tr>
+		  {% endfor %}
+	  </table>
+  </div>
+  <div id="files" class="tab-pane fade">
+	  <h2>Files</h2>
+  </div>
+  <div id="trees" class="tab-pane fade">
+	  <h2>Trees</h2>
+  </div>
+  <div id="trackers" class="tab-pane fade">
+	  <h2>Trackers</h2>
+  </div>
+</div>
+{% endblock %}
+{% block page_js %}
+{{ super() }}
+<script>
+var url = document.location.toString();
+if (url.match('#')) {
+    $('.nav-tabs a[href="#'+url.split('#')[1]+'"]').tab('show') ;
+} 
+
+// With HTML5 history API, we can easily prevent scrolling!
+$('.nav-tabs a').on('shown.bs.tab', function (e) {
+    if(history.pushState) {
+        history.pushState(null, null, e.target.hash); 
+    } else {
+        window.location.hash = e.target.hash; //Polyfill for old browsers
+    }
+})
+</script>
+{% endblock %}

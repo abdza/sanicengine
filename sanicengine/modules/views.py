@@ -3,6 +3,7 @@ from sanic import Blueprint
 from sanic.response import html, redirect
 from .models import Module
 from sanicengine.pages.models import Page
+from sanicengine.portalsettings.models import Setting
 from sanicengine.trackers.models import Tracker,TrackerField,TrackerRole,TrackerStatus,TrackerTransition
 from sanicengine.fileLinks.models import FileLink
 from sanicengine.trees.models import Tree, TreeNode, TreeNodeUser
@@ -16,7 +17,7 @@ import json
 import shutil 
 
 bp = Blueprint('modules')
-modulepath = 'custom_modules'
+modulepath = Setting.namedefault('portal','modulepath','custom_modules')
 
 def readarray(arrayvar,arraykey,default=''):
     if arraykey in arrayvar:
@@ -28,7 +29,6 @@ def readarray(arrayvar,arraykey,default=''):
 @authorized(require_superuser=True)
 async def importmodule(request,slug=None):
     if(os.path.exists(os.path.join(modulepath,slug))):
-
 
         """ Import pages """
         curfile = open(os.path.join(modulepath,slug,'pagelist.json'),'r')
@@ -385,4 +385,14 @@ async def updatelist(request):
 async def index(request):
     modules = dbsession.query(Module)
     paginator = Paginator(modules, 10)
-    return html(render(request, 'modules/list.html',title='Modules',fields=[{'label':'Title','name':'title'}],addtitle='Update List',addlink=request.app.url_for('modules.updatelist'),paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    return html(render(request, 'modules/list.html',title='Modules',fields=[{'label':'Title','name':'title'}],addtitle='Update List',addlink=request.app.url_for('modules.updatelist'),editlink='modules',paginator=paginator,curpage=paginator.page(int(request.args['page'][0]) if 'page' in request.args else 1)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+
+@bp.route('/modules/<id>')
+@authorized(require_superuser=True)
+async def display(request,id):
+    module = dbsession.query(Module).get(id)
+    pages = dbsession.query(Page).filter_by(module=module.title)
+    files = dbsession.query(FileLink).filter_by(module=module.title)
+    trees = dbsession.query(Tree).filter_by(module=module.title)
+    trackers = dbsession.query(Tracker).filter_by(module=module.title)
+    return html(render(request, 'modules/display.html',module=module,pages=pages,files=files,trees=trees,trackers=trackers,headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'}))

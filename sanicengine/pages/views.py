@@ -18,6 +18,7 @@ import traceback
 import datetime
 
 bp = Blueprint('pages')
+modulepath = Setting.namedefault('portal','modulepath','custom_modules')
 
 @bp.route('/terms')
 async def terms(request):
