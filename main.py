@@ -155,8 +155,10 @@ async def returnfunction(request,arg1=None,arg2=None,arg3=None,arg4=None,arg5=No
 @app.listener('before_server_start')
 async def custom_routes(app, loop):
     custom_routes = portalsettings.models.Setting.namedefault('portal','customurl',[])
-    for cr in custom_routes:
-        app.add_route(returnfunction,cr,methods=['GET','POST'])
+    if custom_routes:
+        for cr in custom_routes:
+            if not cr=='/':
+                app.add_route(returnfunction,cr,methods=['GET','POST'])
 
 @app.listener('before_server_start')
 async def custom_static(app, loop):

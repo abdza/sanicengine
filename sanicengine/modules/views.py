@@ -17,7 +17,8 @@ import json
 import shutil 
 
 bp = Blueprint('modules')
-modulepath = Setting.namedefault('portal','modulepath','custom_modules')
+#modulepath = Setting.namedefault('portal','modulepath','custom_modules')
+modulepath = 'custom_modules'
 
 def readarray(arrayvar,arraykey,default=''):
     if arraykey in arrayvar:

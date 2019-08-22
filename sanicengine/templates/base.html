@@ -38,6 +38,7 @@
 		{% block mainblock %}
 		<div class='wrapper'>
 			<main role='main' class='container'>
+			{% block flashmessage %}
 			{% if request.session.flashmessage %}
 				<div class="alert alert-warning alert-dismissible fade show" role="alert">
 					{{ request.session.pop('flashmessage',None) }}
@@ -46,6 +47,7 @@
 					</button>
 				</div>
 			{% endif %}
+			{% endblock %}
 			{% block content %}
 			<h1>{% if app.config.APP_TITLE %}{{ app.config.APP_TITLE }}{% else %}Sanic Engine{% endif %}</h1>
 			{% endblock %}

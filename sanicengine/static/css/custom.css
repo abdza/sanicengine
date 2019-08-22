@@ -95,3 +95,7 @@ span.fa {
 .dropdown .highlighted::before {
 	display: none;
 }
+
+.mobile-logo {
+	width: 30px;
+}

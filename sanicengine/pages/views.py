@@ -5,6 +5,7 @@ from .models import Page
 from .forms import PageForm
 from sanicengine.trackers.models import Tracker
 from sanicengine.trees.models import Tree
+from sanicengine.emailtemplates.models import EmailTemplate, EmailTrail
 from sanicengine.portalsettings.models import Setting
 from sanicengine.database import dbsession, executedb, querydb, queryobj
 from sanicengine.template import render
@@ -18,7 +19,8 @@ import traceback
 import datetime
 
 bp = Blueprint('pages')
-modulepath = Setting.namedefault('portal','modulepath','custom_modules')
+#modulepath = Setting.namedefault('portal','modulepath','custom_modules')
+modulepath = 'custom_modules'
 
 @bp.route('/terms')
 async def terms(request):

@@ -282,18 +282,22 @@ async def changepassword(request):
 async def resetpassword(request,resethash=None):
     user=dbsession.query(User).filter_by(resethash=resethash).first()
     if request.method=='POST':
-        if request.form.get('password')==request.form.get('passwordrepeat'):
-            if datetime.datetime.today() < user.resetexpire:
-                user.password = hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest()
-                dbsession.add(user)
-                dbsession.commit()
-                return redirect(request.app.url_for('users.login'))
+        if user:
+            if request.form.get('password')==request.form.get('passwordrepeat'):
+                if datetime.datetime.today() < user.resetexpire:
+                    user.password = hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest()
+                    dbsession.add(user)
+                    dbsession.commit()
+                    return redirect(request.app.url_for('users.login'))
+                else:
+                    request['session']['flashmessage']='Sorry but the link has already expired. Please resubmit request to rest password'
+                    return redirect(request.app.url_for('users.forgotpassword'))
             else:
-                request['session']['flashmessage']='Sorry but the link has already expired. Please resubmit request to rest password'
-                return redirect(request.app.url_for('users.forgotpassword'))
+                request['session']['flashmessage']='Repeated password need to be the same password'
+                return redirect(request.app.url_for('users.resetpassword',resethash=resethash))
         else:
-            request['session']['flashmessage']='Repeated password need to be the same password'
-            return redirect(request.app.url_for('users.resetpassword',resethash=resethash))
+            request['session']['flashmessage']='Sorry but the link is not working'
+            return redirect(request.app.url_for('users.login'))
 
     return html(render(request,'users/resetpassword.html',user=user),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
