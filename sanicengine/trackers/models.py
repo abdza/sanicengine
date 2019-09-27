@@ -37,6 +37,7 @@ class Tracker(ModelBase):
     expire_date = Column(Date(),nullable=True)
     data_table_name = Column(String(200))
     update_table_name = Column(String(200))
+    list_order = Column(String(200))
 
     __table_args__ = (
         UniqueConstraint(module, slug, name='tracker_module_slug_uidx'),
@@ -464,7 +465,11 @@ class Tracker(ModelBase):
             if offset:
                 offsetstr = ' offset ' + str(offset)
             qtext, qparams = self.queryrules(curuser=curuser,request=request,cleared=cleared)
-            sqltext = text("select * from " + self.data_table + qtext + limitstr + offsetstr)
+            lorder = ''
+            if self.list_order:
+                lorder = ' order by ' + self.list_order + ' '
+
+            sqltext = text("select * from " + self.data_table + qtext + lorder + limitstr + offsetstr)
         try:
             results = dbsession.execute(sqltext,qparams)
         except Exception as inst:

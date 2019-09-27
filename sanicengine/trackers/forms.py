@@ -20,6 +20,7 @@ class TrackerForm(Form):
     expire_date = DateField('Expire Date',validators=(Optional(),))
     data_table_name = StringField('Data Table')
     update_table_name = StringField('Update Table')
+    list_order = StringField('List Order')
 
 class TrackerFieldForm(Form):
     name = StringField('Name')
