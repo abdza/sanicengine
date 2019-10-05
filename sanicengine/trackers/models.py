@@ -584,6 +584,17 @@ class TrackerField(ModelBase):
                     if ddm:
                         self.foreignfields.append(ddm)
 
+    def listnames(datas,sep=','):
+        toret = []
+        for d in datas.split(sep):
+            try:
+                transition = dbsession.query(TrackerField).get(int(d))
+                if transition:
+                    toret.append(transition.name)
+            except Exception as e:
+                print("Cannot get field with id " + str(d) + " :" + str(e))
+        return toret
+
     def obj_fields(self):
         if self.obj_field:
             return self.obj_field.split(',')

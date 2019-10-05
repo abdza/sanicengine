@@ -284,7 +284,8 @@ async def statusform(request,module,slug,id=None):
             form.populate_obj(trackerstatus)
             trackerstatus.tracker = tracker
             if form['display_fields'].data:
-                trackerstatus.display_fields = ','.join([ dbsession.query(TrackerField).get(int(fieldid)).name for fieldid in form['display_fields'].data.split(',') ])
+                trackerstatus.display_fields = ','.join(TrackerField.listnames(form['display_fields'].data))
+
             dbsession.add(trackerstatus)
             try:
                 dbsession.commit()
@@ -394,10 +395,10 @@ async def transitionform(request,module,slug=None,id=None):
             edit_fields = []
             detail_fields = []
             if form['display_fields'].data:
-                display_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['display_fields'].data + ")") ])
+                display_fields = ','.join(TrackerField.listnames(form['display_fields'].data))
                 del(form['display_fields'])
             if form['edit_fields'].data:
-                edit_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['edit_fields'].data + ")") ])
+                edit_fields = ','.join(TrackerField.listnames(form['edit_fields'].data))
                 del(form['edit_fields'])
             form.populate_obj(trackertransition)
             trackertransition.display_fields = display_fields
@@ -700,15 +701,15 @@ async def form(request,id=None):
                 newtracker = True
             form.populate_obj(tracker)
             if form['list_fields'].data:
-                tracker.list_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['list_fields'].data + ")") ])
+                tracker.list_fields = ','.join(TrackerField.listnames(form['list_fields'].data))
             if form['search_fields'].data:
-                tracker.search_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['search_fields'].data + ")") ])
+                tracker.search_fields = ','.join(TrackerField.listnames(form['search_fields'].data))
             if form['filter_fields'].data:
-                tracker.filter_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['filter_fields'].data + ")") ])
+                tracker.filter_fields = ','.join(TrackerField.listnames(form['filter_fields'].data))
             if form['excel_fields'].data:
-                tracker.excel_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['excel_fields'].data + ")") ])
+                tracker.excel_fields = ','.join(TrackerField.listnames(form['excel_fields'].data))
             if form['detail_fields'].data:
-                tracker.detail_fields = ','.join([ ddat.name for ddat in dbsession.execute("select name from tracker_fields where id in (" + form['detail_fields'].data + ")") ])
+                tracker.detail_fields = ','.join(TrackerField.listnames(form['detail_fields'].data))
             dbsession.add(tracker)
             if newtracker:
                 newstatus = TrackerStatus(name='New',tracker=tracker)
