@@ -72,7 +72,10 @@ async def login(request):
                 if 'targeturl' in request.form:
                     return redirect(request.form['targeturl'][0])
                 else:
-                    return redirect('/')
+                    if curuser.superuser:
+                        return redirect(request.app.url_for('pages.admin'))
+                    else:
+                        return redirect('/')
             else:
                 request['session']['flashmessage']='Wrong username or password'
         else:

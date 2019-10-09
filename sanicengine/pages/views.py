@@ -161,6 +161,13 @@ async def home(request):
         return html(home.render(request),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     return html(render(request,'pages/home.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
+@bp.route('/admin')
+async def admin(request):
+    home = dbsession.query(Page).filter_by(module='portal',slug='admin').first()
+    if home:
+        return html(home.render(request),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    return html(render(request,'pages/admin.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+
 @bp.route('/loginrequired')
 async def loginrequired(request):
     if 'authorization' in request.headers:

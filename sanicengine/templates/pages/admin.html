@@ -1,0 +1,5 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h1>Welcome to {% if app.config.APP_TITLE %}{{ app.config.APP_TITLE }}{% else %}Sanic Engine{% endif %} Admin Page</h1>
+<h3>Go to the <a href='{{ app.url_for('pages.home') }}'>main</a> page</h3>
+{% endblock %}
