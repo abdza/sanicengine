@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
-"""The user module."""
+"""The trackers module."""
 from . import views  # noqa

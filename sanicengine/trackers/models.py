@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""User models."""
+"""Tracker models."""
 import datetime
 
 from sanicengine.database import ModelBase, dbsession, reference_col, executedb
@@ -8,7 +8,6 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import text
 from sanicengine.template import render_string
 from sanicengine.users.models import ModuleRole, User
-from sanicengine.pages.models import Page
 from sanicengine.fileLinks.models import FileLink
 from sanicengine import settings
 from openpyxl import load_workbook
@@ -18,6 +17,94 @@ import os
 import time
 
 class Tracker(ModelBase):
+    """ 
+    A class used to represent a Tracker
+
+    Attributes
+    ----------
+    __tablename__ : str
+        name of the table in the database
+    id : int
+        id of the tracker
+    title : string
+        the title of the tracker
+    slug : string
+        the slug of the tracker
+    module : string
+        the module the tracker belong to
+    default_new_transition : string
+        name of the transition to use to create a new record
+    list_fields : string
+        comma delimited list of fields (referred by name) to use when displaying 
+        the records list
+    search_fields : string
+        comma delimited list of fields to use when making a search
+    filter_fields : string
+        comma delimited list of fields to use when making dropdown filter fields
+    excel_fields : string
+        comma delimited list of fields to use when generating an excel for download.
+        If empty then will fallback on list from list_fields
+    detail_fields : string
+        comma delimited list of fields to use when displaying the details of the record.
+        Will be overwritten by the status list of fields
+    published : boolean
+        indicate whether the tracker is published or not (default False)
+    pagelimit : int
+        default number of record to display per page in a list (default 10)
+    require_login : boolean
+        indicate whether the tracker requires the user to be logged in to be used
+    allowed_roles : string
+        comma delimited list of roles who can use the tracker.
+        Anyone can use the tracker if not specified (anon users will rely on
+        the require_login indicator though)
+    publish_date : date
+        date the tracker become published if published indicator is true.
+        If null then tracker publishing just depend on published indicator
+        and whether past expiry date if expire_date is specified
+    expire_date : date
+        date the tracker become expired if published indicator is true
+        If null then never expire
+    data_table_name : string
+        name of the table the tracker data is kept in
+    update_table_name : string
+        name of the table the audit trail data is kept in
+    list_order : string
+        if exist will be appended onto " order by " portion of list query
+
+    Methods
+    -------
+    load(slug,module=None)
+        Static method to load the tracker based on slug and module if given
+    newtransition()
+        Property to get the transition to create a new record. Will search for transition
+        named 'New' if default_new_transition is not specified
+    is_published()
+        Property to check whether the tracker should be published or not depending on the
+        published, publish_date and expire_date values
+    list_fields_list()
+        Get an array of TrackerField from the valid field names specified in list_fields
+    display_fields_list(record)
+        Get an array of TrackerField to be displayed based on record status display_fields
+        if specifed else fallback on the detail_fields from the tracker
+    fields_from_list(field_list)
+        Return array of TrackerField based on comma delimited string in field_list
+    data_table()
+        Property to get name of tracker data table. Will default to trak_{module}_{slug}_data
+        if not specified
+    update_table()
+        Property to get name of audit data table. Will default to trak_{module}_{slug}_updates
+        if not specified
+    pages()
+        Property to list all PortalPages that belong to the same module as current tracker
+    field(name)
+        Get TrackerField of this tracker with given name
+    updatedb()
+        Module to run to create/update the database tables based on values saved
+
+
+
+    """
+
     __tablename__ = 'trackers'
     id = Column(Integer, primary_key=True)
     title = Column(String(200))
@@ -47,6 +134,24 @@ class Tracker(ModelBase):
         return self.title
 
     def load(slug,module=None):
+        """Static method to load tracker based on slug and module
+
+        If the argument `module` isn't passed in, trackers will
+        be searched my slug only
+
+        Parameters
+        ----------
+        slug : str
+            The slug of the tracker to be loaded
+        module : str, optional
+            The module of the tracker to be loaded
+
+        Returns
+        -------
+        Tracker
+            The tracker found with the slug and module searched
+        """
+
         tracker = dbsession.query(Tracker).filter_by(slug=slug)
         if module:
             tracker = tracker.filter_by(module=module)
@@ -54,8 +159,10 @@ class Tracker(ModelBase):
 
     @property
     def newtransition(self):
-        newtransition = dbsession.query(TrackerTransition).filter_by(tracker=self, name='New').first()
-        return newtransition
+        if self.default_new_transition:
+            return dbsession.query(TrackerTransition).filter_by(tracker=self, name=self.default_new_transition).first()
+        else:
+            return dbsession.query(TrackerTransition).filter_by(tracker=self, name='New').first()
 
     @property
     def is_published(self):
@@ -71,14 +178,7 @@ class Tracker(ModelBase):
             return toret
 
     def list_fields_list(self):
-        rfields = []
-        if self.list_fields:
-            pfields = self.list_fields.split(',')
-            for pfield in pfields:
-                rfield = dbsession.query(TrackerField).filter_by(tracker=self,name=pfield.strip()).first()
-                if rfield:
-                    rfields.append(rfield)
-        return rfields
+        return self.fields_from_list(self.list_fields)
 
     def display_fields_list(self,record):
         curstatus = self.status(record)
@@ -116,6 +216,7 @@ class Tracker(ModelBase):
 
     @property
     def pages(self):
+        from sanicengine.pages.models import Page
         return dbsession.query(Page).filter_by(module=self.module).all()
 
     def field(self, name):
