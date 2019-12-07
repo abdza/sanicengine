@@ -11,6 +11,7 @@ Check out our get :ref:`getting-started` page to get your feet wet. Or if you're
    :caption: Contents:
 
    getting-started
+   apidoc
 
 
 

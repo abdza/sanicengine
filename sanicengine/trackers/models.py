@@ -101,8 +101,6 @@ class Tracker(ModelBase):
     updatedb()
         Module to run to create/update the database tables based on values saved
 
-
-
     """
 
     __tablename__ = 'trackers'
@@ -130,6 +128,81 @@ class Tracker(ModelBase):
         UniqueConstraint(module, slug, name='tracker_module_slug_uidx'),
     )
 
+    @property
+    def data_table(self):
+        """Name of table used by tracker to store records
+        """
+
+        if self.data_table_name:
+            return self.data_table_name
+        else:
+            return "trak_" + self.module + "_" + self.slug + "_data"
+
+    @property
+    def update_table(self):
+        """Name of table used by tracker to store the audit trail
+        """
+
+        if self.update_table_name:
+            return self.update_table_name
+        else:
+            return "trak_" + self.module + "_" + self.slug + "_updates"
+
+    @property
+    def pages(self):
+        """Array of pages with the same module as the tracker
+        """
+
+        from sanicengine.pages.models import Page
+        return dbsession.query(Page).filter_by(module=self.module).all()
+
+    @property
+    def newtransition(self):
+        """Transition to create a new record
+        """
+
+        if self.default_new_transition:
+            return dbsession.query(TrackerTransition).filter_by(tracker=self, name=self.default_new_transition).first()
+        else:
+            return dbsession.query(TrackerTransition).filter_by(tracker=self, name='New').first()
+
+    @property
+    def is_published(self):
+        """Determine whether tracker is published based on 
+        published, publish_date and expire_date fields
+        """
+
+        if not self.published:
+            return False
+        else:
+            toret = True
+            curdate = datetime.date.today()
+            if self.publish_date and self.publish_date>curdate:
+                toret = False
+            if self.expire_date and self.expire_date<curdate:
+                toret = False
+            return toret
+
+    @property
+    def list_fields_list(self):
+        """Array of valid TrackerField from list_fields field
+        """
+
+        return self.fields_from_list(self.list_fields)
+
+    def display_fields_list(self,record):
+        """Array of valid TrackerField when displaying record based on 
+        display_fields from the status or detail_fields from tracker
+        """
+
+        curstatus = self.status(record)
+        if curstatus:
+            if curstatus.display_fields:
+                return self.fields_from_list(curstatus.display_fields)
+            elif self.detail_fields:
+                return self.fields_from_list(self.detail_fields)
+        return []
+
     def __repr__(self):
         return self.title
 
@@ -137,7 +210,7 @@ class Tracker(ModelBase):
         """Static method to load tracker based on slug and module
 
         If the argument `module` isn't passed in, trackers will
-        be searched my slug only
+        be searched by slug only
 
         Parameters
         ----------
@@ -157,39 +230,22 @@ class Tracker(ModelBase):
             tracker = tracker.filter_by(module=module)
         return tracker.first()
 
-    @property
-    def newtransition(self):
-        if self.default_new_transition:
-            return dbsession.query(TrackerTransition).filter_by(tracker=self, name=self.default_new_transition).first()
-        else:
-            return dbsession.query(TrackerTransition).filter_by(tracker=self, name='New').first()
-
-    @property
-    def is_published(self):
-        if not self.published:
-            return False
-        else:
-            toret = True
-            curdate = datetime.date.today()
-            if self.publish_date and self.publish_date>curdate:
-                toret = False
-            if self.expire_date and self.expire_date<curdate:
-                toret = False
-            return toret
-
-    def list_fields_list(self):
-        return self.fields_from_list(self.list_fields)
-
-    def display_fields_list(self,record):
-        curstatus = self.status(record)
-        if curstatus:
-            if curstatus.display_fields:
-                return self.fields_from_list(curstatus.display_fields)
-            elif self.detail_fields:
-                return self.fields_from_list(self.detail_fields)
-        return []
-
     def fields_from_list(self,field_list=None):
+        """Method to get array of valid TrackerField from a comma delimited
+        string of field names
+
+        Parameters
+        ----------
+        field_list : str
+            The comma delimited string of field names to split and find 
+            valid TrackerField for the tracker
+
+        Returns
+        -------
+        Array TrackerField
+            Array of TrackerField found in the tracker from the string list
+        """
+
         rfields = []
         if field_list:
             pfields = field_list.split(',')
@@ -200,30 +256,30 @@ class Tracker(ModelBase):
                     rfields.append(rfield)
         return rfields
 
-    @property
-    def data_table(self):
-        if self.data_table_name:
-            return self.data_table_name
-        else:
-            return "trak_" + self.module + "_" + self.slug + "_data"
-
-    @property
-    def update_table(self):
-        if self.update_table_name:
-            return self.update_table_name
-        else:
-            return "trak_" + self.module + "_" + self.slug + "_updates"
-
-    @property
-    def pages(self):
-        from sanicengine.pages.models import Page
-        return dbsession.query(Page).filter_by(module=self.module).all()
-
     def field(self, name):
+        """Find tracker field by it's name
+
+        Parameters
+        ----------
+        name : str
+            Name of the field to search for
+
+        Returns
+        -------
+        TrackerField
+            The TrackerField found with the name given
+        """
+
         field = dbsession.query(TrackerField).filter_by(tracker=self,name=name.strip()).first()
         return field
 
     def updatedb(self):
+        """Update the database to reflect the tracker
+
+        Will create the data table if it doesn't exist yet. Will also create the audit trail table
+        if it doesn't exist yet. Then will update the table for every field in the tracker
+        """
+
         query = """
             do $$
             begin
@@ -275,9 +331,39 @@ class Tracker(ModelBase):
             field.updatedb()
 
     def first(self, query, qparams={}):
+        """Will return the first record found from the tracker table
+
+        Parameters
+        ----------
+        query : str
+            Query string to be used after where in the sql statement
+        qparams : dictionary
+            Dictionary of values to be used in the query placeholders
+
+        Returns
+        -------
+        dict
+            Values of the first row found from the query
+        """
+
         return executedb("select * from " + self.data_table + " where " + query,qparams).first()
 
     def saverecord(self, record, request=None):
+        """Save the dictionary into the db
+
+        Parameters
+        ----------
+        record : dict
+            Dict of the values to be saved into the db
+        request : request
+            Request session to be used to determine identity of user
+
+        Returns
+        -------
+        dict
+            Values of the row once saved
+        """
+        
         curuser = None
         data = None
         if request:
@@ -297,6 +383,21 @@ class Tracker(ModelBase):
         return data
 
     def addrecord(self, form, request):
+        """Save the information from submitted form into the db
+
+        Parameters
+        ----------
+        form : dict
+            Dict of values from the submitted form
+        request : request
+            Request session to be used to determine identity of user
+
+        Returns
+        -------
+        dict
+            Values of the row once saved
+        """
+
         curuser = None
         data = None
         if 'user_id' in request['session']:
@@ -364,7 +465,7 @@ class Tracker(ModelBase):
         try:
             query = "insert into " + self.update_table + " (record_id,user_id,record_status,update_date,description) values ( :record_id,:user_id,:rec_status,now(),:desc) "
             qparams = { 'record_id':data['id'],'user_id': curuser.id if curuser else None,'rec_status':data['record_status'],'desc':desc }
-            dbsession.execute(query,qparams)
+            data = dbsession.execute(query,qparams).fetchone()
             dbsession.commit()
         except Exception as inst:
             dbsession.rollback()
@@ -372,6 +473,21 @@ class Tracker(ModelBase):
         return data
 
     def editrecord(self, form, request, id=None):
+        """Save the information from submitted form into the db
+
+        Parameters
+        ----------
+        form : dict
+            Dict of values from the submitted form
+        request : request
+            Request session to be used to determine identity of user
+
+        Returns
+        -------
+        dict
+            Values of the row once saved
+        """
+
         curuser = None
         transition = None
         if 'user_id' in request['session']:
