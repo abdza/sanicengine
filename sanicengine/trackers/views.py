@@ -1058,7 +1058,7 @@ async def addrecord(request,module,slug=None):
     else:
         newtransition = dbsession.query(TrackerTransition).filter(TrackerTransition.tracker==tracker,TrackerTransition.name.ilike("%new%")).first()
     if request.method=='POST':
-        data = tracker.addrecord(request.form,request)
+        data = tracker.formsave(request.form,request)
         if newtransition.emails:
             newtransition.renderemails(request,data)
         if newtransition.postpage:
@@ -1098,7 +1098,7 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
     if transition_id:
         transition = dbsession.query(TrackerTransition).get(transition_id)
     if request.method=='POST':
-        data = tracker.editrecord(request.form,request,id=record_id)
+        data = tracker.formsave(request.form,request,id=record_id)
         if transition.emails:
             transition.renderemails(request,data)
         if not data:

@@ -364,11 +364,7 @@ class Tracker(ModelBase):
             Values of the row once saved
         """
         
-        curuser = None
         data = None
-        if request:
-            if 'user_id' in request['session']:
-                curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
         if 'id' in record:
             query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in record.keys()  ]) + " where id=:record_id returning *"
             qparams = { k:record[k] for k in record.keys() } + { 'record_id':record['id'] }
@@ -382,97 +378,7 @@ class Tracker(ModelBase):
             dbsession.rollback()
         return data
 
-    def addrecord(self, form, request):
-        """Save the information from submitted form into the db
-
-        Parameters
-        ----------
-        form : dict
-            Dict of values from the submitted form
-        request : request
-            Request session to be used to determine identity of user
-
-        Returns
-        -------
-        dict
-            Values of the row once saved
-        """
-
-        curuser = None
-        data = None
-        if 'user_id' in request['session']:
-            curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
-        if 'transition_id' in form:
-            transition = dbsession.query(TrackerTransition).get(form['transition_id'][0])
-            del(form['transition_id'])
-            if transition:
-                if transition.next_status:
-                    form['record_status'] = [transition.next_status.name,]
-                for field in transition.edit_fields_list:
-                    if field.default and field.name in form and form[field.name][0]=='systemdefault':
-                        output=None
-                        ldict = locals()
-                        exec(field.default,globals(),ldict)
-                        output=ldict['output']
-                        form[field.name][0]=output
-                    elif field.session_override and field.session_override in request['session']:
-                        form[field.name]=[request['session'][field.session_override]]
-                    elif field.field_type in ['file','picture','video']:
-                        if request.files.get(field.name) and request.files.get(field.name).name:
-                            filelink=FileLink()
-                            dfile = request.files.get(field.name)
-                            ext = dfile.type.split('/')[1]
-                            if not os.path.exists(os.path.join('uploads',self.module)):
-                                os.makedirs(os.path.join('uploads',self.module))
-                            outfilename = str(int(time.time())) + dfile.name
-                            dst = os.path.join('uploads',self.module,outfilename)
-                            try:
-                                # extract starting byte from Content-Range header string
-                                range_str = request.headers['Content-Range']
-                                start_bytes = int(range_str.split(' ')[1].split('-')[0])
-                                with open(dst, 'ab') as f:
-                                    f.seek(start_bytes)
-                                    f.write(dfile.body)
-                            except KeyError:
-                                with open(dst, 'wb') as f:
-                                    f.write(dfile.body)
-                            filelink.filename = dfile.name
-                            filelink.filepath = dst
-                            filelink.module = self.module
-                            filelink.slug = outfilename.replace(' ','_').lower()
-                            filelink.title = dfile.name
-                            filelink.published = True
-                            filelink.require_login = False
-                            dbsession.add(filelink)
-                            dbsession.commit()
-                            form[field.name]=[filelink.id,]
-        fieldnames = list(form.keys())
-        if 'on_success' in fieldnames:
-            fieldnames.remove('on_success')
-        query = "insert into " + self.data_table + " ( " + ",".join(fieldnames) + ") values (" + ",".join([ ":" + formfield for formfield in fieldnames  ]) + ") returning * "
-        qparams = { k:form[k][0] for k in fieldnames }
-        try:
-            data = dbsession.execute(query,qparams).fetchone()
-            dbsession.commit()
-        except Exception as inst:
-            dbsession.rollback()
-        desc = ''
-        if curuser:
-            desc = 'Updated by ' + curuser.name
-        else:
-            desc = 'Updated by anonymous'
-
-        try:
-            query = "insert into " + self.update_table + " (record_id,user_id,record_status,update_date,description) values ( :record_id,:user_id,:rec_status,now(),:desc) "
-            qparams = { 'record_id':data['id'],'user_id': curuser.id if curuser else None,'rec_status':data['record_status'],'desc':desc }
-            data = dbsession.execute(query,qparams).fetchone()
-            dbsession.commit()
-        except Exception as inst:
-            dbsession.rollback()
-
-        return data
-
-    def editrecord(self, form, request, id=None):
+    def formsave(self, form, request, id=None):
         """Save the information from submitted form into the db
 
         Parameters
@@ -563,8 +469,11 @@ class Tracker(ModelBase):
                 fieldnames = list(form.keys())
                 if oldrecord:
                     query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in fieldnames  ]) + " where id=:record_id returning *"
-                try:
                     ddata = { 'record_id':oldrecord['id'] }
+                else:
+                    query = "insert into " + self.data_table + " ( " + ",".join(fieldnames) + ") values (" + ",".join([ ":" + formfield for formfield in fieldnames  ]) + ") returning * "
+                    ddata = {}
+                try:
                     fdata = { field:form[field][0] for field in fieldnames }
                     ddata.update(fdata)
                     data = dbsession.execute(query,ddata).fetchone()
@@ -574,13 +483,14 @@ class Tracker(ModelBase):
                     dbsession.rollback()
                 txtdesc = []
                 if data:
-                    for okey,oval in enumerate(oldrecord):
-                        if oval!=data[okey]:
-                            dfield = dbsession.query(TrackerField).filter_by(name=oldrecord.keys()[okey]).first()
-                            if dfield:
-                                txtdesc.append('Updated ' + dfield.label + ' from ' + str(oval) + ' to ' + str(data[okey]))
-                            else:
-                                print("not found")
+                    if oldrecord:
+                        for okey,oval in enumerate(oldrecord):
+                            if oval!=data[okey]:
+                                dfield = dbsession.query(TrackerField).filter_by(name=oldrecord.keys()[okey]).first()
+                                if dfield:
+                                    txtdesc.append('Updated ' + dfield.label + ' from ' + str(oval) + ' to ' + str(data[okey]))
+                                else:
+                                    print("not found")
                     desc = '<br>'.join(txtdesc)
 
                     query = " insert into " + self.update_table + " (record_id,user_id,record_status,update_date,description) values (:record_id,:user_id,:rec_status,now(),:desc) "

@@ -253,7 +253,7 @@ $('#trackerform').submit();
 {% if not links %}
 {% set curindex,links = tracker.pagelinks(curuser=curuser,request=request) %}
 {% endif %}
-{% set list_fields = tracker.list_fields_list() %}
+{% set list_fields = tracker.list_fields_list %}
 <table class='table'>
 	<tr>
 		<th>#</th>
