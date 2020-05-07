@@ -740,7 +740,7 @@ async def form(request,id=None):
                 tokeninput = {
                         'list_fields': {
                             'url': request.app.url_for('trackers.trackerfieldsjson',module=tracker.module,slug=tracker.slug),
-                            'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.list_fields_list() ]
+                            'prePopulate':[ {'id':field.id,'name':field.name} for field in tracker.list_fields_list ]
                             },
                         'search_fields': {
                             'url': request.app.url_for('trackers.trackerfieldsjson',module=tracker.module,slug=tracker.slug),

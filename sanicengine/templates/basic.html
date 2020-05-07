@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang='en' dir='ltr'>
+	<head>
+		{% block head_start %}
+		{% endblock %}
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		{% block layout_css %}
+		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/bootstrap.min.css') }}'>
+		<link rel='stylesheet' href='{{ app.url_for('static',filename='/css/fontawesome-all.min.css') }}'>
+		<link rel='stylesheet' href='{{ app.url_for('static',filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.css') }}'>
+		{% block form_css %}{% endblock %}
+		{% block page_css %}{% endblock %}
+		{% endblock %}
+		<!-- Mobile Specific Metas -->
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<!-- Google Font -->
+		<link href="https://fonts.googleapis.com/css?family=Work+Sans:300,400,500,600,700" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
+		{% block custom_css %}
+		{% endblock %}
+		{% block head_title %}
+		<title>{% if title %}{{ title }}{% else %}{% if app.config.APP_TITLE %}{{ app.config.APP_TITLE }}{% else %}Sanic Engine{% endif %}{% endif %}</title>
+		{% endblock %}
+		{% block head_end %}
+		{% endblock %}
+	</head>
+{% block layout_body %}
+<body>
+	{% block body %}
+		{% block body_start %}
+		{% endblock %}
+		{% block mainblock %}
+		<div class='wrapper'>
+			<main role='main' class='container'>
+			{% block flashmessage %}
+			{% if request.session.flashmessage %}
+				<div class="alert alert-warning alert-dismissible fade show" role="alert">
+					{{ request.session.pop('flashmessage',None) }}
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+			{% endif %}
+			{% endblock %}
+			{% block content %}
+			<h1>{% if app.config.APP_TITLE %}{{ app.config.APP_TITLE }}{% else %}Sanic Engine{% endif %}</h1>
+			{% endblock %}
+			</main>
+		</div>
+		{% endblock %}
+	{% endblock %}
+	{% block layout_js %}
+		<script src='{{ app.url_for('static', filename='/js/jquery-3.3.1.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/js/popper.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/js/bootstrap.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery-ui.min.js')}}'></script>
+		<script src='{{ app.url_for('static', filename='/plugins/jquery-ui-1.12.1/jquery.ui.touch-punch.min.js')}}'></script>
+		{% block form_js %}{% endblock %}
+		{% block page_js %}{% endblock %}
+		{% block custom_js %}
+		{% endblock %}
+	{% endblock %}
+	{% block body_end %}
+	{% endblock %}
+</body>
+{% endblock %}
+</html>

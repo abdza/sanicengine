@@ -436,7 +436,9 @@ class Tracker(ModelBase):
                             print("Error exec:" + str(field.default))
                     elif field.field_type == 'boolean':
                         if field.name not in form:
-                            form[field.name]=[0,]
+                            form[field.name]=[False,]
+                        else:
+                            form[field.name]=[True,]
                     elif field.field_type in ['file','picture','video']:
                         if request.files.get(field.name) and request.files.get(field.name).name:
                             filelink=FileLink()
@@ -479,7 +481,7 @@ class Tracker(ModelBase):
                     data = dbsession.execute(query,ddata).fetchone()
                     dbsession.commit()
                 except Exception as inst:
-                    print("Error query:" + str(query) + " \n with data:" + str(ddata))
+                    print("Error query:" + str(query) + " \n with data:" + str(ddata) + "\n" + str(inst))
                     dbsession.rollback()
                 txtdesc = []
                 if data:
