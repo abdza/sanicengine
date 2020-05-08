@@ -24,16 +24,16 @@ def reference_col(tablename, nullable=False, pk_name='id', **kwargs):
         ForeignKey('{0}.{1}'.format(tablename, pk_name)),
         nullable=nullable, **kwargs)
 
-def executedb(query):
+def executedb(query,qparams={}):
     try:
-        return dbsession.execute(query)
+        return dbsession.execute(query,qparams)
     except Exception as inst:
         dbsession.rollback()
         print("Error executing query:" + str(inst))
 
-def querydb(query):
+def querydb(query,qparams={}):
     try:
-        return dbsession.query(query)
+        return dbsession.query(query,qparams)
     except Exception as inst:
         dbsession.rollback()
         print("Error querying:" + str(inst))

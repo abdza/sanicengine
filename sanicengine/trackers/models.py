@@ -366,8 +366,8 @@ class Tracker(ModelBase):
         
         data = None
         if 'id' in record:
-            query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in record.keys()  ]) + " where id=:record_id returning *"
-            qparams = { k:record[k] for k in record.keys() } + { 'record_id':record['id'] }
+            query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in record.keys()  ]) + " where id=:id returning *"
+            qparams = { k:record[k] for k in record.keys() }
         else:
             query = "insert into " + self.data_table + "(" + ",".join(record.keys()) + ") values (" + ",".join([ ":" + formfield for formfield in record.keys()]) + ") returning *"
             qparams = { k:record[k] for k in record.keys() }
@@ -424,7 +424,12 @@ class Tracker(ModelBase):
                         dbsession.rollback()
                     return None
             else:
+                print("editfields:" + str(transition.edit_fields_list))
+                fieldnames = []
                 for field in transition.edit_fields_list:
+                    if field.name not in form:
+                        form[field.name] = ["",]
+                    fieldnames.append(field.name)
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
                         output=None
                         ldict = locals()
@@ -468,7 +473,6 @@ class Tracker(ModelBase):
                             dbsession.add(filelink)
                             dbsession.commit()
                             form[field.name]=[filelink.id,]
-                fieldnames = list(form.keys())
                 if oldrecord:
                     query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in fieldnames  ]) + " where id=:record_id returning *"
                     ddata = { 'record_id':oldrecord['id'] }
@@ -476,7 +480,10 @@ class Tracker(ModelBase):
                     query = "insert into " + self.data_table + " ( " + ",".join(fieldnames) + ") values (" + ",".join([ ":" + formfield for formfield in fieldnames  ]) + ") returning * "
                     ddata = {}
                 try:
+                    print("fields:" + str(form))
+                    print("fieldnames:" + str(fieldnames))
                     fdata = { field:form[field][0] for field in fieldnames }
+                    print("fdata:" + str(fdata))
                     ddata.update(fdata)
                     data = dbsession.execute(query,ddata).fetchone()
                     dbsession.commit()
@@ -578,6 +585,7 @@ class Tracker(ModelBase):
         return rules, qparams
 
     def records(self,id=None,curuser=None,request=None,cleared=False,offset=None,limit=None):
+        print("in records")
         results = []
         qparams = {}
         if id:
@@ -587,6 +595,7 @@ class Tracker(ModelBase):
                 sqltext = text("select * from " + self.data_table +  " where id=:id and (" + self.rolesrule(curuser,request) + ")")
             sqltext = sqltext.bindparams(id=id)
         else:
+            print("no id")
             limitstr = ''
             offsetstr = ''
             if limit:
@@ -594,11 +603,15 @@ class Tracker(ModelBase):
             if offset:
                 offsetstr = ' offset ' + str(offset)
             qtext, qparams = self.queryrules(curuser=curuser,request=request,cleared=cleared)
+            print("done queryrules")
             lorder = ''
             if self.list_order:
                 lorder = ' order by ' + self.list_order + ' '
 
-            sqltext = text("select * from " + self.data_table + qtext + lorder + limitstr + offsetstr)
+            strsql = "select * from " + self.data_table + qtext + lorder + limitstr + offsetstr
+            sqltext = text(strsql)
+            print("sqltext:" + strsql)
+            print("qp:" + str(qparams))
         try:
             results = dbsession.execute(sqltext,qparams)
         except Exception as inst:
