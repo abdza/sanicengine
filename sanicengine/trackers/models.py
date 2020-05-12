@@ -427,8 +427,6 @@ class Tracker(ModelBase):
                 print("editfields:" + str(transition.edit_fields_list))
                 fieldnames = []
                 for field in transition.edit_fields_list:
-                    if field.name not in form:
-                        form[field.name] = ["",]
                     fieldnames.append(field.name)
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
                         output=None
@@ -473,6 +471,9 @@ class Tracker(ModelBase):
                             dbsession.add(filelink)
                             dbsession.commit()
                             form[field.name]=[filelink.id,]
+                    else:
+                        if field.name not in form:
+                            form[field.name] = ["",]
                 if oldrecord:
                     query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in fieldnames  ]) + " where id=:record_id returning *"
                     ddata = { 'record_id':oldrecord['id'] }
