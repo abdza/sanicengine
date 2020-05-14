@@ -827,10 +827,13 @@ class TrackerField(ModelBase):
                     return 'Map failed to render for location: ' + value
             
         if self.field_type=='boolean':
+            result = ['False','True']
+            if self.disp_options() and len(self.disp_options())>0:
+                result = self.disp_options()
             if not value:
-                value = 'False'
+                value = result[0]
             else:
-                value = 'True'
+                value = result[1]
         return value
 
     def queryvalue(self, value,equals=False):

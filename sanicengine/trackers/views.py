@@ -538,7 +538,7 @@ async def fieldform(request,module,slug=None,id=None):
         if trackerfield:
             form = TrackerFieldForm(obj=trackerfield)
             title = tracker.title + '-Edit Field'
-    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default','options'],acetype={'default':'python','options':'python'},info="<p>Default will take final value of the output variable. curuser is available if the user is logged in. The form variable is also available to check on the information submitted in other fields.</p>"),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',acefield=['default','options'],acetype={'default':'python','options':'python'},info="<p>Default will take final value of the output variable. curuser is available if the user is logged in. The form variable is also available to check on the information submitted in other fields. If type is boolean, then options can be value when false/true in the form of '&lt;false value&gt;,&lt;true value&gt;' </p>"),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trackers/deletefield/<field_id>',methods=['POST'])
 @authorized(require_admin=True)
