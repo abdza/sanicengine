@@ -972,7 +972,7 @@ class TrackerDataUpdate(ModelBase):
                             cellrows.update( {'record_status':newtransition.next_status.name })
                     qparams.append(cellrows)
             try:
-                dbsession.execute(query,qparams)
+                executedb(query,qparams)
                 dbsession.commit()
                 self.status = 'Uploaded ' + str(len(qparams)) + ' rows'
                 dbsession.add(self)
@@ -994,7 +994,7 @@ class TrackerDataUpdate(ModelBase):
 
                     sqltext = text("select id from " + self.tracker.data_table + queryrow)
                     try:
-                        result = dbsession.execute(sqltext,wquery)
+                        result = executedb(sqltext,wquery)
                         gotdata = False
                         for r in result:
                             gotdata = True
@@ -1018,7 +1018,7 @@ class TrackerDataUpdate(ModelBase):
                         uquery.update(wquery)
                         query += ','.join(fieldinfos) + queryrow + ' returning *'
                         try:
-                            result = dbsession.execute(query,uquery)
+                            result = executedb(query,uquery)
                         except Exception as inst:
                             print("Error runing query:" + str(inst))
                             dbsession.rollback()
@@ -1032,7 +1032,7 @@ class TrackerDataUpdate(ModelBase):
                         celldatas['batch_no'] = self.id
                         query = 'insert into ' + self.tracker.data_table + ' (' + ','.join([ f.name for f in fields ]) + ',batch_no) values (' + ','.join([ ':' + f.name for f in fields ]) + ',:batch_no)'
                         query += ' returning *'
-                        result = dbsession.execute(query,celldatas)
+                        result = executedb(query,celldatas)
                     try:
                         dbsession.commit()
                         allresults.append('Uploaded ' + str(result.first()))
