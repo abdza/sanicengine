@@ -130,6 +130,8 @@ async def importmodule(request,slug=None):
             tracker.expire_date = readarray(ctracker,'expire_date',None)
             tracker.data_table_name = readarray(ctracker,'data_table_name')
             tracker.update_table_name = readarray(ctracker,'update_table_name')
+            tracker.default_new_transition = readarray(ctracker,'default_new_transition')
+            tracker.list_order = readarray(ctracker,'list_order')
             dbsession.add(tracker)
 
             for cfield in ctracker['fields']:
@@ -307,6 +309,8 @@ async def export(request,slug=None):
                 'expire_date':tracker.expire_date.strftime('%Y-%m-%d') if tracker.expire_date else None,
                 'data_table_name':tracker.data_table_name,
                 'update_table_name':tracker.update_table_name,
+                'list_order':tracker.list_order,
+                'default_new_transition':tracker.default_new_transition,
                 'fields':fields,
                 'roles':roles,
                 'statuses':statuses,
