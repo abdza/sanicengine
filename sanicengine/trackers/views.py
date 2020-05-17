@@ -857,6 +857,7 @@ async def clearsystemdata(request,module,slug):
 
 
 @bp.route('/system/<module:string>/<slug:string>/')
+@authorized(object_type='tracker')
 async def viewlist(request,module,slug=None):
     if slug==None:
         slug=module
@@ -886,6 +887,7 @@ async def viewlist(request,module,slug=None):
             return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/excel')
+@authorized(object_type='tracker')
 async def listexcel(request,module,slug=None):
     if slug==None:
         slug=module
@@ -916,6 +918,7 @@ async def listexcel(request,module,slug=None):
     return raw(virtual_wb, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title) + '.xlsx'})
 
 @bp.route('/system/<module:string>/<slug:string>/method/<method:string>')
+@authorized(object_type='tracker')
 async def listmethod(request,module,slug,method):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_' + method).first()
@@ -949,6 +952,7 @@ async def listmethod(request,module,slug,method):
         return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/<id:int>',methods=['POST','GET'])
+@authorized(object_type='tracker')
 async def viewdetail(request,module,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     curuser = None
@@ -992,6 +996,7 @@ async def viewdetail(request,module,slug=None,id=None):
             return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/method/<method:string>/<id:int>',methods=['POST','GET'])
+@authorized(object_type='tracker')
 async def detailmethod(request,module,slug,method,id):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     curuser = None
@@ -1044,6 +1049,7 @@ async def detailmethod(request,module,slug,method,id):
         return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/add',methods=['POST','GET'])
+@authorized(object_type='tracker')
 async def addrecord(request,module,slug=None):
     data = []
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
@@ -1079,6 +1085,7 @@ async def addrecord(request,module,slug=None):
         return redirect(request.app.url_for('pages.home'))
 
 @bp.route('/system/<module:string>/<slug:string>/edit/<transition_id:int>/<record_id:int>',methods=['POST','GET'])
+@authorized(object_type='tracker')
 async def editrecord(request,module,slug=None,transition_id=None,record_id=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     transition = None
