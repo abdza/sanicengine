@@ -228,6 +228,18 @@ $('#trackerform').submit();
     <div class='form-group row'>
     <label class='col-sm-2 col-form-label'>{{field.label}}:</label>
     <div class='col-sm-10'>
+    {% if field.field_type in ['date','datetime'] %}
+    	{% if field.field_type=='date' %}
+    <input class='form-control datepicker' type='text' name='filter_{{field.name}}_from' id=filter_{{field.name}}_from' value='{% if request.args['filter_' + field.name + '_from'] %}{{ request.args['filter_' + field.name + '_from'][0] }}{% endif %}'/>
+    	{% else %}
+    <input class='form-control datetimepicker' type='text' name='filter_{{field.name}}_from' id=filter_{{field.name}}_from' value='{% if request.args['filter_' + field.name + '_from'] %}{{ request.args['filter_' + field.name + '_from'][0] }}{% endif %}'/>
+	{% endif %}
+    	{% if field.field_type=='date' %}
+    <input class='form-control datepicker' type='text' name='filter_{{field.name}}_to' id=filter_{{field.name}}_to' value='{% if request.args['filter_' + field.name + '_to'] %}{{ request.args['filter_' + field.name + '_to'][0] }}{% endif %}'/>
+    	{% else %}
+    <input class='form-control datetimepicker' type='text' name='filter_{{field.name}}_to' id=filter_{{field.name}}_to' value='{% if request.args['filter_' + field.name + '_to'] %}{{ request.args['filter_' + field.name + '_to'][0] }}{% endif %}'/>
+	{% endif %}
+    {% else %}
     <select class='form-control' name='filter_{{field.name}}' id='filter_{{field.name}}'>
         <option value='plall' {% if 'filter_'+field.name in request.args and request.args['filter_'+field.name][0]=='plall' %}selected{% endif %}>All</option>
         {% for option in field.filter_options() %}
@@ -240,6 +252,7 @@ $('#trackerform').submit();
 	</option>
         {% endfor %}
     </select>
+    {% endif %}
     </div>
     </div>
     {% endfor %}

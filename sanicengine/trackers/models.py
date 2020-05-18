@@ -542,6 +542,10 @@ class Tracker(ModelBase):
                     pname = 'filter_' + ff.name
                     if pname in request.args:
                         params.update({pname:request.args[pname][0]})
+                    elif pname + '_from' in request.args:
+                        params.update({pname + '_from':request.args[pname+'_from'][0]})
+                        if pname + '_to' in request.args:
+                            params.update({pname + '_to':request.args[pname+'_to'][0]})
             params.update({'plo':offset})
             url=request.app.url_for('trackers.viewlist',module=self.module,**params)
             params.update({'plo':prevoffset})
@@ -574,6 +578,10 @@ class Tracker(ModelBase):
             for ffield in ffields:
                 if 'filter_' + ffield.name in request.args and request.args['filter_'+ffield.name][0]!='plall':
                     qrule,qparam = ffield.queryvalue(request.args['filter_'+ffield.name][0],equals=True)
+                    fqs.append(qrule)
+                    qparams.update(qparam)
+                elif 'filter_' + ffield.name + '_from' in request.args:
+                    qrule,qparam = ffield.queryvalue([request.args['filter_' + ffield.name + '_from'][0],request.args['filter_' + ffield.name + '_to'][0]])
                     fqs.append(qrule)
                     qparams.update(qparam)
             if len(fqs):
@@ -837,11 +845,38 @@ class TrackerField(ModelBase):
         return value
 
     def queryvalue(self, value,equals=False):
+        """Will return name of query to run with placeholders for variables
+
+        default is just the value sent
+        for 
+        If the argument `module` isn't passed in, trackers will
+        be searched by slug only
+
+        Parameters
+        ----------
+        value : str or list
+            value is the value used to compare which would be put into qparams to send as parameter
+                if equals is true then it would be put in between % before putting into parameter
+                if the field type is a date then value is a list consisting of from and to date to compare
+        equals : bool
+            by default certain string based field would compare with like %% but equals true would force it to be compared as equal
+
+        Returns
+        -------
+        toret
+            Query string to be run
+        qparams
+            Parameterized values to be run in query
+        """
+
         toret = self.name + "=:" + self.name
         qparams = { self.name: value }
         if self.field_type in ['string','text','location','map'] and not equals:
             qparams = { self.name: "%" + str(value) + "%" }
             toret = self.name + " ilike :" + self.name
+        if self.field_type in ['date','datetime']:
+            qparams = { self.name + '_from': value[0], self.name + '_to': value[1] }
+            toret = self.name + ">=:" + self.name + "_from and " + self.name + "<=:" + self.name +"_to"
         return toret, qparams
 
     def sqlvalue(self, value):
