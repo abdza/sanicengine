@@ -424,7 +424,6 @@ class Tracker(ModelBase):
                         dbsession.rollback()
                     return None
             else:
-                print("editfields:" + str(transition.edit_fields_list))
                 fieldnames = []
                 for field in transition.edit_fields_list:
                     fieldnames.append(field.name)
@@ -481,10 +480,7 @@ class Tracker(ModelBase):
                     query = "insert into " + self.data_table + " ( " + ",".join(fieldnames) + ") values (" + ",".join([ ":" + formfield for formfield in fieldnames  ]) + ") returning * "
                     ddata = {}
                 try:
-                    print("fields:" + str(form))
-                    print("fieldnames:" + str(fieldnames))
                     fdata = { field:form[field][0] for field in fieldnames }
-                    print("fdata:" + str(fdata))
                     ddata.update(fdata)
                     data = dbsession.execute(query,ddata).fetchone()
                     dbsession.commit()
@@ -499,8 +495,6 @@ class Tracker(ModelBase):
                                 dfield = dbsession.query(TrackerField).filter_by(name=oldrecord.keys()[okey]).first()
                                 if dfield:
                                     txtdesc.append('Updated ' + dfield.label + ' from ' + str(oval) + ' to ' + str(data[okey]))
-                                else:
-                                    print("not found")
                     desc = '<br>'.join(txtdesc)
 
                     query = " insert into " + self.update_table + " (record_id,user_id,record_status,update_date,description) values (:record_id,:user_id,:rec_status,now(),:desc) "
@@ -528,34 +522,36 @@ class Tracker(ModelBase):
         curoffset = 0
         if request:
             curoffset = int(request.args['plo'][0]) if 'plo' in request.args else 0
-        curindex = 0
+        curindex = int(curoffset/(self.pagelimit if self.pagelimit else 10))
         for x in range(0,pageamount):
-            nextoffset=((x+1)*(self.pagelimit if self.pagelimit else 10) if x+1<pageamount else None)
-            prevoffset=((x-1)*(self.pagelimit if self.pagelimit else 10) if x else None)
-            offset=x*(self.pagelimit if self.pagelimit else 10)
-            params = {'slug':self.slug,'pll':(self.pagelimit if self.pagelimit else 10)}
-            if 'plq' in request.args:
-                params.update({'plq':request.args['plq'][0]})
-            if self.filter_fields:
-                ffields = self.fields_from_list(self.filter_fields)
-                for ff in ffields:
-                    pname = 'filter_' + ff.name
-                    if pname in request.args:
-                        params.update({pname:request.args[pname][0]})
-                    elif pname + '_from' in request.args:
-                        params.update({pname + '_from':request.args[pname+'_from'][0]})
-                        if pname + '_to' in request.args:
-                            params.update({pname + '_to':request.args[pname+'_to'][0]})
-            params.update({'plo':offset})
-            url=request.app.url_for('trackers.viewlist',module=self.module,**params)
-            params.update({'plo':prevoffset})
-            prevlink = (request.app.url_for('trackers.viewlist',module=self.module,**params)) if prevoffset else None
-            params.update({'plo':nextoffset})
-            nextlink = (request.app.url_for('trackers.viewlist',module=self.module,**params)) if nextoffset else None
-            thislink = { 'url':url,'nextlink':nextlink,'prevlink':prevlink }
-            if curoffset==x*(self.pagelimit if self.pagelimit else 10):
-                curindex = x
-            links.append(thislink)
+            if x<11 or pageamount-x<11 or abs(x-curindex)<10:
+                nextoffset=((x+1)*(self.pagelimit if self.pagelimit else 10) if x+1<pageamount else None)
+                prevoffset=((x-1)*(self.pagelimit if self.pagelimit else 10) if x else None)
+                offset=x*(self.pagelimit if self.pagelimit else 10)
+                params = {'slug':self.slug,'pll':(self.pagelimit if self.pagelimit else 10)}
+                if 'plq' in request.args:
+                    params.update({'plq':request.args['plq'][0]})
+                if self.filter_fields:
+                    ffields = self.fields_from_list(self.filter_fields)
+                    for ff in ffields:
+                        pname = 'filter_' + ff.name
+                        if pname in request.args:
+                            params.update({pname:request.args[pname][0]})
+                        elif pname + '_from' in request.args:
+                            params.update({pname + '_from':request.args[pname+'_from'][0]})
+                            if pname + '_to' in request.args:
+                                params.update({pname + '_to':request.args[pname+'_to'][0]})
+                params.update({'plo':offset})
+                url=request.app.url_for('trackers.viewlist',module=self.module,**params)
+                params.update({'plo':prevoffset})
+                prevlink = (request.app.url_for('trackers.viewlist',module=self.module,**params)) if prevoffset else None
+                params.update({'plo':nextoffset})
+                nextlink = (request.app.url_for('trackers.viewlist',module=self.module,**params)) if nextoffset else None
+                thislink = { 'url':url,'nextlink':nextlink,'prevlink':prevlink }
+                links.append(thislink)
+            else:
+                thislink = { 'url':None,'nextlink':None,'prevlink':None }
+                links.append(thislink)
         return curindex,links
 
     def queryrules(self,curuser=None,request=None,cleared=False):
@@ -594,7 +590,6 @@ class Tracker(ModelBase):
         return rules, qparams
 
     def records(self,id=None,curuser=None,request=None,cleared=False,offset=None,limit=None):
-        print("in records")
         results = []
         qparams = {}
         if id:
@@ -604,7 +599,6 @@ class Tracker(ModelBase):
                 sqltext = text("select * from " + self.data_table +  " where id=:id and (" + self.rolesrule(curuser,request) + ")")
             sqltext = sqltext.bindparams(id=id)
         else:
-            print("no id")
             limitstr = ''
             offsetstr = ''
             if limit:
@@ -612,15 +606,12 @@ class Tracker(ModelBase):
             if offset:
                 offsetstr = ' offset ' + str(offset)
             qtext, qparams = self.queryrules(curuser=curuser,request=request,cleared=cleared)
-            print("done queryrules")
             lorder = ''
             if self.list_order:
                 lorder = ' order by ' + self.list_order + ' '
 
             strsql = "select * from " + self.data_table + qtext + lorder + limitstr + offsetstr
             sqltext = text(strsql)
-            print("sqltext:" + strsql)
-            print("qp:" + str(qparams))
         try:
             results = dbsession.execute(sqltext,qparams)
         except Exception as inst:
@@ -668,7 +659,6 @@ class Tracker(ModelBase):
                         for row in results:
                             croles.append(role)
                 except Exception as inst:
-                    print("Error running query:" + str(inst))
                     dbsession.rollback()
         return croles
 
