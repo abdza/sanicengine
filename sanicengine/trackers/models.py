@@ -587,6 +587,8 @@ class Tracker(ModelBase):
             rrules = self.rolesrule(curuser,request)
             if rrules:
                 rules += ' and (' + rrules + ') '
+        print("rules:" + str(rules))
+        print("qparams:" + str(qparams))
         return rules, qparams
 
     def records(self,id=None,curuser=None,request=None,cleared=False,offset=None,limit=None):
@@ -744,16 +746,17 @@ class TrackerField(ModelBase):
         if self.obj_field:
             return self.obj_fields()[0]
 
-    def filter_options(self):
+    def filter_options(self,curuser=None,request=None,cleared=False):
         values = []
         try:
+            qtext, qparams = self.tracker.queryrules(curuser=curuser,request=request,cleared=cleared)
             if self.field_type == 'object' and self.obj_table and self.obj_field:
                 cobj_field = self.main_obj_field()
-                values = dbsession.execute("select distinct cur." + self.name + " as val, ref." + cobj_field + " as label from " + self.tracker.data_table + " cur, " + self.obj_table + " ref where ref.id=cur." + self.name + " order by ref." + cobj_field)
+                values = dbsession.execute("select distinct cur." + self.name + " as val, ref." + cobj_field + " as label from " + self.tracker.data_table + " cur, " + self.obj_table + " ref " + qtext + " and ref.id=cur." + self.name + " order by ref." + cobj_field,qparams)
             elif self.field_type == 'user':
-                values = dbsession.execute("select distinct cur." + self.name + " as val, ref.name as label from " + self.tracker.data_table + " cur, users ref where ref.id=cur." + self.name + " order by ref." + self.name)
+                values = dbsession.execute("select distinct cur." + self.name + " as val, ref.name as label from " + self.tracker.data_table + " cur, users ref " + qtext + " and ref.id=cur." + self.name + " order by ref." + self.name,qparams)
             else:
-                values = dbsession.execute("select distinct " + self.name + " as val from " + self.tracker.data_table + " order by " + self.name)
+                values = dbsession.execute("select distinct " + self.name + " as val from " + self.tracker.data_table + " " + qtext + " order by " + self.name,qparams)
         except Exception as inst:
             print("Error getting filter:" + str(inst))
             dbsession.rollback()

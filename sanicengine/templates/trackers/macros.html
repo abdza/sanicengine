@@ -242,7 +242,7 @@ $('#trackerform').submit();
     {% else %}
     <select class='form-control' name='filter_{{field.name}}' id='filter_{{field.name}}'>
         <option value='plall' {% if 'filter_'+field.name in request.args and request.args['filter_'+field.name][0]=='plall' %}selected{% endif %}>All</option>
-        {% for option in field.filter_options() %}
+        {% for option in field.filter_options(curuser=curuser,request=request) %}
         <option value='{{option.val}}' {% if 'filter_'+field.name in request.args and request.args['filter_'+field.name][0]==option.val|string %}selected{% endif %}>
 	{% if option.label %}
 	{{ option.label }}
