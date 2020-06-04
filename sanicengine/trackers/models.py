@@ -375,6 +375,7 @@ class Tracker(ModelBase):
             data = dbsession.execute(query,qparams).fetchone()
             dbsession.commit()
         except Exception as inst:
+            print("Error executing query:" + str(inst))
             dbsession.rollback()
         return data
 
@@ -425,10 +426,12 @@ class Tracker(ModelBase):
                     return None
             else:
                 fieldnames = []
+                if 'record_status' in form:
+                    fieldnames.append('record_status')
                 for field in transition.edit_fields_list:
                     fieldnames.append(field.name)
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
-                        output=None
+                        output = None
                         ldict = locals()
                         try:
                             exec(field.default,globals(),ldict)
@@ -587,8 +590,6 @@ class Tracker(ModelBase):
             rrules = self.rolesrule(curuser,request)
             if rrules:
                 rules += ' and (' + rrules + ') '
-        print("rules:" + str(rules))
-        print("qparams:" + str(qparams))
         return rules, qparams
 
     def records(self,id=None,curuser=None,request=None,cleared=False,offset=None,limit=None):
