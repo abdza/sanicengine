@@ -15,6 +15,7 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 import os
+import random
 import datetime
 import json
 import re
@@ -24,6 +25,12 @@ from openpyxl import load_workbook, Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.writer.excel import save_virtual_workbook
 
+import xlsxwriter
+
+import unicodedata
+
+def remove_control_characters(s):
+    return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
 
 bp = Blueprint('trackers')
 
@@ -897,6 +904,34 @@ async def listexcel(request,module,slug=None):
     if 'user_id' in request['session']:
         curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
     records = tracker.records(curuser=curuser,request=request)
+
+    if not os.path.exists(os.path.join(uploadfolder,tracker.slug,'tmpexcel')):
+        os.makedirs(os.path.join(uploadfolder,tracker.slug,'tmpexcel'))
+
+    filepath = os.path.join(uploadfolder,tracker.slug,'tmpexcel',slugify(tracker.title) + str(random.randint(1,1000)) + ".xlsx")
+    workbook = xlsxwriter.Workbook(filepath,{'constant_memory':True})
+    worksheet = workbook.add_worksheet()
+
+    if records:
+        xfields = []
+        if tracker.excel_fields:
+            xfields = tracker.fields_from_list(tracker.excel_fields)
+        else:
+            xfields = tracker.fields_from_list(tracker.list_fields)
+        for i,f in enumerate(xfields):
+            worksheet.write(0,i,f.label)
+        row=1
+        for rec in records:
+            for i,f in enumerate(xfields):
+                toput = remove_control_characters(str(f.disp_value(rec[f.name],request)).strip())
+                worksheet.write(row,i,toput)
+            row+=1
+
+    workbook.close()
+    """ return raw(workbook, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title) + '.xlsx'}) """
+    return await file_stream(filepath, filename=slugify(tracker.title) + '.xlsx')
+
+"""
     wb = Workbook()
     ws = wb.active
     ws.title = tracker.title
@@ -911,11 +946,13 @@ async def listexcel(request,module,slug=None):
         row=2
         for rec in records:
             for i,f in enumerate(xfields):
-                ws.cell(row=row,column=i+1,value=str(f.disp_value(rec[f.name],request)))
+                toput = remove_control_characters(str(f.disp_value(rec[f.name],request)).strip())
+                ws.cell(row=row,column=i+1,value=toput)
             row+=1
 
     virtual_wb = save_virtual_workbook(wb)
     return raw(virtual_wb, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition':'inline;filename=' + slugify(tracker.title) + '.xlsx'})
+"""
 
 @bp.route('/system/<module:string>/<slug:string>/method/<method:string>')
 @authorized(object_type='tracker')
