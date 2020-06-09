@@ -81,10 +81,10 @@ async def fixstatus(request,module,slug):
         for status in tracker.statuses:
             statuses.append(status.name)
         
-        fixquery = "select * from " + tracker.data_table + " where record_status not in ('" + "','".join(statuses) + "') or record_status is null"
+        fixquery = "select * from " + tracker.data_table + " where record_status not in ('" + "','".join(statuses) + "') or record_status is null or record_status=''"
         brokendatas = executedb(fixquery)
         for broken in brokendatas:
-            tracker.saverecord({'id':broken.id,'record_status':newtransition.next_status})
+            tracker.saverecord({'id':broken.id,'record_status':newtransition.next_status.name})
         
     request['session']['flashmessage'] = 'Fixed record status for ' + tracker.title
     return redirect(request.app.url_for('trackers.view',id=tracker.id))
