@@ -11,9 +11,9 @@ def authorized(object_type=None, require_admin=False, require_superuser=False):
             # for the client's authorization status
             is_authorized = False
             curuser = None
-            if 'user_id' in request['session']:
+            if 'user_id' in request.ctx.session:
                 from sanicengine.users.models import User
-                curuser = dbsession.query(User).filter(User.id == request['session']['user_id']).first()
+                curuser = dbsession.query(User).filter(User.id == request.ctx.session.get('user_id')).first()
 
             if 'slug' in request.args:
                 kwargs['slug'] = request.args['slug'][0]
@@ -81,11 +81,11 @@ def authorized(object_type=None, require_admin=False, require_superuser=False):
             else:
                 # the user is not authorized.
                 if curuser:
-                    request['session']['flashmessage'] = 'You are not authorized to view that page'
+                    request.ctx.session['flashmessage'] = 'You are not authorized to view that page'
                     return redirect(request.app.url_for('pages.home'))
                 else:
-                    request['session']['flashmessage'] = 'You need to login to view that page'
-                    request['session']['targeturl'] = request.url
+                    request.ctx.session['flashmessage'] = 'You need to login to view that page'
+                    request.ctx.session['targeturl'] = request.url
                     return redirect(request.app.url_for('pages.loginrequired'))
 
         return decorated_function

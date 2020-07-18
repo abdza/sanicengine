@@ -103,7 +103,7 @@ async def form(request,id=None):
     else:
         if filelink:
             form = FileLinkForm(obj=filelink)
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request, 'generic/form.html', title=title, form=form, modules=modules, enctype='multipart/form-data'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
@@ -111,7 +111,7 @@ async def form(request,id=None):
 @bp.route('/files')
 @authorized(object_type='filelink', require_admin=True)
 async def index(request):
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     filelinks = dbsession.query(FileLink)
     modules = []
     donefilter = False

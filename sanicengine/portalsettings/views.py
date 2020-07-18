@@ -62,7 +62,7 @@ async def form(request,id=None):
     if not form:
         form = SettingForm()
 
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request,'generic/form.html',title=title,setting=setting,modules=modules,
             form=form,enctype='multipart/form-data',submitcontinue=submitcontinue),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
@@ -70,7 +70,7 @@ async def form(request,id=None):
 @bp.route('/settings')
 @authorized(object_type='setting',require_admin=True)
 async def index(request):
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     settings = dbsession.query(Setting)
     modules = []
     donefilter = False

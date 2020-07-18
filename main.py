@@ -2,7 +2,7 @@
 from sanic import Sanic
 from sanic.response import html, redirect
 from sanic.exceptions import NotFound,ServerError
-from sanic_session import InMemorySessionInterface
+from sanic_session import Session, InMemorySessionInterface
 from sanicengine import users, pages, fileLinks, trackers, modules, trees, portalsettings, emailtemplates, customtemplates, portalerrors
 from sanicengine import settings
 from sanicengine.template import render
@@ -17,11 +17,15 @@ import sys,traceback
 
 from sqlalchemy import MetaData
 
-app = Sanic()
+try:
+    app = Sanic(settings.APP)
+except:
+    print("Setup your settings.py first")
+    sys.exit(2)
+
 app.static('/static','./sanicengine/static')
 app.config.from_object(settings)
-
-session_interface = InMemorySessionInterface()
+Session(app)
 
 @app.exception(NotFound)
 async def pagenotfound(request,exception):
@@ -43,12 +47,6 @@ async def servererror(request,exception):
         return html(notpage.render(request,title=notpage.title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         return html(render(request,'errors/500.html',title='Server Error'))
-
-@app.middleware('request')
-async def add_session_to_request(request):
-    # before each request initialize a session
-    # using the client's request
-    await session_interface.open(request)
 
 @app.middleware('request')
 async def user_from_request(request):
@@ -77,11 +75,6 @@ async def user_from_request(request):
                 dbsession.add(curuser)
                 dbsession.commit()
 
-@app.middleware('response')
-async def save_session(request, response):
-    # after each request save the session,
-    # pass the response to set client cookies
-    await session_interface.save(request, response)
 
 @app.listener('before_server_start')
 async def setup_db(app, loop):

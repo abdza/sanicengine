@@ -28,7 +28,7 @@ async def view(request, slug):
                 dbsession.rollback()
         return html(render(request,'trees/view.html',tree=tree,title=title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
-        request['session']['flashmessage'] = 'No tree to view'
+        request.ctx.session['flashmessage'] = 'No tree to view'
         return redirect('/')
 
 @bp.route('/trees/nodeview/<node_id>')
@@ -181,7 +181,7 @@ async def deletenode(request, node_id):
 @authorized(object_type='tree',require_admin=True)
 async def delete(request,id):
     if id==1:
-        request['session']['flashmessage'] = 'Cannot delete the first tree. That is a system critical tree'
+        request.ctx.session['flashmessage'] = 'Cannot delete the first tree. That is a system critical tree'
         return redirect(request.app.url_for('trees.index'))
     tree = dbsession.query(Tree).get(int(id))
     if tree:
@@ -238,14 +238,14 @@ async def form(request,id=None):
         if tree:
             form = TreeForm(obj=tree)
 
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request,'generic/form.html',title=title,tree=tree, modules=modules, form=form,enctype='multipart/form-data',acefield=['datastr'],acetype={'datastr':'json'}),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/trees')
 @authorized(object_type='tree',require_admin=True)
 async def index(request):
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     trees = dbsession.query(Tree)
     modules = []
     donefilter = False

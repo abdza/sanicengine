@@ -87,7 +87,7 @@ async def form(request,id=None):
             title = emailtemplate.title + '-Edit'
             submitcontinue = True
 
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request,'generic/form.html',title=title,emailtemplate=emailtemplate,modules=modules,
             form=form,enctype='multipart/form-data',submitcontinue=submitcontinue),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
@@ -96,7 +96,7 @@ async def form(request,id=None):
 @authorized(object_type='emailtemplate',require_admin=True)
 async def index(request):
     emailtemplates = dbsession.query(EmailTemplate)
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     modules = []
     donefilter = False
     for m in dbsession.query(EmailTemplate.module).distinct():

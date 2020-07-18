@@ -13,8 +13,8 @@ def render(request, template_file, *args, **kwargs):
     from sanicengine.pages import models as pages
     from sanicengine.portalsettings.models import Setting
     curuser = None
-    if 'user_id' in request['session']:
-        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    if request.ctx.session.get('user_id'):
+        curuser = dbsession.query(User).filter(User.id==request.ctx.session.get('user_id')).first()
     app = request.app
     app.users = users
     app.fileLinks = fileLinks
@@ -39,8 +39,8 @@ def render_string(request, template_string, *args, **kwargs):
     from sanicengine.pages import models as pages
     from sanicengine.portalsettings.models import Setting
     curuser = None
-    if 'user_id' in request['session']:
-        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    if request.ctx.session.get('user_id'):
+        curuser = dbsession.query(User).filter(User.id==request.ctx.session.get('user_id')).first()
     app = request.app
     app.users = users
     app.fileLinks = fileLinks

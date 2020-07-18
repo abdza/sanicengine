@@ -48,7 +48,7 @@ async def googlesignin(request):
                 dbsession.commit()
                 print("Registered " + str(curuser))
             if curuser:
-                request['session']['user_id']=curuser.id
+                request.ctx.session['user_id']=curuser.id
         except Exception as err:
             print("error:" + str(err))
     return jsonresponse({'output':'done'})
@@ -57,7 +57,7 @@ async def googlesignin(request):
 async def login(request):
     if 'authorization' in request.headers:
         if 'user_id' in request['session']:
-            curuser = dbsession.query(User).get(request['session']['user_id'])
+            curuser = dbsession.query(User).get(request.ctx.session.get('user_id'))
             return jsonresponse({'authtoken':curuser.authhash})
         else:
             return jsonresponse({'message':'Login required'},status=401)
@@ -68,7 +68,7 @@ async def login(request):
             curuser = dbsession.query(User).filter(User.email==request.form.get('username')).first()
         if curuser:
             if curuser.password == curuser.hashpassword(request.form.get('password')):
-                request['session']['user_id']=curuser.id
+                request.ctx.session['user_id']=curuser.id
                 if 'targeturl' in request.form:
                     return redirect(request.form['targeturl'][0])
                 else:
@@ -77,9 +77,9 @@ async def login(request):
                     else:
                         return redirect('/')
             else:
-                request['session']['flashmessage']='Wrong username or password'
+                request.ctx.session['flashmessage']='Wrong username or password'
         else:
-            request['session']['flashmessage']='Wrong username or password'
+            request.ctx.session['flashmessage']='Wrong username or password'
         if 'currentpage' in request.form:
             return redirect(request.form['currentpage'][0])
         else:
@@ -91,7 +91,7 @@ async def login(request):
 @bp.route('/logout')
 async def logout(request):
     if 'user_id' in request['session']:
-        del(request['session']['user_id'])
+        del(request.ctx.session['user_id'])
     return redirect('/')
 
 @bp.route('/module_roles/delete/<id>',methods=['POST'])
@@ -140,7 +140,7 @@ async def module_role_form(request,module_role_id=None):
                 title = 'Edit ModuleRole'
                 userdata = {'id':module_role.user.id,'name':module_role.user.name}
 
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session.get('user_id'))
     modules = []
     for m in dbsession.query(ModuleRole.module).distinct():
         if 'Admin' in curuser.moduleroles(m[0]):
@@ -151,7 +151,7 @@ async def module_role_form(request,module_role_id=None):
 @bp.route('/module_roles')
 @authorized(require_admin=True)
 async def module_roles(request):
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session.get('user_id'))
     module_roles = dbsession.query(ModuleRole)
     modules = []
     donefilter = False
@@ -240,14 +240,14 @@ async def index(request):
 @bp.route('/profile',methods=['GET','POST'])
 @authorized()
 async def profile(request):
-    curuser = dbsession.query(User).get(request['session']['user_id'])
+    curuser = dbsession.query(User).get(request.ctx.session.get('user_id'))
     form = ProfileForm(request.form)
     if request.method=='POST' and form.validate():
         curuser.name = form.name.data
         curuser.email = form.email.data
         dbsession.add(curuser)
         dbsession.commit()
-        request['session']['flashmessage']='Updated profile'
+        request.ctx.session['flashmessage']='Updated profile'
         return redirect('/')
     else:
         form.name.data = curuser.name
@@ -269,7 +269,7 @@ async def register(request):
 
 @bp.route('/changepassword',methods=['GET','POST'])
 async def changepassword(request):
-    user = dbsession.query(User).get(request['session']['user_id'])
+    user = dbsession.query(User).get(request.ctx.session.get('user_id'))
     if request.method=='POST':
         if request.form.get('password')==request.form.get('passwordrepeat'):
             user.password = hashlib.sha224(request.form.get('password').encode('utf-8')).hexdigest()
@@ -277,7 +277,7 @@ async def changepassword(request):
             dbsession.commit()
             return redirect(request.app.url_for('pages.home'))
         else:
-            request['session']['flashmessage']='Repeated password need to be the same password'
+            request.ctx.session['flashmessage']='Repeated password need to be the same password'
             return redirect(request.app.url_for('users.changepassword'))
     return html(render(request,'users/changepassword.html',user=user),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
@@ -293,13 +293,13 @@ async def resetpassword(request,resethash=None):
                     dbsession.commit()
                     return redirect(request.app.url_for('users.login'))
                 else:
-                    request['session']['flashmessage']='Sorry but the link has already expired. Please resubmit request to rest password'
+                    request.ctx.session['flashmessage']='Sorry but the link has already expired. Please resubmit request to rest password'
                     return redirect(request.app.url_for('users.forgotpassword'))
             else:
-                request['session']['flashmessage']='Repeated password need to be the same password'
+                request.ctx.session['flashmessage']='Repeated password need to be the same password'
                 return redirect(request.app.url_for('users.resetpassword',resethash=resethash))
         else:
-            request['session']['flashmessage']='Sorry but the link is not working'
+            request.ctx.session['flashmessage']='Sorry but the link is not working'
             return redirect(request.app.url_for('users.login'))
 
     return html(render(request,'users/resetpassword.html',user=user),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
@@ -316,11 +316,11 @@ async def forgotpassword(request):
             dbsession.commit()
             resetemail = dbsession.query(Page).filter_by(slug='resetemail').first()
             if resetemail:
-                request['session']['flashmessage']='Password reset email sent to ' + user.email
+                request.ctx.session['flashmessage']='Password reset email sent to ' + user.email
                 await send_email({'email_to':[user.email],'subject':resetemail.title,'htmlbody':resetemail.render(request,user=user)})
             else:
-                request['session']['flashmessage']='Password reset email sent to ' + user.email
+                request.ctx.session['flashmessage']='Password reset email sent to ' + user.email
                 await send_email({'email_to':[user.email],'subject':'Reset password link','htmlbody':render(request,'users/reset_email.html',user=user)})
         else:
-            request['session']['flashmessage']='User with email ' + request.form.get('email') + ' was not found'
+            request.ctx.session['flashmessage']='User with email ' + request.form.get('email') + ' was not found'
     return html(render(request,'users/forgot-password.html'),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})

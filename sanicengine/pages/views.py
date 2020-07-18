@@ -98,7 +98,7 @@ async def view(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4
         return html(page.render(request,title=page.title,arg1=arg1,arg2=arg2,arg3=arg3,arg4=arg4,arg5=arg5),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         print("No page to view")
-        request['session']['flashmessage'] = 'Sorry but page was not found'
+        request.ctx.session['flashmessage'] = 'Sorry but page was not found'
         return redirect('/')
 
 @bp.route('/pages/delete/<id>',methods=['POST'])
@@ -149,7 +149,7 @@ async def form(request,id=None):
             title = page.title + '-Edit'
             submitcontinue = True
 
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request,'pages/form.html',title=title,page=page,modules=modules,
             form=form,enctype='multipart/form-data',submitcontinue=submitcontinue),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
@@ -175,12 +175,12 @@ async def loginrequired(request):
     loginrequired = dbsession.query(Page).filter_by(module='portal',slug='loginrequired').first()
     if loginrequired:
         return html(loginrequired.render(request),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
-    return html(render(request,'pages/loginrequired.html',targeturl=request['session'].pop('targeturl',None)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
+    return html(render(request,'pages/loginrequired.html',targeturl=request.ctx.session.pop('targeturl',None)),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/pages')
 @authorized(object_type='page',require_admin=True)
 async def index(request):
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     pages = dbsession.query(Page)
     modules = []
     donefilter = False

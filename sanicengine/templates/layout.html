@@ -22,7 +22,7 @@
 			<ul class="nav navbar-nav mr-auto">
 				{{ topmenu() }}
 			</ul>
-		{% if request.session.user_id %}
+		{% if request.ctx.session.user_id %}
 			<ul class="navbar-nav ml-auto ">
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" id="profilelink">
@@ -69,7 +69,7 @@
 		</div>
 		<ul class="list-unstyled components">
 		{{ sidemenu() }}
-		{% if request.session.user_id and curuser.isadmin %}
+		{% if request.ctx.session.user_id and curuser.isadmin %}
 		{{ adminmenu() }}
 		{% endif %}
 		</ul>
@@ -79,9 +79,9 @@
 
 	{% block mainblock %}
 		<main role='main' class='container'>
-		{% if request.session.flashmessage %}
+		{% if request.ctx.session.flashmessage %}
 			<div class="alert alert-warning alert-dismissible fade show" role="alert">
-				{{ request.session.pop('flashmessage',None) }}
+				{{ request.ctx.session.pop('flashmessage',None) }}
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>

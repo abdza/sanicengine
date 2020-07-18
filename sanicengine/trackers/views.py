@@ -86,7 +86,7 @@ async def fixstatus(request,module,slug):
         for broken in brokendatas:
             tracker.saverecord({'id':broken.id,'record_status':newtransition.next_status.name})
         
-    request['session']['flashmessage'] = 'Fixed record status for ' + tracker.title
+    request.ctx.session['flashmessage'] = 'Fixed record status for ' + tracker.title
     return redirect(request.app.url_for('trackers.view',id=tracker.id))
 
 @bp.route('/trackers/cleardata/<module>/<slug>',methods=['POST'])
@@ -109,7 +109,7 @@ async def cleardata(request,module,slug):
             dbsession.execute("delete from " + tracker.data_table)
         except:
             dbsession.rollback()
-        request['session']['flashmessage'] = 'Cleared data for ' + tracker.title
+        request.ctx.session['flashmessage'] = 'Cleared data for ' + tracker.title
     return redirect(request.app.url_for('trackers.view',id=tracker.id))
 
 
@@ -137,7 +137,7 @@ async def deleteupdate(request,update_id=None):
                 dbsession.rollback()
         return redirect(request.app.url_for('trackers.view',id=trackerid) + '#dataupdates')
     else:
-        request['session']['flashmessage']='Need to specify id of update to delete'
+        request.ctx.session['flashmessage']='Need to specify id of update to delete'
         return redirect(request.app.url_for('trackers.index'))
 
 @bp.route('/trackers/dataupdate/<module>/<slug>',methods=['GET','POST'])
@@ -327,7 +327,7 @@ async def deletestatus(request,status_id=None):
                 dbsession.rollback()
         return redirect(request.app.url_for('trackers.view',id=trackerid) + '#statuses')
     else:
-        request['session']['flashmessage']='Need to specify id of status to delete'
+        request.ctx.session['flashmessage']='Need to specify id of status to delete'
         redirect(request.app.url_for('trackers.index'))
 
 @bp.route('/trackers/roles/<module>/<slug>/json')
@@ -461,7 +461,7 @@ async def deletetransition(request,transition_id=None):
                 dbsession.rollback()
         return redirect(request.app.url_for('trackers.view', id=trackerid) + '#transitions')
     else:
-        request['session']['flashmessage']='You need to specify id of transition to delete'
+        request.ctx.session['flashmessage']='You need to specify id of transition to delete'
         return redirect(request.app.url_for('trackers.index'))
 
 @bp.route('/trackers/role/<module>/<slug>/edit/<id>',methods=['POST','GET'])
@@ -511,7 +511,7 @@ async def deleterole(request,role_id=None):
                 dbsession.rollback()
         return redirect(request.app.url_for('trackers.view',id=trackerid) + '#roles')
     else:
-        request['session']['flashmessage']='You need to specify id of role to delete'
+        request.ctx.session['flashmessage']='You need to specify id of role to delete'
         return redirect(request.app.url_for('trackers.index'))
 
 @bp.route('/trackers/field/<module>/<slug>/edit/<id>',methods=['POST','GET'])
@@ -561,7 +561,7 @@ async def deletefield(request,field_id=None):
                 dbsession.rollback()
         return redirect(request.app.url_for('trackers.view',id=trackerid) + '#fields')
     else:
-        request['session']['flashmessage']='You need to specify the field to delete'
+        request.ctx.session['flashmessage']='You need to specify the field to delete'
         return redirect(request.app.url_for('trackers.index'))
 
 @bp.route('/trackers/field/<module>/<slug>/json/<field_id>')
@@ -767,7 +767,7 @@ async def form(request,id=None):
                             },
                         }
 
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     modules = curuser.rolemodules('Admin')
     return html(render(request,'generic/form.html',title=title,form=form,enctype='multipart/form-data',modules=modules,tokeninput=tokeninput),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
@@ -775,7 +775,7 @@ async def form(request,id=None):
 @authorized(require_admin=True)
 async def index(request):
     trackers = dbsession.query(Tracker)
-    curuser = User.getuser(request['session']['user_id'])
+    curuser = User.getuser(request.ctx.session['user_id'])
     modules = []
     donefilter = False
     for m in dbsession.query(Tracker.module).distinct():
@@ -856,7 +856,7 @@ async def clearsystemdata(request,module,slug):
             dbsession.execute("delete from " + tracker.data_table)
         except:
             dbsession.rollback()
-        request['session']['flashmessage'] = 'Cleared data for ' + tracker.title
+        request.ctx.session['flashmessage'] = 'Cleared data for ' + tracker.title
     if returnurl:
         return redirect(returnurl)
     else:
@@ -901,8 +901,8 @@ async def listexcel(request,module,slug=None):
         module='portal'
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     curuser = None
-    if 'user_id' in request['session']:
-        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    if 'user_id' in request.ctx.session:
+        curuser = dbsession.query(User).filter(User.id==request.ctx.session['user_id']).first()
     records = tracker.records(curuser=curuser,request=request)
 
     if not os.path.exists(os.path.join(uploadfolder,tracker.slug,'tmpexcel')):
@@ -985,7 +985,7 @@ async def listmethod(request,module,slug,method):
             return html(page.render(request,title=title,tracker=tracker),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
         title = tracker.title + '- List'
-        request['session']['flashmessage'] = 'Method ' + method + ' was not found for the tracker ' + tracker.title
+        request.ctx.session['flashmessage'] = 'Method ' + method + ' was not found for the tracker ' + tracker.title
         return html(render(request,'trackers/viewlist.html',title=title,tracker=tracker),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
 @bp.route('/system/<module:string>/<slug:string>/<id:int>',methods=['POST','GET'])
@@ -993,8 +993,8 @@ async def listmethod(request,module,slug,method):
 async def viewdetail(request,module,slug=None,id=None):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     curuser = None
-    if 'user_id' in request['session']:
-        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    if 'user_id' in request.ctx.session:
+        curuser = dbsession.query(User).filter(User.id==request.ctx.session['user_id']).first()
     record = None
     status = None
     page = None
@@ -1037,8 +1037,8 @@ async def viewdetail(request,module,slug=None,id=None):
 async def detailmethod(request,module,slug,method,id):
     tracker = dbsession.query(Tracker).filter_by(module=module,slug=slug).first()
     curuser = None
-    if 'user_id' in request['session']:
-        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    if 'user_id' in request.ctx.session:
+        curuser = dbsession.query(User).filter(User.id==request.ctx.session['user_id']).first()
     record = None
     status = None
     page = None
@@ -1081,7 +1081,7 @@ async def detailmethod(request,module,slug,method,id):
             title = tracker.title + '- ' + page.title
             return html(page.render(request,tracker=tracker,record=record,title=title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
-        request['session']['flashmessage'] = 'Method ' + method + ' was not found for the tracker ' + tracker.title
+        request.ctx.session['flashmessage'] = 'Method ' + method + ' was not found for the tracker ' + tracker.title
         title = tracker.title + '- View'
         return html(render(request,'trackers/viewrecord.html',tracker=tracker,title=title,record=record),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
 
@@ -1118,7 +1118,7 @@ async def addrecord(request,module,slug=None):
         else:
             return html(render(request,'trackers/formrecord.html',tracker=tracker,transition=newtransition,title=title),headers={'X-Frame-Options':'deny','X-Content-Type-Options':'nosniff'})
     else:
-        request['session']['flashmessage'] = 'Default new transition not found'
+        request.ctx.session['flashmessage'] = 'Default new transition not found'
         return redirect(request.app.url_for('pages.home'))
 
 @bp.route('/system/<module:string>/<slug:string>/edit/<transition_id:int>/<record_id:int>',methods=['POST','GET'])
@@ -1128,8 +1128,8 @@ async def editrecord(request,module,slug=None,transition_id=None,record_id=None)
     transition = None
     record = None
     curuser = None
-    if 'user_id' in request['session']:
-        curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+    if 'user_id' in request.ctx.session:
+        curuser = dbsession.query(User).filter(User.id==request.ctx.session['user_id']).first()
     if record_id:
         record = tracker.records(record_id,curuser=curuser,request=request)
     if transition_id:
