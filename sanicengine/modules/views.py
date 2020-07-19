@@ -191,7 +191,7 @@ async def importmodule(request,slug=None):
 
                 dbsession.add(transition)
         dbsession.commit()
-    request['session']['flashmessage'] = 'Module ' + slug + ' has been imported'
+    request.ctx.session['flashmessage'] = 'Module ' + slug + ' has been imported'
     return redirect(request.app.url_for('modules.index'))
 
 @bp.route('/modules/export/<slug>')
@@ -345,7 +345,7 @@ async def export(request,slug=None):
         curfile.close()
 
 
-    request['session']['flashmessage'] = 'Module ' + slug + ' has been exported'
+    request.ctx.session['flashmessage'] = 'Module ' + slug + ' has been exported'
     return redirect(request.app.url_for('modules.index'))
 
 @bp.route('/modules/updatelist')

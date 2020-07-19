@@ -397,8 +397,8 @@ class Tracker(ModelBase):
 
         curuser = None
         transition = None
-        if 'user_id' in request['session']:
-            curuser = dbsession.query(User).filter(User.id==request['session']['user_id']).first()
+        if 'user_id' in request.ctx.session:
+            curuser = dbsession.query(User).filter(User.id==request.ctx.session['user_id']).first()
         if 'transition_id' in form:
             transition = dbsession.query(TrackerTransition).get(form['transition_id'][0])
             if transition and transition.next_status:
@@ -414,7 +414,7 @@ class Tracker(ModelBase):
         if transition:
             if form['record_status'][0].lower()=='delete':
                 if oldrecord:
-                    request['session']['flashmessage']="Deleted " + self.title + " " + str(oldrecord['id'])
+                    request.ctx.session['flashmessage']="Deleted " + self.title + " " + str(oldrecord['id'])
                     try:
                         dbsession.execute("delete from " + self.update_table + " where record_id=:record_id",{'record_id':oldrecord['id']})
                     except Exception as inst:
