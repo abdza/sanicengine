@@ -15,6 +15,23 @@
 		$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',module=transition.tracker.module,slug=transition.tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
 		</script> 
 	{% endif %}
+	{% if field.field_type in ['object','user','treenode','integer','number','file','picture','video'] %}
+		<script> 
+		$('#trackerform').on('submit',function() {
+			var curval = $('input#{{field.name}}').val();
+			if(curval==''){
+				alert('Please fill in a value for {{field.label}}');
+				$('input#{{field.name}}').focus();
+				return false;
+			}
+			else if(isNaN(curval)){
+				alert('Please use a numeric value for {{field.label}}');
+				$('input#{{field.name}}').focus();
+				return false;
+			}
+		});
+		</script> 
+	{% endif %}
 {% endfor %}
 {% if transition.edit_fields and transition.edit_fields|length == 0 %}
 <script>
