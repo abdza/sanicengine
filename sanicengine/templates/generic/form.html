@@ -23,7 +23,7 @@
 	Form
 	{% endif %}
 </h1>
-<form method='POST' {% if enctype %}enctype='{{enctype}}'{% endif %}>
+<form method='POST' class='dataform' {% if enctype %}enctype='{{enctype}}'{% endif %}>
 {% for field in form %}
 <div class='form-group row'>
 	{{ field.label(class_='col-sm-2 col-form-label') }}
@@ -109,6 +109,21 @@
 				}
 			});
 		});
+
 	{% endif %}
+	$('.dataform').on('submit', function() {
+	{% if acefield %}
+			{% for afield in acefield %}
+				var {{afield}}editor = ace.edit("{{afield}}editor");
+				{% if acetype[afield]=='json' %}
+				if(IsJsonString({{afield}}editor.getValue())){
+					$('#{{afield}}').val({{afield}}editor.getValue());
+				}
+				{% else %}
+					$('#{{afield}}').val({{afield}}editor.getValue());
+				{% endif %}
+			{% endfor %}
+	{% endif %}
+	});
 	</script>
 {% endblock %}
