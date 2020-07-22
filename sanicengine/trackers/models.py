@@ -348,6 +348,24 @@ class Tracker(ModelBase):
 
         return executedb("select * from " + self.data_table + " where " + query,qparams).first()
 
+    def query(self, query, qparams={}):
+        """Will return the first record found from the tracker table
+
+        Parameters
+        ----------
+        query : str
+            Query string to be used after where in the sql statement
+        qparams : dictionary
+            Dictionary of values to be used in the query placeholders
+
+        Returns
+        -------
+        dict
+            Values of the first row found from the query
+        """
+
+        return executedb("select * from " + self.data_table + " where " + query,qparams)
+
     def saverecord(self, record, request=None):
         """Save the dictionary into the db
 
@@ -771,7 +789,7 @@ class TrackerField(ModelBase):
                 exec(field.options,globals(),ldict)
                 output=ldict['output']
             except:
-                output=self.options.split(',')
+                output=[ k.strip() for k in self.options.split(',') ]
             return output
         else:
             return None
