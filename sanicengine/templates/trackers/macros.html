@@ -15,7 +15,7 @@
 		$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',module=transition.tracker.module,slug=transition.tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
 		</script> 
 	{% endif %}
-	{% if field.field_type in ['object','user','treenode','integer','number','file','picture','video'] %}
+	{% if field.field_type in ['object','user','treenode','integer','number'] %}
 		<script> 
 		$('#trackerform').on('submit',function() {
 			var curval = $('input#{{field.name}}').val();
