@@ -90,7 +90,7 @@ async def login(request):
 
 @bp.route('/logout')
 async def logout(request):
-    if 'user_id' in request['session']:
+    if 'user_id' in request.ctx.session:
         del(request.ctx.session['user_id'])
     return redirect('/')
 

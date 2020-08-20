@@ -330,7 +330,7 @@ class Tracker(ModelBase):
         for field in self.fields:
             field.updatedb()
 
-    def first(self, query, qparams={}):
+    def first(self, query="1=1", qparams={}):
         """Will return the first record found from the tracker table
 
         Parameters
@@ -348,7 +348,7 @@ class Tracker(ModelBase):
 
         return executedb("select * from " + self.data_table + " where " + query,qparams).first()
 
-    def query(self, query, qparams={}):
+    def query(self, query="1=1", qparams={}):
         """Will return the first record found from the tracker table
 
         Parameters
@@ -645,6 +645,21 @@ class Tracker(ModelBase):
         return results
 
     def rolesrule(self,curuser,request):
+        """Return the query rules based on roles of the curuser
+
+        Parameters
+        ----------
+        curuser : User
+            user that needs to be checked against
+        request : request
+            Request session to be used to determine identity of user
+
+        Returns
+        -------
+        string
+            Value of the query to be used to check the role
+        """
+
         if self.userroles(curuser,request=request):
             rolesrule = '1=1'
         else:
@@ -665,6 +680,23 @@ class Tracker(ModelBase):
         return None
 
     def userroles(self,curuser,record=None,request=None):
+        """Return an array of user roles based on the tracker and record
+        if given
+
+        Parameters
+        ----------
+        curuser : User
+            user that needs to be checked against
+        record : dict
+            data from the tracker table
+        request : request
+            Request session to be used to determine identity of user
+
+        Returns
+        -------
+        array
+            Array of roles the user has on the tracker and record if exists
+        """
         croles = []
         for role in self.roles:
             if role.role_type=='module':
@@ -676,9 +708,8 @@ class Tracker(ModelBase):
                 sqltext = "select id from " + self.data_table + " where id=:record_id and " + rolesrule
                 try:
                     results = dbsession.execute(sqltext,{"record_id":record['id']})
-                    if results:
-                        for row in results:
-                            croles.append(role)
+                    if len(results):
+                        croles.append(role)
                 except Exception as inst:
                     dbsession.rollback()
         return croles
@@ -856,13 +887,10 @@ class TrackerField(ModelBase):
                 value = result[1]
         return value
 
-    def queryvalue(self, value,equals=False):
+    def queryvalue(self, value, equals=False):
         """Will return name of query to run with placeholders for variables
-
-        default is just the value sent
-        for 
-        If the argument `module` isn't passed in, trackers will
-        be searched by slug only
+        e.g: if field name is staff_id, will return "staff_id=:staff_id" and
+        dictionary with value mapped to staff_id 
 
         Parameters
         ----------

@@ -378,6 +378,8 @@ async def transitionform(request,module,slug=None,id=None):
             }
     if id:
         trackertransition = dbsession.query(TrackerTransition).get(int(id))
+    if 'id' in form:
+        trackertransition = dbsession.query(TrackerTransition).get(int(form['id']))
     if trackertransition:
         title = tracker.title + '-Edit Transition'
     if request.method=='POST':
