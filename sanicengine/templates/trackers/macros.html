@@ -15,22 +15,27 @@
 		$('input#{{field.name}}').tokenInput('{{ app.url_for('trackers.fieldjson',module=transition.tracker.module,slug=transition.tracker.slug,field_id=field.id) }}',{ tokenLimit: 1 {% if record and record[field.name] %}, prePopulate:[{id:{{record[field.name]}},name:"{{field.disp_value(record[field.name])}}"}]{% endif %}});
 		</script> 
 	{% endif %}
-	{% if field.field_type in ['object','user','treenode','integer','number'] %}
-		<script> 
-		$('#trackerform').on('submit',function() {
-			var curval = $('input#{{field.name}}').val();
-			if(curval==''){
-				alert('Please fill in a value for {{field.label}}');
-				$('input#{{field.name}}').focus();
-				return false;
-			}
-			else if(isNaN(curval)){
-				alert('Please use a numeric value for {{field.label}}');
-				$('input#{{field.name}}').focus();
-				return false;
-			}
-		});
-		</script> 
+	{% if field.default %}
+	{% elif field.get_override and field.get_override in request.args %}
+	{% elif field.session_override and field.session_override in request.ctx.session %}
+	{% else %}
+		{% if field.field_type in ['object','user','treenode','integer','number'] %}
+			<script> 
+			$('#trackerform').on('submit',function() {
+				var curval = $('input#{{field.name}}').val();
+				if(curval==''){
+					alert('Please fill in a value for {{field.label}}');
+					$('input#{{field.name}}').focus();
+					return false;
+				}
+				else if(isNaN(curval)){
+					alert('Please use a numeric value for {{field.label}}');
+					$('input#{{field.name}}').focus();
+					return false;
+				}
+			});
+			</script> 
+		{% endif %}
 	{% endif %}
 {% endfor %}
 {% if transition.edit_fields and transition.edit_fields|length == 0 %}
@@ -51,11 +56,14 @@ $('#trackerform').submit();
 	{% endif %}
 	{% set ns = namespace(displayed=false,gotlocation=false,gotmap=false) %}
 {% for field in transition.edit_fields_list %}
+{% if field.session_override %}
+{% endif %}
 {% if field.default %}
 <input type='hidden' name='{{field.name}}' value='systemdefault'>
 {% elif field.get_override and field.get_override in request.args %}
 <input type='hidden' name='{{field.name}}' value='{{ request.args[field.get_override][0] }}'>
-{% elif field.session_override and field.session_override in request['session'] %}
+{% elif field.session_override and field.session_override in request.ctx.session %}
+<input type='hidden' name='{{field.name}}' value='{{ request.ctx.session[field.name] }}'>
 {% elif field.field_type in ['location','map'] %}
 	{% if field.field_type == 'map' %}
 	<label class="col-sm-2 col-form-label" for="{{ field.name }}">{{ field.label }}</label>
