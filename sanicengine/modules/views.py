@@ -117,6 +117,7 @@ async def importmodule(request,slug=None):
             tracker.title = readarray(ctracker,'title')
             tracker.slug = readarray(ctracker,'slug')
             tracker.module = readarray(ctracker,'module')
+            tracker.default_new_transition = readarray(ctracker,'default_new_transition')
             tracker.list_fields = readarray(ctracker,'list_fields')
             tracker.search_fields = readarray(ctracker,'search_fields')
             tracker.filter_fields = readarray(ctracker,'filter_fields')
@@ -130,7 +131,6 @@ async def importmodule(request,slug=None):
             tracker.expire_date = readarray(ctracker,'expire_date',None)
             tracker.data_table_name = readarray(ctracker,'data_table_name')
             tracker.update_table_name = readarray(ctracker,'update_table_name')
-            tracker.default_new_transition = readarray(ctracker,'default_new_transition')
             tracker.list_order = readarray(ctracker,'list_order')
             dbsession.add(tracker)
 
@@ -142,9 +142,14 @@ async def importmodule(request,slug=None):
                 field.name = readarray(cfield,'name')
                 field.label = readarray(cfield,'label')
                 field.field_type = readarray(cfield,'field_type')
+                field.widget = readarray(cfield,'widget')
                 field.obj_table = readarray(cfield,'obj_table')
                 field.obj_field = readarray(cfield,'obj_field')
+                field.obj_filter = readarray(cfield,'obj_filter')
+                field.session_override = readarray(cfield,'session_override')
+                field.get_override = readarray(cfield,'get_override')
                 field.default = readarray(cfield,'default')
+                field.options = readarray(cfield,'options')
                 dbsession.add(field)
 
             for crole in ctracker['roles']:
@@ -262,9 +267,14 @@ async def export(request,slug=None):
                     'name':field.name,
                     'label':field.label,
                     'field_type':field.field_type,
+                    'widget':field.widget,
                     'obj_table':field.obj_table,
                     'obj_field':field.obj_field,
-                    'default':field.default
+                    'obj_filter':field.obj_filter,
+                    'session_override':field.session_override,
+                    'get_override':field.get_override,
+                    'default':field.default,
+                    'options':field.options
                     })
             roles = []
             for role in tracker.roles:
@@ -296,6 +306,7 @@ async def export(request,slug=None):
                 'title':tracker.title,
                 'slug':tracker.slug,
                 'module':tracker.module,
+                'default_new_transition':tracker.default_new_transition,
                 'list_fields':tracker.list_fields,
                 'search_fields':tracker.search_fields,
                 'filter_fields':tracker.filter_fields,
@@ -310,7 +321,6 @@ async def export(request,slug=None):
                 'data_table_name':tracker.data_table_name,
                 'update_table_name':tracker.update_table_name,
                 'list_order':tracker.list_order,
-                'default_new_transition':tracker.default_new_transition,
                 'fields':fields,
                 'roles':roles,
                 'statuses':statuses,
