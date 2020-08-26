@@ -28,7 +28,13 @@ def render(request, template_file, *args, **kwargs):
     app.queryobj = queryobj
     app.pages = pages
     app.settings = Setting
-    return jinja_env.get_template(template_file).render(app=app,request=request,curuser=curuser,datetime=datetime,*args,**kwargs)
+    try:
+        return jinja_env.get_template(template_file).render(app=app,request=request,curuser=curuser,datetime=datetime,*args,**kwargs)
+    except Exception as exp:
+        from sanicengine.portalerrors.models import Error
+        Error.capture("Error rendering page at " + request.url,str(exp))
+        return None
+
 
 def render_string(request, template_string, *args, **kwargs):
     from sanicengine.users.models import User
@@ -54,7 +60,17 @@ def render_string(request, template_string, *args, **kwargs):
     app.queryobj = queryobj
     app.pages = pages
     app.settings = Setting
-    return jinja_env.from_string(template_string).render(app=app,request=request,curuser=curuser,datetime=datetime,*args,**kwargs)
+    try:
+        return jinja_env.from_string(template_string).render(app=app,request=request,curuser=curuser,datetime=datetime,*args,**kwargs)
+    except Exception as exp:
+        from sanicengine.portalerrors.models import Error
+        Error.capture("Error rendering string at " + request.url,str(exp))
+        return None
 
 def bare_render_string(template_string, *args, **kwargs):
-    return jinja_env.from_string(template_string).render(*args,**kwargs)
+    try:
+        return jinja_env.from_string(template_string).render(*args,**kwargs)
+    except Exception as exp:
+        from sanicengine.portalerrors.models import Error
+        Error.capture("Error rendering bare string",str(exp))
+        return None
