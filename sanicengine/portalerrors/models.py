@@ -10,7 +10,7 @@ import datetime
 class Error(ModelBase):
     __tablename__ = 'errors'
     id = Column(Integer, primary_key=True)
-    title = Column(String(200),unique=True)
+    title = Column(String(200))
     description = Column(Text())
     date_created = Column(DateTime(timezone=True),server_default=func.now())
     last_updated = Column(DateTime(timezone=True), onupdate=func.now())
