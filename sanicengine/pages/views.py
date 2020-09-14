@@ -67,6 +67,8 @@ async def run(request, module, slug=None, arg1=None, arg2=None, arg3=None, arg4=
             print("Page content:" + str(page.content))
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type,exc_value,exc_traceback)
+            from sanicengine.portalerrors.models import Error
+            Error.capture("Error running page at " + request.url,str(page.content).replace("<","&lt;").replace(">","&gt;").replace("\n","<br>") + "<br><br>Error<br>==========<br>" + traceback.format_exc().replace("<","&lt;").replace(">","&gt;").replace("\n","<br>"))
         if 'redirecturl' in ldict:
             redirecturl=ldict['redirecturl']
         if 'results' in ldict:
