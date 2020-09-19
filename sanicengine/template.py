@@ -1,6 +1,7 @@
 from jinja2 import Template, Environment, FileSystemLoader
 from sanicengine.database import dbsession, executedb, querydb, queryobj
 import datetime
+import traceback
 
 jinja_env = Environment(loader=FileSystemLoader(['custom_modules/custom_templates','sanicengine/templates']))
 
@@ -64,7 +65,7 @@ def render_string(request, template_string, *args, **kwargs):
         return jinja_env.from_string(template_string).render(app=app,request=request,curuser=curuser,datetime=datetime,*args,**kwargs)
     except Exception as exp:
         from sanicengine.portalerrors.models import Error
-        Error.capture("Error rendering string at " + request.url,str(exp))
+        Error.capture("Error rendering string at " + request.url,str(template_string).replace("<","&lt;").replace(">","&gt;").replace("\n","<br>") + "<br><br>Error<br>==========<br>" + traceback.format_exc().replace("<","&lt;").replace(">","&gt;").replace("\n","<br>"))
         return None
 
 def bare_render_string(template_string, *args, **kwargs):
