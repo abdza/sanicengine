@@ -46,7 +46,7 @@ def render_string(request, template_string, *args, **kwargs):
     from sanicengine.pages import models as pages
     from sanicengine.portalsettings.models import Setting
     curuser = None
-    if request.ctx.session.get('user_id'):
+    if request and request.ctx.session.get('user_id'):
         curuser = dbsession.query(User).filter(User.id==request.ctx.session.get('user_id')).first()
     app = request.app
     app.users = users

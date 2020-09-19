@@ -190,6 +190,16 @@ class Tracker(ModelBase):
 
         return self.fields_from_list(self.list_fields)
 
+    def transition(self,trans_name,get_id=False):
+        transition = dbsession.query(TrackerTransition).filter(TrackerTransition.name==trans_name,TrackerTransition.tracker==self).first()
+        if transition:
+            if get_id:
+                return transition.id
+            else:
+                return transition
+        else:
+            return None
+
     def display_fields_list(self,record):
         """Array of valid TrackerField when displaying record based on 
         display_fields from the status or detail_fields from tracker
@@ -737,12 +747,12 @@ class Tracker(ModelBase):
                 dbsession.rollback()
         return updates
 
-    def recordvalue(self,record,field):
+    def recordvalue(self,record,field,request=None):
         ftags = field.split('.')
         if len(ftags)==1:
             dfield = dbsession.query(TrackerField).filter(TrackerField.tracker==self,TrackerField.name==ftags[0]).first()
             if dfield:
-                return dfield.disp_value(record[ftags[0]])
+                return dfield.disp_value(record[ftags[0]],request=request)
 
 class TrackerField(ModelBase):
     __tablename__ = 'tracker_fields'
@@ -776,6 +786,7 @@ class TrackerField(ModelBase):
                     ddm = dbsession.query(TrackerField).filter_by(tracker=dtracker,name=f.strip()).first()
                     if ddm:
                         self.foreignfields.append(ddm)
+
 
     def listnames(datas,sep=','):
         toret = []
