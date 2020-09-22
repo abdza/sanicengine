@@ -15,6 +15,7 @@ import json
 import math
 import os
 import time
+import traceback
 
 class Tracker(ModelBase):
     """ 
@@ -457,7 +458,6 @@ class Tracker(ModelBase):
                 if 'record_status' in form:
                     fieldnames.append('record_status')
                 for field in transition.edit_fields_list:
-                    fieldnames.append(field.name)
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
                         output = None
                         ldict = locals()
@@ -465,13 +465,16 @@ class Tracker(ModelBase):
                             exec(field.default,globals(),ldict)
                             output=ldict['output']
                             form[field.name][0]=output
+                            fieldnames.append(field.name)
                         except Exception as inst:
-                            print("Error exec:" + str(field.default))
+                            from sanicengine.portalerrors.models import Error
+                            Error.capture("Error exec default at " + request.url,str(field.default).replace("<","&lt;").replace(">","&gt;").replace("\n","<br>") + "<br><br>Error<br>==========<br>" + traceback.format_exc().replace("<","&lt;").replace(">","&gt;").replace("\n","<br>"))
                     elif field.field_type == 'boolean':
                         if field.name not in form:
                             form[field.name]=[False,]
                         else:
                             form[field.name]=[True,]
+                        fieldnames.append(field.name)
                     elif field.field_type in ['file','picture','video']:
                         if request.files.get(field.name) and request.files.get(field.name).name:
                             filelink=FileLink()
@@ -501,9 +504,12 @@ class Tracker(ModelBase):
                             dbsession.add(filelink)
                             dbsession.commit()
                             form[field.name]=[filelink.id,]
+                            fieldnames.append(field.name)
                     else:
                         if field.name not in form:
+                            print(field.name + " not in form ")
                             form[field.name] = ["",]
+                        fieldnames.append(field.name)
                 if oldrecord:
                     query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in fieldnames  ]) + " where id=:record_id returning *"
                     ddata = { 'record_id':oldrecord['id'] }
@@ -513,6 +519,7 @@ class Tracker(ModelBase):
                 try:
                     fdata = { field:form[field][0] for field in fieldnames }
                     ddata.update(fdata)
+                    print("q:" + query)
                     data = dbsession.execute(query,ddata).fetchone()
                     dbsession.commit()
                 except Exception as inst:
