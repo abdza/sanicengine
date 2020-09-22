@@ -496,7 +496,7 @@ class Tracker(ModelBase):
                                     f.write(dfile.body)
                             filelink.filename = dfile.name
                             filelink.filepath = dst
-                            filelink.module = self.module
+                            filelink.module = self.module + "_data"
                             filelink.slug = outfilename.replace(' ','_').lower()
                             filelink.title = dfile.name
                             filelink.published = True
