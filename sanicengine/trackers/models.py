@@ -236,9 +236,9 @@ class Tracker(ModelBase):
             The tracker found with the slug and module searched
         """
 
-        tracker = dbsession.query(Tracker).filter_by(slug=slug)
+        tracker = dbsession.query(Tracker).filter_by(slug=slug.strip())
         if module:
-            tracker = tracker.filter_by(module=module)
+            tracker = tracker.filter_by(module=module.strip())
         return tracker.first()
 
     def fields_from_list(self,field_list=None):
@@ -499,11 +499,12 @@ class Tracker(ModelBase):
                             fieldnames.append(field.name)
                     else:
                         if field.name not in form:
-                            print(field.name + " not in form ")
                             form[field.name] = ["",]
                         fieldnames.append(field.name)
                 if len(defaultfields)>0:
+                    print("Processing defaults")
                     for field in defaultfields:
+                        print("Default for " + field.name)
                         output = None
                         ldict = locals()
                         try:
