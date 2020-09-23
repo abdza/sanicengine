@@ -88,6 +88,7 @@
 			{% for afield in acefield %}
 			var {{afield}}editor = ace.edit("{{afield}}editor");
 			{{afield}}editor.setTheme("ace/theme/xcode");
+			{{afield}}editor.setOption("maxLines",1000);
 			{% if acetype and afield in acetype %}
 			{{afield}}editor.session.setMode("ace/mode/{{acetype[afield]}}");
 			{{afield}}editor.getSession().on('change', function() {

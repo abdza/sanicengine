@@ -455,20 +455,12 @@ class Tracker(ModelBase):
                     return None
             else:
                 fieldnames = []
+                defaultfields = []
                 if 'record_status' in form:
                     fieldnames.append('record_status')
                 for field in transition.edit_fields_list:
                     if field.default and field.name in form and form[field.name][0]=='systemdefault':
-                        output = None
-                        ldict = locals()
-                        try:
-                            exec(field.default,globals(),ldict)
-                            output=ldict['output']
-                            form[field.name][0]=output
-                            fieldnames.append(field.name)
-                        except Exception as inst:
-                            from sanicengine.portalerrors.models import Error
-                            Error.capture("Error exec default at " + request.url,str(field.default).replace("<","&lt;").replace(">","&gt;").replace("\n","<br>") + "<br><br>Error<br>==========<br>" + traceback.format_exc().replace("<","&lt;").replace(">","&gt;").replace("\n","<br>"))
+                        defaultfields.append(field)
                     elif field.field_type == 'boolean':
                         if field.name not in form:
                             form[field.name]=[False,]
@@ -510,6 +502,18 @@ class Tracker(ModelBase):
                             print(field.name + " not in form ")
                             form[field.name] = ["",]
                         fieldnames.append(field.name)
+                if len(defaultfields)>0:
+                    for field in defaultfields:
+                        output = None
+                        ldict = locals()
+                        try:
+                            exec(field.default,globals(),ldict)
+                            output=ldict['output']
+                            form[field.name][0]=output
+                            fieldnames.append(field.name)
+                        except Exception as inst:
+                            from sanicengine.portalerrors.models import Error
+                            Error.capture("Error exec default at " + request.url,str(field.default).replace("<","&lt;").replace(">","&gt;").replace("\n","<br>") + "<br><br>Error<br>==========<br>" + traceback.format_exc().replace("<","&lt;").replace(">","&gt;").replace("\n","<br>"))
                 if oldrecord:
                     query = "update " + self.data_table + " set " + ",".join([ formfield + "=:" + formfield for formfield in fieldnames  ]) + " where id=:record_id returning *"
                     ddata = { 'record_id':oldrecord['id'] }
