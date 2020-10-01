@@ -7,6 +7,7 @@ class PageForm(Form):
     title = StringField('Title')
     content = TextAreaField('Content')
     runable = BooleanField('Runable')
+    script = BooleanField('Script')
     require_login = BooleanField('Require Login')
     published = BooleanField('Published')
     allowed_roles = StringField('Allowed Roles')

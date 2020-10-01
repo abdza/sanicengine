@@ -18,6 +18,7 @@ class Page(ModelBase):
     content = Column(Text())
     published = Column(Boolean(),default=False)
     runable = Column(Boolean(),default=False)
+    script = Column(Boolean(),default=False)
     require_login = Column(Boolean(),default=False)
     allowed_roles = Column(String(300))
     publish_date = Column(Date(),nullable=True)
