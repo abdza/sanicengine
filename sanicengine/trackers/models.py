@@ -759,12 +759,12 @@ class Tracker(ModelBase):
                 dbsession.rollback()
         return updates
 
-    def recordvalue(self,record,field,request=None):
+    def recordvalue(self,record,field,request=None,info=None):
         ftags = field.split('.')
         if len(ftags)==1:
             dfield = dbsession.query(TrackerField).filter(TrackerField.tracker==self,TrackerField.name==ftags[0]).first()
             if dfield:
-                return dfield.disp_value(record[ftags[0]],request=request)
+                return dfield.disp_value(record[ftags[0]],request=request,info=info)
 
 class TrackerField(ModelBase):
     __tablename__ = 'tracker_fields'
@@ -848,7 +848,7 @@ class TrackerField(ModelBase):
         else:
             return None
 
-    def disp_value(self, value, request=None):
+    def disp_value(self, value, request=None, info=None):
         if value:
             if self.field_type=='object':
                 sqlq = "select " + self.main_obj_field() + " from " + self.obj_table + " where id=:obj_id"
@@ -881,12 +881,18 @@ class TrackerField(ModelBase):
                 filelink = dbsession.query(FileLink).get(value)
                 if filelink:
                     url=request.app.url_for('fileLinks.download',module=filelink.module,slug=filelink.slug)
-                    value = "<img src='" + url + "'>"
+                    if info and info=='url':
+                        value = url
+                    else:
+                        value = "<img src='" + url + "'>"
             elif self.field_type == 'video' or self.widget== 'video':
                 filelink = dbsession.query(FileLink).get(value)
                 if filelink:
                     url=request.app.url_for('fileLinks.download',module=filelink.module,slug=filelink.slug)
-                    value = "<video controls><source src='" + url + "'></video>"
+                    if info and info=='url':
+                        value = url
+                    else:
+                        value = "<video controls><source src='" + url + "'></video>"
             elif self.field_type in ['location','map']:
                 mlat = value.split(',')
                 try:
