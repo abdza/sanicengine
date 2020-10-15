@@ -1047,8 +1047,10 @@ async def detailmethod(request,module,slug,method,id):
     if request.method=='POST':
         return redirect(request.app.url_for('tracker.detailmethod',module=module,slug=slug,method=method,id=id))
     if(id):
+        print("got id:" + str(id))
         record = tracker.records(id,curuser=curuser,request=request)
         if record:
+            print("got record:" + str(record))
             status = tracker.status(record)
     if status:
         page = dbsession.query(Page).filter_by(module=module,slug=tracker.slug + '_' + method + '_' + status.name.lower().replace(' ','_')).first()
